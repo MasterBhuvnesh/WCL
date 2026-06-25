@@ -53,24 +53,30 @@ Single active exam assumed for this timeline; schema is multi-exam ready.
 
 ## 2. Architecture
 
-```
-  CENTER (per PC)                 CLOUD (AWS)                          ADMIN
- ┌───────────────┐         ┌──────────────────────────┐        ┌──────────────┐
- │ Electron app  │  HTTPS  │   ALB (TLS term)         │  HTTPS │ Next.js admin│
- │ (kiosk)       │◄───────►│        │                 │◄──────►│ (Vercel/EC2) │
- │ - local SQLite│   WSS   │   ┌────┴────┐  ┌────────┐│        └──────────────┘
- │   write-buffer│         │   │ Bun API │  │ Bun API││
- │ - countdown   │         │   │ node 1  │  │ node 2 ││  (stateless, N+1)
- └───────────────┘         │   └────┬────┘  └───┬────┘│
-                           │        └─────┬─────┘     │
-                           │        ┌─────┴─────┐     │
-                           │        │  Redis    │  (sessions, deadlines,
-                           │        │ElastiCache│   leaderboard, pub/sub,
-                           │        └─────┬─────┘   rate-limit, idempotency)
-                           │        ┌─────┴─────┐  │
-                           │        │RDS Postgres│ (Multi-AZ, source of truth)
-                           │        └───────────┘  │
-                           └──────────────────────────┘
+```mermaid
+flowchart LR
+    subgraph CENTER["CENTER (per PC)"]
+        EC["Electron app (kiosk)<br/>local SQLite write-buffer<br/>countdown"]
+    end
+
+    subgraph CLOUD["CLOUD (AWS)"]
+        ALB["ALB (TLS termination)"]
+        API1["Bun API node 1<br/>stateless"]
+        API2["Bun API node 2<br/>stateless"]
+        REDIS["Redis / ElastiCache<br/>sessions, deadlines, leaderboard<br/>pub/sub, rate-limit, idempotency"]
+        DB["RDS PostgreSQL<br/>Multi-AZ, source of truth"]
+    end
+
+    ADMIN["Next.js admin<br/>(Vercel / EC2)"]
+
+    EC -->|HTTPS / WSS| ALB
+    ADMIN -->|HTTPS| ALB
+    ALB --> API1
+    ALB --> API2
+    API1 --> REDIS
+    API2 --> REDIS
+    API1 --> DB
+    API2 --> DB
 ```
 
 **Why:** stateless API nodes behind an ALB give failover + trivial scale. Redis absorbs the
@@ -325,12 +331,21 @@ Student score is never exposed by any client endpoint; results visibility is gat
 
 ## 8. Client state machine (Electron app spec)
 
-```
-LAUNCH → AUTH → LOBBY(in window, not started) → BEGIN(stamps started_at) → IN_EXAM ⇄ OFFLINE_BUFFERING
-                                                                              │
-                                              ├─ same-device relaunch → RESUME(local + server) → IN_EXAM
-                                              ├─ different-device login → REBIND(+integrity_event) → RESUME(server) → IN_EXAM
-                                              └─ deadline/manual → SUBMITTING → SUBMITTED(confirmation only, locked)
+```mermaid
+stateDiagram-v2
+    [*] --> LAUNCH
+    LAUNCH --> AUTH
+    AUTH --> LOBBY: logged in, within window, not started
+    AUTH --> RESUME: existing in-progress session found
+    LOBBY --> IN_EXAM: BEGIN (stamps started_at)
+    IN_EXAM --> OFFLINE_BUFFERING: network drop
+    OFFLINE_BUFFERING --> IN_EXAM: reconnect, replay buffer
+    IN_EXAM --> CRASH: power loss or app kill
+    CRASH --> LAUNCH: relaunch
+    RESUME --> IN_EXAM: restore (same device local plus server; new device rebind plus integrity_event)
+    IN_EXAM --> SUBMITTING: deadline reached or manual submit
+    SUBMITTING --> SUBMITTED: confirmation only, locked
+    SUBMITTED --> [*]
 ```
 
 Each transition is persisted in local SQLite so any relaunch lands in the correct state.
