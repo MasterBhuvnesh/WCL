@@ -19,9 +19,9 @@ integrity path; Tier 2 items are marked.
 
 ---
 
-## ELECTRON CLIENT (DESKTOP)
+## ELECTRON CLIENT
 
-- [ ] Scaffold Electron, React, Vite, TypeScript
+- [x] Scaffold Electron, React, Vite, TypeScript (electron-vite, at `app/client`; shadcn ui, tailwind v4, lucide already present)
 - [ ] Security baseline: `contextIsolation: true`, `nodeIntegration: false`, no remote module
 - [ ] Kiosk and fullscreen mode; DevTools disabled in production
 - [ ] Local SQLite (better-sqlite3) write-ahead buffer for answers and session state
