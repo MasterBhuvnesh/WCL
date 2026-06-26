@@ -3,9 +3,10 @@ import { useEffect, useState } from 'react'
 
 interface TitleBarProps {
   title?: string
+  showControls?: boolean
 }
 
-export function TitleBar({ title = 'WCL' }: TitleBarProps): React.JSX.Element {
+export function TitleBar({ title = 'WCL', showControls = true }: TitleBarProps): React.JSX.Element {
   const [isMaximized, setIsMaximized] = useState(false)
 
   // Window control handlers via IPC
@@ -71,7 +72,7 @@ export function TitleBar({ title = 'WCL' }: TitleBarProps): React.JSX.Element {
       <div
         style={
           {
-            display: 'flex',
+            display: showControls ? 'flex' : 'none',
             WebkitAppRegion: 'no-drag'
           } as React.CSSProperties
         }

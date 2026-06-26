@@ -1,0 +1,22 @@
+{
+  "name": "@wcl/api",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "In-memory development backend for the WCL on-center examination system.",
+  "scripts": {
+    "dev": "bun --watch src/index.ts",
+    "start": "bun src/index.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "cors": "2.8.6",
+    "express": "4.22.2"
+  },
+  "devDependencies": {
+    "@types/cors": "2.8.19",
+    "@types/express": "4.17.25",
+    "@types/node": "26.0.1",
+    "typescript": "6.0.3"
+  }
+}

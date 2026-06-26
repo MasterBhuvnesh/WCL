@@ -1,7 +1,9 @@
 import { electronApp, is, optimizer } from '@electron-toolkit/utils'
-import { app, BrowserWindow, dialog, ipcMain, shell } from 'electron'
+import { app, BrowserWindow, dialog, globalShortcut, ipcMain, Menu, shell } from 'electron'
 import path, { join } from 'path'
 import icon from '../../resources/icon.png?asset'
+import { lockdown, registerLockdownIpc } from './lockdown'
+import { registerDevModeShortcut } from './devmode'
 
 let mainWindow: BrowserWindow | null = null
 
@@ -54,6 +56,8 @@ function createWindow(): void {
     height: 670,
     show: false,
     autoHideMenuBar: true,
+    // Launch in fullscreen for the kiosk exam experience.
+    fullscreen: true,
     ...(process.platform === 'linux' ? { icon } : {}),
     title: 'WCL',
     center: true,
@@ -92,6 +96,11 @@ function createWindow(): void {
     return { action: 'deny' }
   })
 
+  // Attach kiosk lockdown enforcement (no-op until an exam lock is requested)
+  // and register the always-available Ctrl+Alt+X developer escape hatch.
+  lockdown.attach(mainWindow)
+  registerDevModeShortcut(mainWindow)
+
   // HMR for renderer base on electron-vite cli.
   // Load the remote URL for development or the local html file for production.
   if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
@@ -108,6 +117,12 @@ app.whenReady().then(() => {
   // Set app user model id for windows
   electronApp.setAppUserModelId('in.wcl.desktop')
 
+  // Remove the native application menu (kiosk lockdown).
+  Menu.setApplicationMenu(null)
+
+  // Register the examBridge IPC handlers (dev mode, exam lock, integrity).
+  registerLockdownIpc()
+
   // Default open or close DevTools by F12 in development
   // and ignore CommandOrControl + R in production.
   // see https://github.com/alex8088/electron-toolkit/tree/master/packages/utils
@@ -118,13 +133,16 @@ app.whenReady().then(() => {
   // IPC test
   ipcMain.on('ping', () => console.log('pong'))
 
-  // Window control IPC handlers
+  // Window control IPC handlers. These are ignored while strict enforcement is
+  // active so the renderer TitleBar cannot minimize or close during an exam.
   ipcMain.on('window-minimize', () => {
+    if (!lockdown.allowWindowControl()) return
     const win = BrowserWindow.getFocusedWindow()
     if (win) win.minimize()
   })
 
   ipcMain.on('window-maximize', () => {
+    if (!lockdown.allowWindowControl()) return
     const win = BrowserWindow.getFocusedWindow()
     if (win) {
       if (win.isMaximized()) {
@@ -137,6 +155,7 @@ app.whenReady().then(() => {
   })
 
   ipcMain.on('window-close', () => {
+    if (!lockdown.allowWindowControl()) return
     const win = BrowserWindow.getFocusedWindow()
     if (win) win.close()
   })
@@ -167,6 +186,11 @@ app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
     app.quit()
   }
+})
+
+// Release all global shortcut registrations (blocking set + escape hatch) on quit.
+app.on('will-quit', () => {
+  globalShortcut.unregisterAll()
 })
 
 // In this file you can include the rest of your app's specific main process
