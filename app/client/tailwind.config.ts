@@ -4,7 +4,7 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        google: ['Google Sans', 'sans-serif']
+        sans: ['Inter', 'sans-serif']
       }
     }
   }
