@@ -136,6 +136,9 @@ legend and live counts sit alongside the grid.
 - **Shortcut blocking** (best effort, while strict): swallows reload, DevTools,
   zoom, close, minimize, and quit shortcuts via `globalShortcut` and
   `before-input-event`.
+- **Copy protection:** text selection is disabled in CSS (login inputs stay
+  selectable), and the renderer blocks copy, cut, the context menu, and drag.
+  Both relax in Developer Mode.
 - **`Ctrl+Shift+Alt+X`** toggles Developer Mode via a best-effort global shortcut
   plus a reliable in-window fallback.
 - **Renderer bridge** (`src/preload/index.d.ts` declares the type; the renderer

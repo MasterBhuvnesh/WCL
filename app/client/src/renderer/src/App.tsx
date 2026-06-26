@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { HashRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { ExamProvider, useExam } from './context/ExamProvider'
 import { TitleBar } from './components/TitleBar'
@@ -79,6 +80,38 @@ function AppShell(): React.JSX.Element {
   // During an active exam (and not in developer mode) the window controls are
   // hidden; the title bar remains as a drag region only.
   const showControls = devMode || !isStarted
+
+  // Prevent selecting and copying exam content. Selection is also disabled in
+  // CSS; here we block copy, cut, the context menu, and drag. Developer mode
+  // lifts all of it (and adds the `dev-mode` class that relaxes the CSS) so the
+  // app stays debuggable.
+  useEffect(() => {
+    const root = document.documentElement
+    if (devMode) {
+      root.classList.add('dev-mode')
+      return
+    }
+    root.classList.remove('dev-mode')
+
+    const isEditable = (target: EventTarget | null): boolean =>
+      target instanceof HTMLElement &&
+      !!target.closest('input, textarea, [contenteditable="true"]')
+
+    const block = (event: Event): void => {
+      if (isEditable(event.target)) return
+      event.preventDefault()
+    }
+
+    const events: Array<keyof DocumentEventMap> = [
+      'copy',
+      'cut',
+      'contextmenu',
+      'dragstart',
+      'selectstart'
+    ]
+    events.forEach((name) => document.addEventListener(name, block))
+    return () => events.forEach((name) => document.removeEventListener(name, block))
+  }, [devMode])
 
   return (
     <div className="bg-background text-foreground flex h-screen flex-col" style={{ paddingTop: 32 }}>

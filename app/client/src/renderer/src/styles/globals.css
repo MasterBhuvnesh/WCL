@@ -148,6 +148,23 @@
   body {
     @apply bg-background text-foreground;
     font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  /* Text selection is disabled to prevent copying exam content. Editable
+     fields (the login inputs) stay selectable, and developer mode relaxes it. */
+  input,
+  textarea,
+  [contenteditable='true'] {
+    user-select: text;
+    -webkit-user-select: text;
+  }
+
+  html.dev-mode,
+  html.dev-mode * {
+    user-select: text !important;
+    -webkit-user-select: text !important;
   }
 
   /* Hide all scrollbars globally (kiosk look). */
