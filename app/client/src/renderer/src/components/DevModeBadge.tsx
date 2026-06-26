@@ -1,7 +1,7 @@
 import { Wrench } from 'lucide-react'
 
 /**
- * Persistent indicator shown while developer mode (Ctrl+Alt+X) is active, so it
+ * Persistent indicator shown while developer mode (Ctrl+Shift+Alt+X) is active, so it
  * is always obvious that exam lockdown is currently disabled.
  */
 export function DevModeBadge(): React.JSX.Element {

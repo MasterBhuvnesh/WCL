@@ -42,7 +42,7 @@ npm run dev            # launches the fullscreen Electron app
 The Exam ID / Engine field is optional and defaults to the seeded exam
 `WCL-DEMO`.
 
-**Developer override:** `Ctrl+Alt+X` toggles Developer Mode, which disables the
+**Developer override:** `Ctrl+Shift+Alt+X` toggles Developer Mode, which disables the
 kiosk lock, allows minimizing and app switching, and opens DevTools. This is the
 intended escape hatch while testing.
 
@@ -136,8 +136,8 @@ legend and live counts sit alongside the grid.
 - **Shortcut blocking** (best effort, while strict): swallows reload, DevTools,
   zoom, close, minimize, and quit shortcuts via `globalShortcut` and
   `before-input-event`.
-- **`Ctrl+Alt+X`** is a standalone global shortcut that always works and toggles
-  Developer Mode.
+- **`Ctrl+Shift+Alt+X`** toggles Developer Mode via a best-effort global shortcut
+  plus a reliable in-window fallback.
 - **Renderer bridge** (`src/preload/index.d.ts` declares the type; the renderer
   reads it via `tsconfig.web.json`):
   ```ts

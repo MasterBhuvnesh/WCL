@@ -81,7 +81,7 @@ class Lockdown {
   }
 
   /**
-   * Set by the developer override (Ctrl+Alt+X). When leaving dev mode the lock
+   * Set by the developer override (Ctrl+Shift+Alt+X). When leaving dev mode the lock
    * is re-asserted if an exam is still active.
    */
   public setDevMode(enabled: boolean): void {

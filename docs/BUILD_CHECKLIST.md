@@ -23,7 +23,7 @@ integrity path; Tier 2 items are marked.
 
 - [x] Scaffold Electron, React, Vite, TypeScript (electron-vite, at `app/client`; shadcn ui, tailwind v4, lucide already present)
 - [x] Security baseline: `contextIsolation: true`, `nodeIntegration: false`, no remote module
-- [x] Kiosk and fullscreen mode; DevTools off unless developer mode (Ctrl+Alt+X)
+- [x] Kiosk and fullscreen mode; DevTools off unless developer mode (Ctrl+Shift+Alt+X)
 - [ ] Local SQLite (better-sqlite3) write-ahead buffer (currently localStorage-backed via `lib/buffer.ts`; SQLite swap is a follow-up)
 - [ ] Device fingerprint capture for session binding
 - [x] Login screen (username, password, optional Exam ID / Engine)

@@ -44,11 +44,8 @@ export default function LoginPage(): React.JSX.Element {
     <div className="bg-muted/40 flex h-full w-full items-center justify-center p-6">
       <div className="w-full max-w-md">
         <div className="mb-6 flex flex-col items-center text-center">
-          <div className="bg-primary text-primary-foreground flex size-12 items-center justify-center rounded-xl text-lg font-bold tracking-tight">
-            WCL
-          </div>
-          <h1 className="text-foreground mt-4 text-2xl font-semibold tracking-tight">
-            Examination Login
+          <h1 className="text-foreground mt-4 text-3xl font-semibold tracking-tight">
+             WCL Examination Login
           </h1>
           <p className="text-muted-foreground mt-1 text-sm">
             Sign in with your assigned credentials to continue.

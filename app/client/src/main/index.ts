@@ -97,7 +97,7 @@ function createWindow(): void {
   })
 
   // Attach kiosk lockdown enforcement (no-op until an exam lock is requested)
-  // and register the always-available Ctrl+Alt+X developer escape hatch.
+  // and register the always-available Ctrl+Shift+Alt+X developer escape hatch.
   lockdown.attach(mainWindow)
   registerDevModeShortcut(mainWindow)
 
