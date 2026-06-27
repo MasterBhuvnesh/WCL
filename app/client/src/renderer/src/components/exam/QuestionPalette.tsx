@@ -20,8 +20,9 @@ function statusClasses(status: QuestionStatus): string {
     case 'not_answered':
       return 'bg-destructive text-white border-transparent'
     case 'marked_for_review':
-    case 'answered_marked':
       return 'bg-violet-600 text-white border-transparent'
+    case 'answered_marked':
+      return 'bg-orange-500 text-white border-transparent'
     case 'not_visited':
     default:
       return 'bg-card text-foreground border-input'
@@ -48,14 +49,14 @@ export function QuestionPalette({
     { label: 'Marked for review', swatch: 'bg-violet-600', count: counts.markedForReview },
     {
       label: 'Answered & marked',
-      swatch: 'bg-violet-600',
+      swatch: 'bg-orange-500',
       count: counts.answeredMarked
     },
     { label: 'Not visited', swatch: 'bg-card border border-input', count: counts.notVisited }
   ]
 
   return (
-    <aside className="bg-card flex h-full w-[19rem] shrink-0 flex-col border-l">
+    <aside className="bg-card flex h-full w-76 shrink-0 flex-col border-l">
       <div className="shrink-0 px-4 py-3">
         <h2 className="text-sm font-semibold">Question Palette</h2>
         <p className="text-muted-foreground text-xs">
