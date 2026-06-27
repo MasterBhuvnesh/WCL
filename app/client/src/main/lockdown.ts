@@ -131,15 +131,6 @@ class Lockdown {
     }
   }
 
-  /**
-   * The renderer requests window minimize/maximize/close via IPC. While strict
-   * enforcement is active these must be ignored. Returns true when the action is
-   * permitted, false when it is blocked.
-   */
-  public allowWindowControl(): boolean {
-    return !this.isEnforcing()
-  }
-
   // --- Window event handlers ---------------------------------------------
 
   private handleLeaveFullScreen(): void {
@@ -248,8 +239,8 @@ export const lockdown = new Lockdown()
 
 /**
  * Register the examBridge IPC handlers. Call once after app is ready.
- * The window-control channels are intentionally NOT registered here; they live
- * in index.ts and must consult lockdown.allowWindowControl().
+ * There are no window-control channels: the renderer has no title bar and the
+ * window cannot be minimized, restored, or closed by the user.
  */
 export function registerLockdownIpc(): void {
   ipcMain.handle('exam:get-dev-mode', () => lockdown.getDevMode())

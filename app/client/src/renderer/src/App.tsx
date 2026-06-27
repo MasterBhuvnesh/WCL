@@ -1,7 +1,6 @@
 import { useEffect } from 'react'
 import { HashRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { ExamProvider, useExam } from './context/ExamProvider'
-import { TitleBar } from './components/TitleBar'
 import { DevModeBadge } from './components/DevModeBadge'
 import { IntegrityOverlay } from './components/IntegrityOverlay'
 import LoginPage from './pages/LoginPage'
@@ -75,11 +74,7 @@ function AppRoutes(): React.JSX.Element {
 }
 
 function AppShell(): React.JSX.Element {
-  const { devMode, isStarted, integrityWarning, dismissIntegrityWarning } = useExam()
-
-  // During an active exam (and not in developer mode) the window controls are
-  // hidden; the title bar remains as a drag region only.
-  const showControls = devMode || !isStarted
+  const { devMode, integrityWarning, dismissIntegrityWarning } = useExam()
 
   // Prevent selecting and copying exam content. Selection is also disabled in
   // CSS; here we block copy, cut, the context menu, and drag. Developer mode
@@ -114,8 +109,7 @@ function AppShell(): React.JSX.Element {
   }, [devMode])
 
   return (
-    <div className="bg-background text-foreground flex h-screen flex-col" style={{ paddingTop: 32 }}>
-      <TitleBar title="WCL Examination" showControls={showControls} />
+    <div className="bg-background text-foreground flex h-screen flex-col">
       <main className="flex flex-1 flex-col overflow-hidden">
         <AppRoutes />
       </main>

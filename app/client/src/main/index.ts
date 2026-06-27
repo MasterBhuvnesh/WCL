@@ -133,32 +133,9 @@ app.whenReady().then(() => {
   // IPC test
   ipcMain.on('ping', () => console.log('pong'))
 
-  // Window control IPC handlers. These are ignored while strict enforcement is
-  // active so the renderer TitleBar cannot minimize or close during an exam.
-  ipcMain.on('window-minimize', () => {
-    if (!lockdown.allowWindowControl()) return
-    const win = BrowserWindow.getFocusedWindow()
-    if (win) win.minimize()
-  })
-
-  ipcMain.on('window-maximize', () => {
-    if (!lockdown.allowWindowControl()) return
-    const win = BrowserWindow.getFocusedWindow()
-    if (win) {
-      if (win.isMaximized()) {
-        win.unmaximize()
-      } else {
-        win.maximize()
-      }
-      win.webContents.send('window-maximized', win.isMaximized())
-    }
-  })
-
-  ipcMain.on('window-close', () => {
-    if (!lockdown.allowWindowControl()) return
-    const win = BrowserWindow.getFocusedWindow()
-    if (win) win.close()
-  })
+  // No window-control IPC handlers are registered: the renderer has no title bar
+  // and users must not be able to minimize, restore, or close the window. The
+  // only escape hatch is the Ctrl+Shift+Alt+X developer override (see devmode.ts).
 
   // Unix machines - Linux and Mac
   app.on('open-url', (event, url) => {
