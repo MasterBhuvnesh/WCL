@@ -1,0 +1,74 @@
+name: Build Windows
+
+# Produces the standalone portable Windows .exe for the WCL exam client.
+# Runs natively on windows-latest (no Wine), so the build matches the target OS.
+#
+# Trigger manually from the Actions tab, or automatically on a version tag (v*).
+#
+# Required repository Variables (Settings -> Secrets and variables -> Actions -> Variables):
+#   VITE_API_BASE     e.g. https://api.your-domain.com
+#   VITE_CONNECT_SRC  e.g. https://api.your-domain.com wss://api.your-domain.com
+# These are injected at build time so the packaged app talks to production and its
+# Content-Security-Policy allows that origin. If unset, the localhost defaults in
+# electron.vite.config.ts are used and the exe will only work where a backend runs
+# on localhost.
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build:
+    runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: app/client
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      # Pin Node 22 LTS: Node 26 stalls electron's postinstall zip extraction
+      # (yauzl), the issue the postinstall workaround addresses.
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      # No bun.lock is committed (package-lock.json is the tracked lockfile), so a
+      # plain install is used. Commit bun.lock and switch to --frozen-lockfile for
+      # fully reproducible CI installs.
+      - name: Install dependencies
+        run: bun install
+
+      - name: Build portable Windows exe
+        env:
+          VITE_API_BASE: ${{ vars.VITE_API_BASE }}
+          VITE_CONNECT_SRC: ${{ vars.VITE_CONNECT_SRC }}
+          # electron-builder needs a token to query its own GitHub release assets;
+          # the default GITHUB_TOKEN is sufficient and avoids anonymous rate limits.
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          bun run build
+          bunx electron-builder --win --publish never
+
+      - name: Upload portable exe
+        uses: actions/upload-artifact@v4
+        with:
+          name: wcl-portable-windows
+          path: app/client/dist/*.exe
+          if-no-files-found: error
+
+      # On a version tag, also attach the exe to a GitHub Release.
+      - name: Attach exe to release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: app/client/dist/*.exe

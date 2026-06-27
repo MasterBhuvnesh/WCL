@@ -14,6 +14,12 @@ asarUnpack:
   - resources/**
 win:
   executableName: wcl
+  # Ship a single run-anywhere portable .exe (no installer). The nsis block below
+  # stays configured but is inactive unless 'nsis' is added back to this target list.
+  target:
+    - portable
+portable:
+  artifactName: ${name}-${version}-portable.${ext}
 nsis:
   artifactName: ${name}-${version}-setup.${ext}
   shortcutName: ${productName}
