@@ -6,7 +6,7 @@ import { Wrench } from 'lucide-react'
  */
 export function DevModeBadge(): React.JSX.Element {
   return (
-    <div className="bg-warning text-warning-foreground fixed bottom-3 left-3 z-[9998] flex items-center gap-1.5 rounded-md px-3 py-1 text-xs font-semibold shadow-md">
+    <div className="bg-warning text-warning-foreground fixed bottom-3 left-3 z-9998 flex items-center gap-1.5 rounded-md px-3 py-1 text-xs font-semibold shadow-md">
       <Wrench className="size-3.5" />
       Developer Mode
     </div>
