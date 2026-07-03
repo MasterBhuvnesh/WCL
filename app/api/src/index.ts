@@ -12,6 +12,9 @@
  */
 
 import { randomUUID } from "node:crypto";
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import express, { type Request, type Response, type NextFunction } from "express";
 import cors from "cors";
 
@@ -27,7 +30,7 @@ import {
 } from "./store.ts";
 import { seededSubset } from "./lib/shuffle.ts";
 import { buildManifest } from "./lib/manifest.ts";
-import { gradeSession } from "./lib/grading.ts";
+import { gradeSession, isExactMatch } from "./lib/grading.ts";
 
 const PORT = Number(process.env.PORT ?? 4000);
 const DEV_PASSWORD = "password";
@@ -94,9 +97,76 @@ function isPastDeadline(session: Session): boolean {
 }
 
 /**
+ * Completed-exam results are appended to a JSON file so the admin panel can
+ * read them across restarts. Interim persistence until the real database lands.
+ */
+const RESULTS_FILE = join(
+  dirname(fileURLToPath(import.meta.url)),
+  "..",
+  "data",
+  "results.json",
+);
+
+// ponytail: read-modify-write of one JSON file; replace with PostgreSQL per the plan.
+function persistResult(session: Session): void {
+  try {
+    let records: unknown[] = [];
+    try {
+      const parsed = JSON.parse(readFileSync(RESULTS_FILE, "utf8"));
+      if (Array.isArray(parsed)) records = parsed;
+    } catch {
+      // First write, or an unreadable file: start a fresh array.
+    }
+    // Per-question review data, denormalized so the admin panel can render it
+    // from the file alone. This file is server-side only; isCorrect is safe here.
+    const answers = session.servedQuestionIds.map((questionId) => {
+      const question = questionsById.get(questionId);
+      const selected = session.answers.get(questionId)?.selectedOptionIds ?? [];
+      const correctIds = (question?.options ?? [])
+        .filter((option) => option.isCorrect)
+        .map((option) => option.id);
+      const outcome =
+        selected.length === 0
+          ? "unanswered"
+          : isExactMatch(selected, correctIds)
+            ? "correct"
+            : "wrong";
+      return {
+        questionId,
+        type: question?.type ?? "SCQ",
+        text: question?.text ?? "",
+        options: (question?.options ?? []).map((option) => ({
+          id: option.id,
+          text: option.text,
+          isCorrect: option.isCorrect,
+        })),
+        selectedOptionIds: selected,
+        outcome,
+      };
+    });
+
+    records.push({
+      sessionId: session.sessionId,
+      username: session.username,
+      examId: session.examId,
+      status: session.status,
+      startedAt: session.startedAt,
+      submittedAt: session.submittedAt,
+      ...session.result,
+      answers,
+    });
+    mkdirSync(dirname(RESULTS_FILE), { recursive: true });
+    writeFileSync(RESULTS_FILE, JSON.stringify(records, null, 2));
+  } catch (error) {
+    console.error("[results] failed to persist result", error);
+  }
+}
+
+/**
  * Finalize and grade a session exactly once. Used by both manual submit and
  * deadline-triggered auto-submit. Grading is server-side only; the result is
- * stored on the session and never returned to the client.
+ * stored on the session, appended to the results file for the admin panel, and
+ * never returned to the client.
  */
 function finalizeSession(session: Session, status: "submitted" | "auto_submitted"): void {
   if (session.status === "submitted" || session.status === "auto_submitted") {
@@ -105,6 +175,7 @@ function finalizeSession(session: Session, status: "submitted" | "auto_submitted
   session.status = status;
   session.submittedAt = new Date().toISOString();
   session.result = gradeSession(session, questionsById);
+  persistResult(session);
 }
 
 /**

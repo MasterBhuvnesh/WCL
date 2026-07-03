@@ -105,11 +105,11 @@ const sessionsById = new Map<string, Session>();
 export const DEMO_EXAM: ExamMeta = {
   examId: "WCL-DEMO",
   title: "WCL Practice Examination",
-  durationSeconds: 3600,
-  questionsToServe: 60,
+  durationSeconds: 300,
+  questionsToServe: 10,
   instructions: [
     "The total duration of this examination is 60 minutes. The countdown begins when you select Begin and cannot be paused.",
-    "This paper contains 60 questions. Each question carries 1 mark and there is no negative marking.",
+    "This paper contains 10 questions. Each question carries 1 mark and there is no negative marking.",
     "Questions are of two types: single correct answer and multiple correct answers. Read each question carefully before responding.",
     "For multiple correct answer questions, marks are awarded only when the selected set of options exactly matches the correct set.",
     "Your answers are saved automatically and synchronised with the server. Do not refresh or close the application during the examination.",

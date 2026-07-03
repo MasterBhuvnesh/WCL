@@ -13,7 +13,7 @@ import type { Session, SessionResult, StoredAnswer } from "../store.ts";
 /**
  * Compare two sets of option IDs for exact equality, independent of order.
  */
-function isExactMatch(selected: readonly string[], correct: readonly string[]): boolean {
+export function isExactMatch(selected: readonly string[], correct: readonly string[]): boolean {
   if (selected.length !== correct.length) {
     return false;
   }
