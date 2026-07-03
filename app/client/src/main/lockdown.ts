@@ -116,16 +116,21 @@ class Lockdown {
     this.enforcing = shouldEnforce
 
     if (shouldEnforce) {
-      // Trap the window: kiosk + fullscreen.
+      // Trap the window: kiosk + fullscreen + always-on-top above the shell.
+      // 'screen-saver' is the highest level: it keeps the window over the
+      // taskbar and any Start menu / other window the user manages to open, and
+      // combined with the blur refocus makes the desktop effectively unreachable.
       if (!win.isVisible()) win.show()
       if (win.isMinimized()) win.restore()
       if (!win.isKiosk()) win.setKiosk(true)
       if (!win.isFullScreen()) win.setFullScreen(true)
+      win.setAlwaysOnTop(true, 'screen-saver')
       win.focus()
       this.registerShortcuts()
     } else {
       // Release the trap and allow normal behaviour.
       this.unregisterShortcuts()
+      if (win.isAlwaysOnTop()) win.setAlwaysOnTop(false)
       if (win.isKiosk()) win.setKiosk(false)
       // Do not force the user out of fullscreen here; simply stop trapping them.
     }
@@ -169,6 +174,11 @@ class Lockdown {
     if (!this.isEnforcing()) return
     const win = this.window
     if (!win || win.isDestroyed()) return
+    // Re-assert the trap and pull focus back above whatever was opened.
+    win.setAlwaysOnTop(true, 'screen-saver')
+    if (!win.isFullScreen()) win.setFullScreen(true)
+    if (!win.isKiosk()) win.setKiosk(true)
+    win.show()
     win.focus()
     win.webContents.send('integrity-warning', {
       type: 'focus_lost',
