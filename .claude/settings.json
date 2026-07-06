@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(bun --version)",
+      "Bash(curl --version)",
+      "Bash(bun add *)",
+      "Bash(echo \"=== EXIT: $? ===\")"
+    ]
+  }
+}

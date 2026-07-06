@@ -67,6 +67,7 @@ integrity path; Tier 2 items are marked.
 - [x] `/exam/submit`: finalize, return confirmation only (never the score)
 - [x] `/exam/resume`: server-authoritative state (seed, manifest, answers, deadline, remaining)
 - [x] Grading engine: no negative marking, all-or-nothing, MCQ scores only on exact set match
+- [x] Persist completed-exam results to a JSON file (`app/api/data/results.json`; interim until PostgreSQL)
 - [x] Deadline enforcement by `answered_at` plus grace (availability-window cap pending)
 - [ ] Redis integration: sessions, deadline cache, leaderboard sorted set, pub/sub, idempotency keys, rate limiting
 - [ ] Question bank cached in Redis
@@ -97,14 +98,17 @@ integrity path; Tier 2 items are marked.
 
 ## ADMIN FRONTEND (NEXT.JS)
 
-- [ ] Scaffold Next.js and React, admin auth and MFA UI
+- [x] Scaffold Next.js and React (`app/admin`, shadcn and Inter, port 5000)
+- [x] Completed-exam results dashboard (stat row and results table; reads the JSON results file)
+- [x] Per-candidate answer review page (marked options against correct options, per-question outcome)
+- [ ] Admin auth and MFA UI
 - [ ] Exam and question bank management screens
 - [ ] Participant import screen
 - [ ] Live leaderboard view
 - [ ] Score edit, session reset, add-time controls
 - [ ] Exam open and close, publish results controls
 - [ ] Integrity-events dashboard
-- [ ] Results export action
+- [x] Results export action (CSV: all results, and per-candidate answers)
 
 ---
 
