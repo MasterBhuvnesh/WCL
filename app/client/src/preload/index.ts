@@ -12,10 +12,29 @@ interface ExamBridge {
   reportIntegrity(event: { type: string; meta?: Record<string, unknown> }): void
   onIntegrityWarning(cb: (info: { type: string; message: string }) => void): () => void
   setExamLock(locked: boolean): void
+  getDeviceId(): Promise<string>
+}
+
+/**
+ * Synchronous key/value bridge over the main-process store (SQLite or JSON).
+ * Synchronous so lib/buffer.ts keeps its localStorage-like API; get blocks on a
+ * round-trip, set/delete are fire-and-forget but stay FIFO-ordered before get.
+ */
+interface StoreBridge {
+  get(key: string): string | null
+  set(key: string, value: string): void
+  delete(key: string): void
+}
+
+const store: StoreBridge = {
+  get: (key) => ipcRenderer.sendSync('store:get', key),
+  set: (key, value) => ipcRenderer.send('store:set', { key, value }),
+  delete: (key) => ipcRenderer.send('store:delete', key)
 }
 
 const examBridge: ExamBridge = {
   getDevMode: () => ipcRenderer.invoke('exam:get-dev-mode'),
+  getDeviceId: () => ipcRenderer.invoke('app:get-device-id'),
   onDevModeChanged: (cb) => {
     const listener = (_event: Electron.IpcRendererEvent, enabled: boolean): void => cb(enabled)
     ipcRenderer.on('dev-mode-changed', listener)
@@ -48,6 +67,7 @@ if (process.contextIsolated) {
   try {
     contextBridge.exposeInMainWorld('electron', electronAPI)
     contextBridge.exposeInMainWorld('examBridge', examBridge)
+    contextBridge.exposeInMainWorld('store', store)
   } catch (error) {
     console.error(error)
   }
@@ -56,4 +76,6 @@ if (process.contextIsolated) {
   window.electron = electronAPI
   // @ts-ignore (define in dts)
   window.examBridge = examBridge
+  // @ts-ignore (define in dts)
+  window.store = store
 }

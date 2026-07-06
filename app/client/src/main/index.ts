@@ -4,6 +4,8 @@ import path, { join } from 'path'
 import icon from '../../resources/icon.png?asset'
 import { lockdown, registerLockdownIpc } from './lockdown'
 import { registerDevModeShortcut } from './devmode'
+import { registerStoreIpc } from './store'
+import { deviceId } from './fingerprint'
 
 let mainWindow: BrowserWindow | null = null
 
@@ -122,6 +124,12 @@ app.whenReady().then(() => {
 
   // Register the examBridge IPC handlers (dev mode, exam lock, integrity).
   registerLockdownIpc()
+
+  // Persisted write-ahead buffer / state-machine store (SQLite or JSON fallback).
+  registerStoreIpc()
+
+  // Stable device fingerprint for session binding (sent as deviceId on login).
+  ipcMain.handle('app:get-device-id', () => deviceId())
 
   // Default open or close DevTools by F12 in development
   // and ignore CommandOrControl + R in production.

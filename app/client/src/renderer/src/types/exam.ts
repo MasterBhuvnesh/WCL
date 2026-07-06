@@ -27,6 +27,8 @@ export interface LoginRequest {
   username: string
   password: string
   examId?: string
+  /** Stable machine fingerprint for session/device binding. */
+  deviceId?: string
 }
 
 export interface LoginResponse {

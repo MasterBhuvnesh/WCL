@@ -23,7 +23,11 @@ import {
 } from 'react'
 import { api, ApiError } from '../lib/api'
 import { buffer } from '../lib/buffer'
-import { HEARTBEAT_INTERVAL_MS, ANSWER_PUSH_DEBOUNCE_MS } from '../lib/config'
+import {
+  HEARTBEAT_INTERVAL_MS,
+  HEARTBEAT_MAX_BACKOFF_MS,
+  ANSWER_PUSH_DEBOUNCE_MS
+} from '../lib/config'
 import type {
   AnswerState,
   AnswerUpsert,
@@ -115,8 +119,12 @@ export function ExamProvider({ children }: { children: ReactNode }): React.JSX.E
   const statusRef = useRef<SessionStatus>('not_started')
   const syncingRef = useRef(false)
   const submittingRef = useRef(false)
+  // Reconnect backoff: 0 = healthy; each failed heartbeat bumps the step so the
+  // next attempt waits 1s, 2s, 4s … capped, with jitter. Reset on success.
+  const onlineRef = useRef(true)
+  const backoffStepRef = useRef(0)
   const pushTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const heartbeatRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const heartbeatRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const tickRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   tokenRef.current = token
@@ -152,6 +160,8 @@ export function ExamProvider({ children }: { children: ReactNode }): React.JSX.E
     syncingRef.current = true
     try {
       const res = await api.heartbeat(t, { answers: unsynced, clientTime: nowIso() })
+      onlineRef.current = true
+      backoffStepRef.current = 0
       setOnline(true)
       offsetMsRef.current = new Date(res.serverTime).getTime() - Date.now()
       deadlineMsRef.current = new Date(res.deadlineAt).getTime()
@@ -173,12 +183,24 @@ export function ExamProvider({ children }: { children: ReactNode }): React.JSX.E
         finalizeSubmitted('auto_submitted')
       }
     } catch (err) {
-      if (err instanceof ApiError && err.status === 0) setOnline(false)
+      if (err instanceof ApiError && err.status === 0) {
+        onlineRef.current = false
+        backoffStepRef.current = Math.min(backoffStepRef.current + 1, 10)
+        setOnline(false)
+      }
     } finally {
       syncingRef.current = false
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [recomputeRemaining, persistAnswers])
+
+  // Next heartbeat delay: steady cadence while healthy, exponential backoff with
+  // jitter (capped) while the API is unreachable.
+  const nextHeartbeatDelay = useCallback((): number => {
+    if (onlineRef.current || backoffStepRef.current === 0) return HEARTBEAT_INTERVAL_MS
+    const base = Math.min(1000 * 2 ** (backoffStepRef.current - 1), HEARTBEAT_MAX_BACKOFF_MS)
+    return base + Math.random() * base * 0.2
+  }, [])
 
   const scheduleSync = useCallback(() => {
     if (pushTimerRef.current) clearTimeout(pushTimerRef.current)
@@ -186,7 +208,7 @@ export function ExamProvider({ children }: { children: ReactNode }): React.JSX.E
   }, [sync])
 
   const stopLoops = useCallback(() => {
-    if (heartbeatRef.current) clearInterval(heartbeatRef.current)
+    if (heartbeatRef.current) clearTimeout(heartbeatRef.current)
     if (tickRef.current) clearInterval(tickRef.current)
     if (pushTimerRef.current) clearTimeout(pushTimerRef.current)
     heartbeatRef.current = null
@@ -199,6 +221,7 @@ export function ExamProvider({ children }: { children: ReactNode }): React.JSX.E
       stopLoops()
       setSessionStatus(status)
       statusRef.current = status
+      buffer.saveStatus(status)
       window.examBridge?.setExamLock(false)
     },
     [stopLoops]
@@ -206,7 +229,13 @@ export function ExamProvider({ children }: { children: ReactNode }): React.JSX.E
 
   const startLoops = useCallback(() => {
     stopLoops()
-    heartbeatRef.current = setInterval(() => void sync(), HEARTBEAT_INTERVAL_MS)
+    // Self-rescheduling heartbeat so the interval can stretch under backoff.
+    const scheduleHeartbeat = (): void => {
+      heartbeatRef.current = setTimeout(() => {
+        void sync().finally(scheduleHeartbeat)
+      }, nextHeartbeatDelay())
+    }
+    scheduleHeartbeat()
     tickRef.current = setInterval(() => {
       const remaining = recomputeRemaining()
       setRemainingSeconds(remaining)
@@ -346,7 +375,10 @@ export function ExamProvider({ children }: { children: ReactNode }): React.JSX.E
   const login = useCallback(async (req: LoginRequest) => {
     setError(null)
     try {
-      const res = await api.login(req)
+      // Stable machine fingerprint (main process) binds the session to this
+      // device; harmless to omit in web dev where the bridge is absent.
+      const deviceId = req.deviceId ?? (await window.examBridge?.getDeviceId().catch(() => undefined))
+      const res = await api.login({ ...req, deviceId })
       setToken(res.token)
       tokenRef.current = res.token
       sessionIdRef.current = res.sessionId
@@ -358,7 +390,8 @@ export function ExamProvider({ children }: { children: ReactNode }): React.JSX.E
         token: res.token,
         sessionId: res.sessionId,
         examId: res.exam.examId,
-        username: req.username
+        username: req.username,
+        status: res.sessionStatus
       })
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Login failed'
@@ -377,6 +410,7 @@ export function ExamProvider({ children }: { children: ReactNode }): React.JSX.E
       deadlineMsRef.current = new Date(begin.deadlineAt).getTime()
       setSessionStatus('in_progress')
       statusRef.current = 'in_progress'
+      buffer.saveStatus('in_progress')
       const m = await api.manifest(t)
       const restored = sessionIdRef.current ? buffer.loadAnswers(sessionIdRef.current) : {}
       hydrateFromManifest(m, restored)
@@ -421,6 +455,13 @@ export function ExamProvider({ children }: { children: ReactNode }): React.JSX.E
     tokenRef.current = persisted.token
     sessionIdRef.current = persisted.sessionId
     setUsername(persisted.username ?? null)
+    // Seed the state machine from the persisted snapshot so the correct screen
+    // shows immediately (and survives an offline relaunch); the server resume
+    // below overrides it as the source of truth once reachable.
+    if (persisted.status) {
+      setSessionStatus(persisted.status)
+      statusRef.current = persisted.status
+    }
     api
       .resume(persisted.token)
       .then((res) => {
@@ -443,9 +484,14 @@ export function ExamProvider({ children }: { children: ReactNode }): React.JSX.E
           startLoops()
         }
       })
-      .catch(() => {
+      .catch((err) => {
         if (cancelled) return
-        // stale/expired session: fall back to a clean login
+        // Network-unreachable: keep the persisted session so a later launch can
+        // resume; only a real auth/expiry error clears it and returns to login.
+        if (err instanceof ApiError && err.status === 0) {
+          setOnline(false)
+          return
+        }
         buffer.clearSession()
         setToken(null)
         tokenRef.current = null

@@ -1,0 +1,224 @@
+"use client";
+
+import { useCallback, useEffect, useState } from "react";
+
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { apiFetch, DEFAULT_EXAM_ID } from "@/lib/api";
+
+type Status = "not_started" | "in_progress" | "submitted" | "auto_submitted";
+interface Session {
+  sessionId: string;
+  username: string;
+  status: Status;
+  startedAt: string | null;
+  deadlineAt: string | null;
+  submittedAt: string | null;
+}
+interface SessionsResponse {
+  counts: Record<Status, number>;
+  sessions: Session[];
+}
+
+function fmt(iso: string | null): string {
+  if (!iso) return "-";
+  return new Date(iso).toLocaleString("en-IN", {
+    day: "2-digit",
+    month: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+const STATUS_LABEL: Record<Status, string> = {
+  not_started: "Not started",
+  in_progress: "In progress",
+  submitted: "Submitted",
+  auto_submitted: "Auto submitted",
+};
+
+export default function SessionsPage() {
+  const [examId, setExamId] = useState(DEFAULT_EXAM_ID);
+  const [data, setData] = useState<SessionsResponse | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
+
+  const load = useCallback(async () => {
+    setError(null);
+    try {
+      const res = await apiFetch<SessionsResponse>(
+        `/admin/sessions?examId=${encodeURIComponent(examId)}`,
+      );
+      setData(res);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to load sessions");
+    }
+  }, [examId]);
+
+  useEffect(() => {
+    void load();
+  }, [load]);
+
+  async function act(fn: () => Promise<unknown>, ok: string) {
+    setError(null);
+    setNotice(null);
+    try {
+      await fn();
+      setNotice(ok);
+      await load();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Action failed");
+    }
+  }
+
+  function reset(s: Session) {
+    if (!confirm(`Reset ${s.username}'s session? All their answers are cleared.`)) return;
+    void act(
+      () => apiFetch(`/admin/sessions/${encodeURIComponent(s.sessionId)}/reset`, { method: "POST" }),
+      "Session reset",
+    );
+  }
+
+  function addTime(s: Session) {
+    const mins = prompt(`Add how many minutes to ${s.username}?`, "10");
+    if (!mins) return;
+    const seconds = Math.round(Number(mins) * 60);
+    if (!Number.isFinite(seconds) || seconds < 1) return;
+    void act(
+      () =>
+        apiFetch(`/admin/sessions/${encodeURIComponent(s.sessionId)}/add-time`, {
+          method: "POST",
+          body: JSON.stringify({ seconds }),
+        }),
+      "Time added",
+    );
+  }
+
+  function addTimeAll() {
+    const mins = prompt("Add how many minutes to every in-progress session? (also extends the exam's available_until)", "10");
+    if (!mins) return;
+    const seconds = Math.round(Number(mins) * 60);
+    if (!Number.isFinite(seconds) || seconds < 1) return;
+    void act(
+      () =>
+        apiFetch(`/admin/exams/${encodeURIComponent(examId)}/add-time`, {
+          method: "POST",
+          body: JSON.stringify({ seconds }),
+        }),
+      "Time added to all in-progress sessions",
+    );
+  }
+
+  function editScore(s: Session) {
+    const raw = prompt(`New final score for ${s.username}?`);
+    if (raw === null) return;
+    const finalScore = Number(raw);
+    if (!Number.isInteger(finalScore) || finalScore < 0) {
+      setError("Score must be a non-negative integer");
+      return;
+    }
+    const reason = prompt("Reason for the change? (optional)") ?? undefined;
+    void act(
+      () =>
+        apiFetch(`/admin/results/${encodeURIComponent(s.sessionId)}`, {
+          method: "PATCH",
+          body: JSON.stringify({ finalScore, reason: reason || undefined }),
+        }),
+      "Score updated",
+    );
+  }
+
+  const counts = data?.counts;
+  const statOrder: Status[] = ["not_started", "in_progress", "submitted", "auto_submitted"];
+
+  return (
+    <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-6 py-10">
+      <header className="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight">Sessions</h1>
+          <p className="text-muted-foreground text-sm">Monitor and control participant sessions</p>
+        </div>
+        <div className="flex items-end gap-3">
+          <Button variant="outline" size="sm" onClick={addTimeAll}>
+            Add time to all
+          </Button>
+          <label className="flex flex-col gap-1 text-sm">
+            <span className="text-muted-foreground">Exam ID</span>
+            <Input value={examId} onChange={(e) => setExamId(e.target.value)} className="w-44" />
+          </label>
+        </div>
+      </header>
+
+      {error && <p className="text-destructive text-sm">{error}</p>}
+      {notice && <p className="text-emerald-600 text-sm dark:text-emerald-400">{notice}</p>}
+
+      <section className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+        {statOrder.map((s) => (
+          <Card key={s}>
+            <CardHeader>
+              <CardDescription>{STATUS_LABEL[s]}</CardDescription>
+              <CardTitle className="text-3xl tabular-nums">{counts?.[s] ?? 0}</CardTitle>
+            </CardHeader>
+          </Card>
+        ))}
+      </section>
+
+      <Card className="overflow-hidden py-0">
+        {data && data.sessions.length > 0 ? (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Username</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Started</TableHead>
+                <TableHead>Deadline</TableHead>
+                <TableHead>Submitted</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {data.sessions.map((s) => {
+                const submitted = s.status === "submitted" || s.status === "auto_submitted";
+                return (
+                  <TableRow key={s.sessionId}>
+                    <TableCell className="font-medium">{s.username}</TableCell>
+                    <TableCell>
+                      <Badge variant={s.status === "in_progress" ? "default" : "outline"}>
+                        {STATUS_LABEL[s.status]}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">{fmt(s.startedAt)}</TableCell>
+                    <TableCell className="text-muted-foreground">{fmt(s.deadlineAt)}</TableCell>
+                    <TableCell className="text-muted-foreground">{fmt(s.submittedAt)}</TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex justify-end gap-1.5">
+                        {s.status === "in_progress" && (
+                          <Button size="xs" variant="outline" onClick={() => addTime(s)}>
+                            Add time
+                          </Button>
+                        )}
+                        {submitted && (
+                          <Button size="xs" variant="outline" onClick={() => editScore(s)}>
+                            Edit score
+                          </Button>
+                        )}
+                        <Button size="xs" variant="destructive" onClick={() => reset(s)}>
+                          Reset
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
+        ) : (
+          <p className="text-muted-foreground px-6 py-16 text-center text-sm">No sessions for this exam yet.</p>
+        )}
+      </Card>
+    </main>
+  );
+}

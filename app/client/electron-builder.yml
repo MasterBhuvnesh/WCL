@@ -1,5 +1,6 @@
 appId: in.wcl.desktop
-productName: wcl
+productName: WCL
+asar: true
 directories:
   buildResources: build
 files:
@@ -14,7 +15,13 @@ asarUnpack:
   - resources/**
 win:
   executableName: wcl
+  icon: build/icon.ico
+  target:
+    - nsis
 nsis:
+  oneClick: false
+  perMachine: false
+  allowToChangeInstallationDirectory: true
   artifactName: ${name}-${version}-setup.${ext}
   shortcutName: ${productName}
   uninstallDisplayName: ${productName}

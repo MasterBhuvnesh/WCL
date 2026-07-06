@@ -1,0 +1,31 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: wcl-postgres
+    environment:
+      POSTGRES_USER: wcl
+      POSTGRES_PASSWORD: wcl
+      POSTGRES_DB: wcl
+    ports:
+      - "5432:5432"
+    volumes:
+      - wcl-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U wcl -d wcl"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    container_name: wcl-redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  wcl-pgdata:

@@ -9,6 +9,9 @@ export const API_BASE: string =
 /** Heartbeat cadence: sync buffered answers and reconcile the clock. */
 export const HEARTBEAT_INTERVAL_MS = 12_000
 
+/** Reconnect backoff cap while the API is unreachable (1s → 2s → 4s … → cap). */
+export const HEARTBEAT_MAX_BACKOFF_MS = 30_000
+
 /** Number of /time samples used to estimate the client-server clock offset. */
 export const TIME_SYNC_SAMPLES = 3
 

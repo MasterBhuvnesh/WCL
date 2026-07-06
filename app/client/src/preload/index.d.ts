@@ -8,11 +8,19 @@ interface ExamBridge {
   reportIntegrity(event: { type: string; meta?: Record<string, unknown> }): void
   onIntegrityWarning(cb: (info: { type: string; message: string }) => void): () => void
   setExamLock(locked: boolean): void
+  getDeviceId(): Promise<string>
+}
+
+interface StoreBridge {
+  get(key: string): string | null
+  set(key: string, value: string): void
+  delete(key: string): void
 }
 
 declare global {
   interface Window {
     electron: ElectronAPI
     examBridge: ExamBridge
+    store?: StoreBridge
   }
 }
