@@ -4,6 +4,7 @@ import { ExamProvider, useExam } from './context/ExamProvider'
 import { TitleBar } from './components/TitleBar'
 import { DevModeBadge } from './components/DevModeBadge'
 import { IntegrityOverlay } from './components/IntegrityOverlay'
+import { Watermark } from './components/Watermark'
 import LoginPage from './pages/LoginPage'
 import TermsPage from './pages/TermsPage'
 import ExamPage from './pages/ExamPage'
@@ -119,6 +120,7 @@ function AppShell(): React.JSX.Element {
       <main className="flex flex-1 flex-col overflow-hidden">
         <AppRoutes />
       </main>
+      <Watermark />
       {devMode && <DevModeBadge />}
       {integrityWarning && (
         <IntegrityOverlay message={integrityWarning.message} onDismiss={dismissIntegrityWarning} />

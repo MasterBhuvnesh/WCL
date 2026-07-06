@@ -16,6 +16,8 @@ interface PersistedSession {
   token: string
   sessionId: string
   examId: string
+  /** Optional: absent in sessions persisted before the watermark existed. */
+  username?: string
 }
 
 const SESSION_KEY = `${STORAGE_PREFIX}.session`

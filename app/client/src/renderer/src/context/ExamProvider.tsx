@@ -44,6 +44,7 @@ export interface ExamContextValue {
   integrityWarning: { type: string; message: string } | null
 
   token: string | null
+  username: string | null
   exam: ExamMeta | null
   sessionStatus: SessionStatus
   isAuthenticated: boolean
@@ -96,6 +97,7 @@ export function ExamProvider({ children }: { children: ReactNode }): React.JSX.E
   )
 
   const [token, setToken] = useState<string | null>(null)
+  const [username, setUsername] = useState<string | null>(null)
   const [exam, setExam] = useState<ExamMeta | null>(null)
   const [sessionStatus, setSessionStatus] = useState<SessionStatus>('not_started')
   const [manifest, setManifest] = useState<ExamManifest | null>(null)
@@ -351,7 +353,13 @@ export function ExamProvider({ children }: { children: ReactNode }): React.JSX.E
       setExam(res.exam)
       setSessionStatus(res.sessionStatus)
       statusRef.current = res.sessionStatus
-      buffer.saveSession({ token: res.token, sessionId: res.sessionId, examId: res.exam.examId })
+      setUsername(req.username)
+      buffer.saveSession({
+        token: res.token,
+        sessionId: res.sessionId,
+        examId: res.exam.examId,
+        username: req.username
+      })
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Login failed'
       setError(message)
@@ -412,6 +420,7 @@ export function ExamProvider({ children }: { children: ReactNode }): React.JSX.E
     setToken(persisted.token)
     tokenRef.current = persisted.token
     sessionIdRef.current = persisted.sessionId
+    setUsername(persisted.username ?? null)
     api
       .resume(persisted.token)
       .then((res) => {
@@ -521,6 +530,7 @@ export function ExamProvider({ children }: { children: ReactNode }): React.JSX.E
     devMode,
     integrityWarning,
     token,
+    username,
     exam,
     sessionStatus,
     isAuthenticated: !!token,

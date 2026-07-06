@@ -11,7 +11,7 @@ integrity path; Tier 2 items are marked.
 - [ ] Monorepo layout: `apps/api`, `apps/admin`, `apps/client`, `packages/shared-types`
 - [ ] Shared TypeScript types package (API contract, enums, status values)
 - [ ] `docker-compose.yml` for local Postgres and Redis
-- [ ] Database migrations tooling (Drizzle or Prisma)
+- [ ] Database migrations tooling (Drizzle)
 - [ ] Seed script: 1 exam, 100-question bank, 700 fake participants
 - [ ] Fast-clock test mode (env-flag time multiplier) for timer and auto-submit testing
 - [ ] CI pipeline (lint, type-check, tests, build)
@@ -42,8 +42,9 @@ integrity path; Tier 2 items are marked.
 - [x] Offline state indicator and handling
 - [ ] State-machine transitions persisted to local SQLite (localStorage for now)
 - [ ] Installer and ASAR packaging
-- [ ] Code signing (TIER 2; start certificate procurement on day 0)
+- [0] Code signing (TIER 2; start certificate procurement on day 0)
 - [ ] Full kiosk lockdown beyond fullscreen (best-effort shortcut blocking done; Alt+Tab and Windows key need a native hook or Assigned Access, TIER 2)
+- [x] Watermark based on candidate name and exam ID (tiled diagonal overlay after login)
 
 ---
 
