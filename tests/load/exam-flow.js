@@ -23,7 +23,7 @@
  *   P95_MS            p95 latency threshold (ms)    (default 800)
  *   ERROR_RATE        max unexpected-error rate     (default 0.01)
  *   PARTICIPANT_PW    shared candidate secret       (default "password")
- *   EXAM_ID           exam id                       (default WCL-DEMO)
+ *   EXAM_ID           exam id                       (default WCL-EXAM)
  *
  * Run:  k6 run tests/load/exam-flow.js
  *       SCENARIO=smoke k6 run tests/load/exam-flow.js
@@ -40,7 +40,7 @@ import { check, sleep } from "k6";
 import { Rate, Counter, Trend } from "k6/metrics";
 
 const BASE_URL = (__ENV.BASE_URL || "http://localhost:4000").replace(/\/$/, "");
-const EXAM_ID = __ENV.EXAM_ID || "WCL-DEMO";
+const EXAM_ID = __ENV.EXAM_ID || "WCL-EXAM";
 const PASSWORD = __ENV.PARTICIPANT_PW || "password";
 const VUS = parseInt(__ENV.VUS || "700", 10);
 const ANSWERS = parseInt(__ENV.ANSWERS || "15", 10);

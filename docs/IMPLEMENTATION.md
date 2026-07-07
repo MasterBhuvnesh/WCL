@@ -57,7 +57,7 @@ cd app/client && npm install && npm run dev
 ```
 
 **Seeded credentials:** participants `user001`..`user700` / `password`, exam
-`WCL-DEMO`, admin `admin@wcl.local` / `adminpass`. Environment is
+`WCL-EXAM`, admin `admin@wcl.local` / `adminpass`. Environment is
 zod-validated (`app/api/src/env.ts`, see `.env.example`); `CLOCK_MULTIPLIER`
 speeds the exam clock for testing (60 makes the hour last a minute) — verify
 it is unset for real events, the boot log prints it.
@@ -152,7 +152,8 @@ score and reason), and **device-binding release**
 - Grading is entirely server-side (all-or-nothing, no negative marking, MCQ
   exact-set match); `is_correct` and scores never reach any client.
 - Deadline enforced by `answered_at` + grace, not arrival time, so
-  before-deadline answers buffered through an outage still count.
+  before-deadline answers buffered through an outage still count — even when
+  they arrive after the session was finalized (the result is re-graded).
 - **Auto-submit jitter:** the background deadline sweep spreads finalizations
   randomly over ~3 s (scaled down by `CLOCK_MULTIPLIER`) so 700 clustered
   deadlines don't stampede the DB; per-session lazy finalize on
@@ -178,7 +179,7 @@ Two halves, one Next.js app on port 5000:
 Known smallness: the leaderboard WS shows "Offline" instead of
 auto-reconnecting (refresh reconnects), destructive actions use
 `confirm()`/`prompt()` rather than dialogs, and since no exam-CRUD endpoint
-exists, exam-scoped screens take an editable Exam ID (default `WCL-DEMO`).
+exists, exam-scoped screens take an editable Exam ID (default `WCL-EXAM`).
 
 ---
 
@@ -226,11 +227,16 @@ The deadline suite surfaced a real grading bug — see §8.
   electron-vite bundles) pass; SQLite KV roundtrip, backoff schedule, and
   fingerprint stability self-checked.
 - All four integration suites pass against a live seeded API, twice in a row.
-- **Bug found by the deadline suite:** an answer stamped before the deadline
-  (within grace) that *arrives after* the session was already finalized was
-  ACKed and stored but never graded — the score had been computed without it.
-  A fix (re-grade on late in-grace writes) is being applied; this line will
-  be updated with the verified outcome.
+- **Bug found and fixed:** an answer stamped before the deadline (within
+  grace) that *arrived after* the session was already finalized was ACKed and
+  stored but never graded — the score had been computed without it. Fixed in
+  `services/exam.ts`: all write paths (`/exam/answer` and heartbeat) now go
+  through `applyBatch`, which re-grades the finalized result after a late
+  in-grace write (skipped, with a warning log, if an admin already edited the
+  score). Verified live: the deadline suite now asserts via the admin results
+  endpoint that the late answer is counted into the regraded result, and all
+  four suites re-pass after the fix (deadline 8, offline-sync 7, stale-write
+  9, resume 25 checks).
 
 ---
 

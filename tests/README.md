@@ -27,7 +27,7 @@ docker compose up -d                 # Postgres + Redis
 cd app/api
 bun install
 bun run db:migrate                   # apply Drizzle migrations
-bun run seed                         # 1 exam (WCL-DEMO), 100-Q bank, 700 candidates, 1 admin
+bun run seed                         # 1 exam (WCL-EXAM), 100-Q bank, 700 candidates, 1 admin
 #   bun run seed --fresh             # wipe + reseed (needed before a repeat load run)
 ```
 
@@ -35,7 +35,7 @@ bun run seed                         # 1 exam (WCL-DEMO), 100-Q bank, 700 candid
 
 | Who | Username / email | Secret | Notes |
 |---|---|---|---|
-| Candidates | `user001` .. `user700` | `password` | exam id `WCL-DEMO`, all share the same secret |
+| Candidates | `user001` .. `user700` | `password` | exam id `WCL-EXAM`, all share the same secret |
 | Admin | `admin@wcl.local` | `adminpass` | no TOTP by default |
 
 The exam bank is 100 questions; each session is served a frozen 60-question

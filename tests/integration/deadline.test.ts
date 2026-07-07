@@ -15,14 +15,14 @@
  * Run:  BASE_URL=http://localhost:4600 bun tests/integration/deadline.test.ts
  */
 
-import { api, beginFresh, check, eq, manifest, answerBody, run, sleep } from "./_lib.ts";
+import { EXAM_ID, adminLogin, api, beginFresh, check, eq, manifest, answerBody, run, sleep } from "./_lib.ts";
 
 const USER = process.env.DEADLINE_USER ?? "user697";
 const GRACE_MS = 10_000; // ANSWER_GRACE_MS in services/exam.ts
 const MAX_WAIT_S = 45; // refuse to sit for a real-time hour
 
 await run("deadline", async () => {
-  const { token, begin } = await beginFresh(USER);
+  const { token, sessionId, begin } = await beginFresh(USER);
   const durationSeconds: number = begin.durationSeconds;
   const deadlineMs = Date.parse(begin.deadlineAt);
   console.log(`  info durationSeconds=${durationSeconds} deadlineAt=${begin.deadlineAt}`);
@@ -64,6 +64,15 @@ await run("deadline", async () => {
     body: answerBody(m.questions[1], [0], 3, buffered),
   });
   eq(bufd.json.acked, [m.questions[1].questionId], "before-deadline buffered answer still accepted after arrival");
+
+  // The late in-grace answer must be RE-GRADED into the result, not merely
+  // stored: the session finalized with 1 answered, so after the regrade the
+  // result must count 2 answered regardless of correctness.
+  const admin = await adminLogin();
+  const rows = (await api(`/admin/results?examId=${encodeURIComponent(EXAM_ID)}`, { token: admin })).json;
+  const row = rows.find((r: { sessionId: string }) => r.sessionId === sessionId);
+  check(row != null, "result row exists for the auto-submitted session");
+  eq(row.unanswered, m.questions.length - 2, "regrade counted the late in-grace answer");
 
   // Submit after the deadline: idempotent, returns the finalized status; the
   // already-graded session is not re-opened (still auto_submitted, not submitted).

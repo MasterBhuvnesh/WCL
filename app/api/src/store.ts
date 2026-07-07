@@ -103,7 +103,7 @@ const sessionsById = new Map<string, Session>();
  * stay thin.
  */
 export const DEMO_EXAM: ExamMeta = {
-  examId: "WCL-DEMO",
+  examId: "WCL-EXAM",
   title: "WCL Practice Examination",
   durationSeconds: 300,
   questionsToServe: 10,

@@ -1,7 +1,7 @@
 /**
  * Database seed script for the WCL examination system.
  *
- * Populates a single demonstration exam ("WCL-DEMO") with a bank of one
+ * Populates a single demonstration exam ("WCL-EXAM") with a bank of one
  * hundred deterministically generated questions, seven hundred candidate
  * participants, and one administrator account. The script is idempotent: if
  * the demo exam already exists it exits without modifying anything, unless it
@@ -44,7 +44,7 @@ type QuestionRow = typeof questions.$inferInsert;
 type OptionRow = typeof options.$inferInsert;
 type ParticipantRow = typeof participants.$inferInsert;
 
-const EXAM_ID = "WCL-DEMO";
+const EXAM_ID = "WCL-EXAM";
 const QUESTION_COUNT = 100;
 const PARTICIPANT_COUNT = 700;
 const CHUNK_SIZE = 100;
@@ -623,7 +623,7 @@ async function main(): Promise<void> {
   console.log(`Admins:        1`);
   console.log("--------------------------------------------------");
   console.log("Development credentials:");
-  console.log("  Candidates: user001 .. user700  / password  (examId WCL-DEMO)");
+  console.log("  Candidates: user001 .. user700  / password  (examId WCL-EXAM)");
   console.log("  Admin:      admin@wcl.local      / adminpass");
   console.log("--------------------------------------------------");
 

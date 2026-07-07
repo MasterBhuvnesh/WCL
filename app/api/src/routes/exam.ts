@@ -56,7 +56,7 @@ declare const Bun: {
   };
 };
 
-const DEFAULT_EXAM_ID = "WCL-DEMO";
+const DEFAULT_EXAM_ID = "WCL-EXAM";
 
 /** Wrap an async handler so rejections reach the Express error middleware. */
 function asyncHandler(

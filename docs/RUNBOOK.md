@@ -12,7 +12,8 @@ Scope of the current build:
   questions, exam open/close/publish, participant import, live leaderboard,
   sessions with reset/add-time/score-edit, integrity events). Every control is
   also available as `curl` below — the runbook documents the API form so it
-  works even if the panel is down.
+  works even if the panel is down. For the exact request and response body of
+  every route, see [API.md](API.md).
 - Anything AWS (ALB, RDS, ElastiCache, CloudWatch) is **production only /
   pending** — not built. Sections that need it say so explicitly.
 
@@ -20,7 +21,7 @@ Conventions used below:
 
 ```bash
 API=http://localhost:4000          # production: your ALB https URL
-EXAM=WCL-DEMO                       # the exam id (DEFAULT_EXAM_ID)
+EXAM=WCL-EXAM                       # the exam id (DEFAULT_EXAM_ID)
 # Obtain an admin token once; reuse it as $TOKEN for every admin call.
 TOKEN=$(curl -s $API/admin/login \
   -H 'content-type: application/json' \
@@ -48,11 +49,21 @@ Run from repo root unless a step says `app/api`.
    cd app/api
    bun install
    bun run db:migrate         # applies committed drizzle migrations
-   bun run seed               # 1 exam (WCL-DEMO), 100-Q bank, 700 participants, 1 admin
+   bun run seed               # 1 exam (WCL-EXAM), 100-Q bank, 700 participants, 1 admin
    # bun run seed --fresh     # ONLY to wipe everything and reseed. Never on exam data.
    ```
    Real participants/questions replace the seed via
    `POST /admin/participants/import` and `POST /admin/questions` (see §3).
+
+   **Production: skip `bun run seed` entirely.** With `NODE_ENV=production`
+   the API self-initializes on first boot: it creates the admin account
+   (`ADMIN_EMAIL`/`ADMIN_PASSWORD` from env) and the exam (`EXAM_ID`,
+   `EXAM_TITLE`, `EXAM_DURATION_SECONDS`, `EXAM_QUESTIONS_TO_SERVE`),
+   created **closed** — open it via §3.1 when the event starts. The server
+   refuses to boot with the default `ADMIN_PASSWORD` or `JWT_SECRET`.
+   Existing rows are never modified; changing `ADMIN_PASSWORD` later does
+   not update an existing admin. Then load questions and participants via
+   the admin panel or the two endpoints above.
 
 3. **Start the API node(s):**
    ```bash

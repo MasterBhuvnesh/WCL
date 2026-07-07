@@ -29,12 +29,12 @@ The API listens on `http://localhost:4000` by default. Re-run the seed with
 
 ## Development credentials
 
-The seed script provisions the demonstration exam `WCL-DEMO` together with the
+The seed script provisions the demonstration exam `WCL-EXAM` together with the
 following accounts.
 
 | Role      | Identifier                    | Secret      | Notes                     |
 | --------- | ----------------------------- | ----------- | ------------------------- |
-| Candidate | `user001` through `user700`   | `password`  | Log in with `examId` `WCL-DEMO`. |
+| Candidate | `user001` through `user700`   | `password`  | Log in with `examId` `WCL-EXAM`. |
 | Admin     | `admin@wcl.local`             | `adminpass` | TOTP MFA is not enrolled. |
 
 ## Fast-clock mode

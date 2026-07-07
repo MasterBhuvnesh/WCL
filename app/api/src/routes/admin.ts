@@ -46,7 +46,7 @@ declare const Bun: {
   };
 };
 
-const DEFAULT_EXAM_ID = "WCL-DEMO";
+const DEFAULT_EXAM_ID = "WCL-EXAM";
 
 export const adminRouter = Router();
 

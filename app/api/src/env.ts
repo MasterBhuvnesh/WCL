@@ -23,8 +23,34 @@ const EnvSchema = z.object({
   CLOCK_MULTIPLIER: z.coerce.number().positive().default(1),
   DB_POOL_MAX: z.coerce.number().default(20),
   LOG_LEVEL: z.string().default("info"),
+  /**
+   * Production bootstrap: on first boot against an empty database the API
+   * creates this admin account and exam itself (see bootstrap() in index.ts),
+   * so a clean deployment never needs manual SQL. Rows are only created when
+   * missing — changing these values later does not update existing rows.
+   */
+  ADMIN_EMAIL: z.string().default("admin@wcl.local"),
+  /** MUST be overridden in production; the server refuses the default. */
+  ADMIN_PASSWORD: z.string().default("adminpass"),
+  EXAM_ID: z.string().default("WCL-EXAM"),
+  EXAM_TITLE: z.string().default("WCL Examination"),
+  EXAM_DURATION_SECONDS: z.coerce.number().int().positive().default(3600),
+  EXAM_QUESTIONS_TO_SERVE: z.coerce.number().int().positive().default(60),
 });
 
 export const env = EnvSchema.parse(process.env);
 
 export const isProduction = env.NODE_ENV === "production";
+
+// Refuse to boot a production instance on dev-only secrets.
+if (isProduction) {
+  const insecure = [
+    env.JWT_SECRET === "dev-only-secret-change-me" && "JWT_SECRET",
+    env.ADMIN_PASSWORD === "adminpass" && "ADMIN_PASSWORD",
+  ].filter(Boolean);
+  if (insecure.length > 0) {
+    throw new Error(
+      `Refusing to start with default ${insecure.join(" and ")} in production. Set real values in the environment.`,
+    );
+  }
+}
