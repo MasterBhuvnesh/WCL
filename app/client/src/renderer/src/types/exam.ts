@@ -79,6 +79,8 @@ export interface AnswerUpsert {
 export interface HeartbeatRequest {
   answers: AnswerUpsert[]
   clientTime: string
+  /** Queued integrity events piggybacking on this heartbeat (no extra request). */
+  integrityEvents?: { type: string; meta?: Record<string, unknown> }[]
 }
 
 export interface HeartbeatResponse {

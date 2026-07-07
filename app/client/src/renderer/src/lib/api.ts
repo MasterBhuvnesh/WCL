@@ -94,9 +94,6 @@ export const api = {
   submit: (token: string) =>
     request<SubmitResponse>('/exam/submit', { method: 'POST', token }),
 
-  integrity: (token: string, event: { type: string; meta?: Record<string, unknown> }) =>
-    request<{ ok: boolean }>('/exam/integrity', { method: 'POST', token, body: event }),
-
   resume: (token: string) =>
     request<ResumeResponse>('/exam/resume', { method: 'POST', token })
 }

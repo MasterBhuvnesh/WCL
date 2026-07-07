@@ -166,15 +166,20 @@ Save one answer. Idempotent upsert — a replay of the same `clientSeq` or an ol
 
 Periodic sync: pushes any buffered answers, gets the authoritative clock back. Also the trigger that auto-submits a session past its deadline. Participant token required.
 
-**Request** (answers optional — `{}` is a pure clock check)
+**Request** (both fields optional — `{}` is a pure clock check)
 
 ```json
 {
   "answers": [
     { "questionId": "Q-002", "selectedOptionIds": ["O-007"], "status": "answered", "clientSeq": 18, "answeredAt": "2026-07-07T10:06:00.000Z" }
+  ],
+  "integrityEvents": [
+    { "type": "focus_lost", "meta": { "count": 3 } }
   ]
 }
 ```
+
+`integrityEvents` (max 50) lets queued proctoring events piggyback on the heartbeat instead of costing their own requests; the client coalesces repeats of the same type into one entry with a `count`.
 
 **Response `200`**
 

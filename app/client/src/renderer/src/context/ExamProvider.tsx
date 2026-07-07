@@ -126,6 +126,8 @@ export function ExamProvider({ children }: { children: ReactNode }): React.JSX.E
   const pushTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const heartbeatRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const tickRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  // Integrity events waiting to ride the next heartbeat (see queueIntegrity).
+  const integrityQueueRef = useRef<Array<{ type: string; meta?: Record<string, unknown> }>>([])
 
   tokenRef.current = token
   answersRef.current = answers
@@ -157,9 +159,17 @@ export function ExamProvider({ children }: { children: ReactNode }): React.JSX.E
         answeredAt
       }))
 
+    // Integrity events ride along on the heartbeat; on failure they go back
+    // on the queue for the next attempt.
+    const events = integrityQueueRef.current.splice(0)
+
     syncingRef.current = true
     try {
-      const res = await api.heartbeat(t, { answers: unsynced, clientTime: nowIso() })
+      const res = await api.heartbeat(t, {
+        answers: unsynced,
+        clientTime: nowIso(),
+        ...(events.length ? { integrityEvents: events } : {})
+      })
       onlineRef.current = true
       backoffStepRef.current = 0
       setOnline(true)
@@ -183,6 +193,7 @@ export function ExamProvider({ children }: { children: ReactNode }): React.JSX.E
         finalizeSubmitted('auto_submitted')
       }
     } catch (err) {
+      integrityQueueRef.current.unshift(...events)
       if (err instanceof ApiError && err.status === 0) {
         onlineRef.current = false
         backoffStepRef.current = Math.min(backoffStepRef.current + 1, 10)
@@ -506,32 +517,22 @@ export function ExamProvider({ children }: { children: ReactNode }): React.JSX.E
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // --- Integrity upload: every recorded event is POSTed to /exam/integrity.
-  // A small queue holds events through offline gaps or a not-yet-logged-in
-  // state and retries on the next flush (new event, reconnect, or login).
-  const integrityQueueRef = useRef<Array<{ type: string; meta?: Record<string, unknown> }>>([])
-  const flushIntegrity = useCallback((): void => {
-    const t = tokenRef.current
-    if (!t) return
-    const pending = integrityQueueRef.current.splice(0)
-    for (const event of pending) {
-      api.integrity(t, event).catch(() => {
-        integrityQueueRef.current.push(event) // kept for the next flush
-      })
-    }
-  }, [])
+  // --- Integrity queue: events ride the next heartbeat (see sync()) instead
+  // of costing their own requests. Repeats of the same type coalesce into one
+  // entry with a count, so an Alt-Tab flood becomes a single row.
   const queueIntegrity = useCallback(
     (event: { type: string; meta?: Record<string, unknown> }): void => {
-      integrityQueueRef.current.push(event)
-      flushIntegrity()
+      const queue = integrityQueueRef.current
+      const last = queue[queue.length - 1]
+      if (last && last.type === event.type) {
+        last.meta = { ...last.meta, count: Number(last.meta?.count ?? 1) + 1 }
+      } else {
+        queue.push({ ...event })
+      }
+      scheduleSync() // debounced heartbeat so proctors still see it promptly
     },
-    [flushIntegrity]
+    [scheduleSync]
   )
-
-  // Flush anything queued before login as soon as the session token exists.
-  useEffect(() => {
-    if (token) flushIntegrity()
-  }, [token, flushIntegrity])
 
   // --- Electron bridge: dev mode, integrity warnings, lifecycle ----------------
   useEffect(() => {
@@ -571,7 +572,7 @@ export function ExamProvider({ children }: { children: ReactNode }): React.JSX.E
   useEffect(() => {
     const on = (): void => {
       setOnline(true)
-      flushIntegrity() // retry integrity events that queued up while offline
+      scheduleSync() // push queued answers/integrity events promptly on reconnect
     }
     const off = (): void => setOnline(false)
     window.addEventListener('online', on)
@@ -580,7 +581,7 @@ export function ExamProvider({ children }: { children: ReactNode }): React.JSX.E
       window.removeEventListener('online', on)
       window.removeEventListener('offline', off)
     }
-  }, [flushIntegrity])
+  }, [scheduleSync])
 
   useEffect(() => stopLoops, [stopLoops])
 

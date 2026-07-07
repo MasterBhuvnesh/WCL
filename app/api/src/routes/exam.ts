@@ -85,13 +85,17 @@ const answerEntrySchema = z.object({
   answeredAt: z.string(),
 });
 
-const heartbeatSchema = z.object({
-  answers: z.array(answerEntrySchema).optional(),
-});
-
 const integritySchema = z.object({
   type: z.string(),
   meta: z.record(z.string(), z.unknown()).optional(),
+});
+
+const heartbeatSchema = z.object({
+  answers: z.array(answerEntrySchema).optional(),
+  // Integrity events piggyback on the heartbeat so cheat-attempt reporting
+  // never costs an extra request. The client coalesces repeats client-side;
+  // the cap bounds a hostile client.
+  integrityEvents: z.array(integritySchema).max(50).optional(),
 });
 
 // --- Router ----------------------------------------------------------------
@@ -317,8 +321,21 @@ examRouter.post(
     const session = await getSession(sessionId);
     if (!session) throw new HttpError(401, "Session not found");
 
-    const body = req.body as { answers?: AnswerEntry[] };
+    const body = req.body as {
+      answers?: AnswerEntry[];
+      integrityEvents?: { type: string; meta?: Record<string, unknown> }[];
+    };
     const acked = body.answers?.length ? await applyBatch(session, body.answers) : [];
+
+    if (body.integrityEvents?.length) {
+      await db.insert(integrityEvents).values(
+        body.integrityEvents.map((e) => ({
+          sessionId: session.id,
+          type: e.type,
+          meta: e.meta ?? null,
+        })),
+      );
+    }
 
     const now = Date.now();
     const deadlineMs = session.deadlineAt ? Date.parse(session.deadlineAt) : null;
