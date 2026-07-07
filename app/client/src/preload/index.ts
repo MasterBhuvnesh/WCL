@@ -11,6 +11,7 @@ interface ExamBridge {
   onDevModeChanged(cb: (enabled: boolean) => void): () => void
   reportIntegrity(event: { type: string; meta?: Record<string, unknown> }): void
   onIntegrityWarning(cb: (info: { type: string; message: string }) => void): () => void
+  onIntegrityEvent(cb: (event: { type: string; meta?: Record<string, unknown> }) => void): () => void
   setExamLock(locked: boolean): void
   getDeviceId(): Promise<string>
 }
@@ -53,6 +54,16 @@ const examBridge: ExamBridge = {
     ipcRenderer.on('integrity-warning', listener)
     return () => {
       ipcRenderer.removeListener('integrity-warning', listener)
+    }
+  },
+  onIntegrityEvent: (cb) => {
+    const listener = (
+      _event: Electron.IpcRendererEvent,
+      event: { type: string; meta?: Record<string, unknown> }
+    ): void => cb(event)
+    ipcRenderer.on('integrity-event', listener)
+    return () => {
+      ipcRenderer.removeListener('integrity-event', listener)
     }
   },
   setExamLock: (locked) => {

@@ -93,7 +93,10 @@ class Lockdown {
     return this.integrityEvents
   }
 
-  /** Record an integrity event: log it and buffer it in memory for later upload. */
+  /**
+   * Record an integrity event: log it, buffer it, and forward it to the
+   * renderer, which owns the session token and uploads it to /exam/integrity.
+   */
   public recordIntegrity(event: { type: string; meta?: Record<string, unknown> }): void {
     const entry: IntegrityEvent = {
       type: event.type,
@@ -102,6 +105,7 @@ class Lockdown {
     }
     this.integrityEvents.push(entry)
     console.log('[integrity]', JSON.stringify(entry))
+    this.window?.webContents.send('integrity-event', { type: entry.type, meta: entry.meta })
   }
 
   /**

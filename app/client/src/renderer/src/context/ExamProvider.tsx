@@ -506,6 +506,33 @@ export function ExamProvider({ children }: { children: ReactNode }): React.JSX.E
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
+  // --- Integrity upload: every recorded event is POSTed to /exam/integrity.
+  // A small queue holds events through offline gaps or a not-yet-logged-in
+  // state and retries on the next flush (new event, reconnect, or login).
+  const integrityQueueRef = useRef<Array<{ type: string; meta?: Record<string, unknown> }>>([])
+  const flushIntegrity = useCallback((): void => {
+    const t = tokenRef.current
+    if (!t) return
+    const pending = integrityQueueRef.current.splice(0)
+    for (const event of pending) {
+      api.integrity(t, event).catch(() => {
+        integrityQueueRef.current.push(event) // kept for the next flush
+      })
+    }
+  }, [])
+  const queueIntegrity = useCallback(
+    (event: { type: string; meta?: Record<string, unknown> }): void => {
+      integrityQueueRef.current.push(event)
+      flushIntegrity()
+    },
+    [flushIntegrity]
+  )
+
+  // Flush anything queued before login as soon as the session token exists.
+  useEffect(() => {
+    if (token) flushIntegrity()
+  }, [token, flushIntegrity])
+
   // --- Electron bridge: dev mode, integrity warnings, lifecycle ----------------
   useEffect(() => {
     const bridge = window.examBridge
@@ -513,26 +540,39 @@ export function ExamProvider({ children }: { children: ReactNode }): React.JSX.E
     void bridge.getDevMode().then(setDevMode)
     const offDev = bridge.onDevModeChanged(setDevMode)
     const offWarn = bridge.onIntegrityWarning((info) => setIntegrityWarning(info))
+    // Main-process lockdown events (focus_lost, shortcut_blocked, ...) come
+    // back over this channel; the renderer owns the token, so it uploads them.
+    const offEvent = bridge.onIntegrityEvent?.(queueIntegrity)
     return () => {
       offDev?.()
       offWarn?.()
+      offEvent?.()
     }
-  }, [])
+  }, [queueIntegrity])
 
   // Renderer-side integrity signal: tab/window hidden during an active exam.
   useEffect(() => {
     const onVisibility = (): void => {
       if (document.visibilityState === 'hidden' && statusRef.current === 'in_progress') {
-        window.examBridge?.reportIntegrity({ type: 'visibility_hidden' })
+        if (window.examBridge) {
+          // Main records it and echoes it back via onIntegrityEvent for upload.
+          window.examBridge.reportIntegrity({ type: 'visibility_hidden' })
+        } else {
+          // Web dev build: no bridge, upload directly.
+          queueIntegrity({ type: 'visibility_hidden' })
+        }
       }
     }
     document.addEventListener('visibilitychange', onVisibility)
     return () => document.removeEventListener('visibilitychange', onVisibility)
-  }, [])
+  }, [queueIntegrity])
 
   // online/offline indicator from the platform
   useEffect(() => {
-    const on = (): void => setOnline(true)
+    const on = (): void => {
+      setOnline(true)
+      flushIntegrity() // retry integrity events that queued up while offline
+    }
     const off = (): void => setOnline(false)
     window.addEventListener('online', on)
     window.addEventListener('offline', off)
@@ -540,7 +580,7 @@ export function ExamProvider({ children }: { children: ReactNode }): React.JSX.E
       window.removeEventListener('online', on)
       window.removeEventListener('offline', off)
     }
-  }, [])
+  }, [flushIntegrity])
 
   useEffect(() => stopLoops, [stopLoops])
 
