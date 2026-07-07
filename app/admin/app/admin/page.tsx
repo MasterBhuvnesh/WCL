@@ -5,7 +5,7 @@ import { useState } from "react";
 import { ListChecks, ShieldAlert, Trophy, UploadCloud, Users } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tray, TrayInner, TrayLabel, TrayStrip } from "@/components/ui/tray";
 import { apiFetch } from "@/lib/api";
 
 const SCREENS = [
@@ -46,34 +46,34 @@ export default function OverviewPage() {
       <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {SCREENS.map(({ href, label, desc, icon: Icon }) => (
           <Link key={href} href={href}>
-            <Card className="h-full transition-colors hover:bg-muted/40">
-              <CardHeader>
+            <Tray className="h-full transition-colors hover:bg-muted">
+              <TrayInner className="flex flex-1 flex-col gap-2">
                 <Icon className="size-5 text-muted-foreground" />
-                <CardTitle className="mt-2">{label}</CardTitle>
-                <CardDescription>{desc}</CardDescription>
-              </CardHeader>
-            </Card>
+                <TrayLabel className="text-foreground">{label}</TrayLabel>
+              </TrayInner>
+              <TrayStrip className="text-xs text-muted-foreground">{desc}</TrayStrip>
+            </Tray>
           </Link>
         ))}
       </section>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Multi-factor authentication</CardTitle>
-          <CardDescription>
+      <Tray>
+        <TrayStrip className="px-3 py-2">
+          <TrayLabel>Multi-factor authentication</TrayLabel>
+        </TrayStrip>
+        <TrayInner className="flex flex-col gap-3">
+          <p className="text-muted-foreground text-sm">
             Generate a TOTP secret for this admin account. Add it to an authenticator app, then a
             code is required at every future sign-in.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="flex flex-col gap-3">
+          </p>
           <div>
-            <Button onClick={setupMfa} disabled={busy} variant="outline" size="sm">
+            <Button onClick={setupMfa} disabled={busy} variant="cta" size="sm">
               {busy ? "Generating…" : mfa ? "Regenerate secret" : "Set up MFA"}
             </Button>
           </div>
           {error && <p className="text-destructive text-sm">{error}</p>}
           {mfa && (
-            <div className="flex flex-col gap-1 rounded-lg border border-border bg-muted/40 p-3 text-sm">
+            <div className="flex flex-col gap-1 rounded-lg bg-muted/50 p-3 text-sm">
               <p>
                 <span className="text-muted-foreground">Secret: </span>
                 <code className="font-mono">{mfa.secret}</code>
@@ -87,8 +87,8 @@ export default function OverviewPage() {
               </p>
             </div>
           )}
-        </CardContent>
-      </Card>
+        </TrayInner>
+      </Tray>
     </main>
   );
 }

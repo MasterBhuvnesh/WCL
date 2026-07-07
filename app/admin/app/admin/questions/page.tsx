@@ -5,8 +5,8 @@ import { Check, Plus, Trash2, X } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input, Textarea } from "@/components/ui/input";
+import { Tray, TrayInner, TrayLabel, TrayStrip } from "@/components/ui/tray";
 import { apiFetch, DEFAULT_EXAM_ID } from "@/lib/api";
 import { cn } from "@/lib/utils";
 
@@ -45,19 +45,19 @@ function blankDraft(): Draft {
 export default function QuestionsPage() {
   const [examId, setExamId] = useState(DEFAULT_EXAM_ID);
   const [questions, setQuestions] = useState<Question[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [draft, setDraft] = useState<Draft | null>(null);
+  const [q, setQ] = useState("");
 
   const load = useCallback(async () => {
-    setLoading(true);
-    setError(null);
     try {
       const rows = await apiFetch<Question[]>(
         `/admin/questions?examId=${encodeURIComponent(examId)}`,
       );
       setQuestions(rows);
+      setError(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load questions");
     } finally {
@@ -66,6 +66,7 @@ export default function QuestionsPage() {
   }, [examId]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- setState happens only after await (data fetch); the sync path sets no state
     void load();
   }, [load]);
 
@@ -119,6 +120,14 @@ export default function QuestionsPage() {
     }
   }
 
+  const needle = q.trim().toLowerCase();
+  const shownQuestions = needle
+    ? questions.filter(
+        (question) =>
+          question.text.toLowerCase().includes(needle) || question.id.toLowerCase().includes(needle),
+      )
+    : questions;
+
   return (
     <main className="mx-auto flex w-full max-w-4xl flex-1 flex-col gap-6 px-6 py-10">
       <header className="flex flex-wrap items-end justify-between gap-4">
@@ -135,14 +144,14 @@ export default function QuestionsPage() {
       {error && <p className="text-destructive text-sm">{error}</p>}
       {notice && <p className="text-emerald-600 text-sm dark:text-emerald-400">{notice}</p>}
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Exam controls</CardTitle>
-          <CardDescription>
-            Availability window and result visibility for <code>{examId}</code>
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="flex flex-wrap gap-2">
+      <Tray>
+        <TrayStrip className="flex flex-wrap items-center justify-between gap-2 px-3 py-2">
+          <TrayLabel>Exam controls</TrayLabel>
+          <span className="text-xs text-muted-foreground">
+            Availability window and result visibility for <code className="font-mono">{examId}</code>
+          </span>
+        </TrayStrip>
+        <TrayInner className="flex flex-wrap gap-2">
           <Button variant="outline" size="sm" onClick={() => control(`/admin/exams/${encodeURIComponent(examId)}/open`, undefined, "Exam opened")}>
             Open exam
           </Button>
@@ -155,18 +164,26 @@ export default function QuestionsPage() {
           <Button variant="outline" size="sm" onClick={() => control(`/admin/exams/${encodeURIComponent(examId)}/publish`, { published: false }, "Results hidden")}>
             Unpublish results
           </Button>
-        </CardContent>
-      </Card>
+        </TrayInner>
+      </Tray>
 
-      <section className="flex items-center justify-between">
+      <section className="flex flex-wrap items-center justify-between gap-3">
         <h2 className="text-sm font-medium">
           Question bank {loading ? "" : `(${questions.length})`}
         </h2>
-        {!draft && (
-          <Button size="sm" onClick={() => setDraft(blankDraft())}>
-            <Plus /> New question
-          </Button>
-        )}
+        <div className="flex items-center gap-2">
+          <Input
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            placeholder="Search question text or id…"
+            className="h-7 w-64"
+          />
+          {!draft && (
+            <Button variant="cta" size="sm" onClick={() => setDraft(blankDraft())}>
+              <Plus /> New question
+            </Button>
+          )}
+        </div>
       </section>
 
       {draft && (
@@ -179,26 +196,26 @@ export default function QuestionsPage() {
       )}
 
       <div className="flex flex-col gap-3">
-        {questions.map((q) => (
-          <Card key={q.id} className="py-4">
-            <CardContent className="flex flex-col gap-2 px-4">
-              <div className="flex items-start justify-between gap-3">
-                <p className="text-muted-foreground text-xs font-medium">
-                  {q.id} · {q.type} · {q.marks} mark{q.marks === 1 ? "" : "s"}
-                </p>
-                <div className="flex gap-1.5">
-                  <Button
-                    size="xs"
-                    variant="outline"
-                    onClick={() => setDraft({ id: q.id, type: q.type, text: q.text, marks: q.marks, options: q.options.map((o) => ({ ...o })) })}
-                  >
-                    Edit
-                  </Button>
-                  <Button size="xs" variant="destructive" onClick={() => remove(q.id)}>
-                    <Trash2 />
-                  </Button>
-                </div>
+        {shownQuestions.map((q) => (
+          <Tray key={q.id}>
+            <TrayStrip className="flex items-center justify-between gap-3 px-3 py-2">
+              <TrayLabel>
+                {q.id} · {q.type} · {q.marks} mark{q.marks === 1 ? "" : "s"}
+              </TrayLabel>
+              <div className="flex gap-1.5">
+                <Button
+                  size="xs"
+                  variant="outline"
+                  onClick={() => setDraft({ id: q.id, type: q.type, text: q.text, marks: q.marks, options: q.options.map((o) => ({ ...o })) })}
+                >
+                  Edit
+                </Button>
+                <Button size="xs" variant="destructive" onClick={() => remove(q.id)}>
+                  <Trash2 />
+                </Button>
               </div>
+            </TrayStrip>
+            <TrayInner className="flex flex-col gap-2">
               <p className="text-sm font-medium">{q.text}</p>
               <ul className="flex flex-col gap-1">
                 {q.options.map((o) => (
@@ -218,11 +235,13 @@ export default function QuestionsPage() {
                   </li>
                 ))}
               </ul>
-            </CardContent>
-          </Card>
+            </TrayInner>
+          </Tray>
         ))}
-        {!loading && questions.length === 0 && (
-          <p className="text-muted-foreground py-8 text-center text-sm">No questions for this exam yet.</p>
+        {!loading && shownQuestions.length === 0 && (
+          <p className="text-muted-foreground py-8 text-center text-sm">
+            {questions.length > 0 ? "No questions match the search." : "No questions for this exam yet."}
+          </p>
         )}
       </div>
     </main>
@@ -254,8 +273,11 @@ function QuestionEditor({
   }
 
   return (
-    <Card className="py-4">
-      <CardContent className="flex flex-col gap-3 px-4">
+    <Tray>
+      <TrayStrip className="px-3 py-2">
+        <TrayLabel>{draft.id ? `Edit ${draft.id}` : "New question"}</TrayLabel>
+      </TrayStrip>
+      <TrayInner className="flex flex-col gap-3">
         <div className="flex flex-wrap items-end gap-3">
           <label className="flex flex-col gap-1 text-sm">
             <span className="text-muted-foreground">Type</span>
@@ -327,7 +349,7 @@ function QuestionEditor({
           <Button size="sm" onClick={onSave}>Save question</Button>
           <Button size="sm" variant="ghost" onClick={onCancel}>Cancel</Button>
         </div>
-      </CardContent>
-    </Card>
+      </TrayInner>
+    </Tray>
   );
 }

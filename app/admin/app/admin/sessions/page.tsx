@@ -4,8 +4,9 @@ import { useCallback, useEffect, useState } from "react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Pager } from "@/components/ui/pager";
+import { Tray, TrayInner, TrayLabel, TrayStrip } from "@/components/ui/tray";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { apiFetch, DEFAULT_EXAM_ID } from "@/lib/api";
 
@@ -33,6 +34,8 @@ function fmt(iso: string | null): string {
   });
 }
 
+const PAGE = 50;
+
 const STATUS_LABEL: Record<Status, string> = {
   not_started: "Not started",
   in_progress: "In progress",
@@ -45,20 +48,23 @@ export default function SessionsPage() {
   const [data, setData] = useState<SessionsResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+  const [q, setQ] = useState("");
+  const [offset, setOffset] = useState(0);
 
   const load = useCallback(async () => {
-    setError(null);
     try {
       const res = await apiFetch<SessionsResponse>(
         `/admin/sessions?examId=${encodeURIComponent(examId)}`,
       );
       setData(res);
+      setError(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load sessions");
     }
   }, [examId]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- setState happens only after await (data fetch); the sync path sets no state
     void load();
   }, [load]);
 
@@ -112,6 +118,7 @@ export default function SessionsPage() {
     );
   }
 
+  /* Edit score — Bhuvnesh has told to comment it out for now.
   function editScore(s: Session) {
     const raw = prompt(`New final score for ${s.username}?`);
     if (raw === null) return;
@@ -130,9 +137,15 @@ export default function SessionsPage() {
       "Score updated",
     );
   }
+  */
 
   const counts = data?.counts;
   const statOrder: Status[] = ["not_started", "in_progress", "submitted", "auto_submitted"];
+  const needle = q.trim().toLowerCase();
+  const filteredSessions = (data?.sessions ?? []).filter(
+    (s) => !needle || s.username.toLowerCase().includes(needle),
+  );
+  const shownSessions = filteredSessions.slice(offset, offset + PAGE);
 
   return (
     <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-6 py-10">
@@ -142,12 +155,12 @@ export default function SessionsPage() {
           <p className="text-muted-foreground text-sm">Monitor and control participant sessions</p>
         </div>
         <div className="flex items-end gap-3">
-          <Button variant="outline" size="sm" onClick={addTimeAll}>
+          <Button variant="cta" size="sm" onClick={addTimeAll}>
             Add time to all
           </Button>
           <label className="flex flex-col gap-1 text-sm">
             <span className="text-muted-foreground">Exam ID</span>
-            <Input value={examId} onChange={(e) => setExamId(e.target.value)} className="w-44" />
+            <Input value={examId} onChange={(e) => { setOffset(0); setExamId(e.target.value); }} className="w-44" />
           </label>
         </div>
       </header>
@@ -157,17 +170,29 @@ export default function SessionsPage() {
 
       <section className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         {statOrder.map((s) => (
-          <Card key={s}>
-            <CardHeader>
-              <CardDescription>{STATUS_LABEL[s]}</CardDescription>
-              <CardTitle className="text-3xl tabular-nums">{counts?.[s] ?? 0}</CardTitle>
-            </CardHeader>
-          </Card>
+          <Tray key={s}>
+            <TrayInner className="space-y-2">
+              <TrayLabel>{STATUS_LABEL[s]}</TrayLabel>
+              <p className="font-mono text-[28px] leading-none font-medium tracking-tight tabular-nums">
+                {counts?.[s] ?? 0}
+              </p>
+            </TrayInner>
+          </Tray>
         ))}
       </section>
 
-      <Card className="overflow-hidden py-0">
-        {data && data.sessions.length > 0 ? (
+      <Tray>
+        <TrayStrip className="flex items-center justify-between gap-3 px-3 py-2">
+          <TrayLabel>Recent sessions</TrayLabel>
+          <Input
+            value={q}
+            onChange={(e) => { setOffset(0); setQ(e.target.value); }}
+            placeholder="Search username…"
+            className="h-7 w-56"
+          />
+        </TrayStrip>
+        <TrayInner className="overflow-hidden p-0">
+        {shownSessions.length > 0 ? (
           <Table>
             <TableHeader>
               <TableRow>
@@ -180,8 +205,7 @@ export default function SessionsPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {data.sessions.map((s) => {
-                const submitted = s.status === "submitted" || s.status === "auto_submitted";
+              {shownSessions.map((s) => {
                 return (
                   <TableRow key={s.sessionId}>
                     <TableCell className="font-medium">{s.username}</TableCell>
@@ -200,11 +224,13 @@ export default function SessionsPage() {
                             Add time
                           </Button>
                         )}
-                        {submitted && (
+                        {/* Edit score — Bhuvnesh has told to comment it out for now.
+                        {(s.status === "submitted" || s.status === "auto_submitted") && (
                           <Button size="xs" variant="outline" onClick={() => editScore(s)}>
                             Edit score
                           </Button>
                         )}
+                        */}
                         <Button size="xs" variant="destructive" onClick={() => reset(s)}>
                           Reset
                         </Button>
@@ -216,9 +242,15 @@ export default function SessionsPage() {
             </TableBody>
           </Table>
         ) : (
-          <p className="text-muted-foreground px-6 py-16 text-center text-sm">No sessions for this exam yet.</p>
+          <p className="text-muted-foreground px-6 py-16 text-center text-sm">
+            {data && data.sessions.length > 0 ? "No sessions match the search." : "No sessions for this exam yet."}
+          </p>
         )}
-      </Card>
+        </TrayInner>
+        <TrayStrip className="flex items-center justify-between">
+          <Pager offset={offset} total={filteredSessions.length} page={PAGE} onOffset={setOffset} />
+        </TrayStrip>
+      </Tray>
     </main>
   );
 }

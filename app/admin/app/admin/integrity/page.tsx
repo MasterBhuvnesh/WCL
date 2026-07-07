@@ -3,8 +3,8 @@
 import { useCallback, useEffect, useState } from "react";
 
 import { Badge } from "@/components/ui/badge";
-import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Tray, TrayInner, TrayLabel, TrayStrip } from "@/components/ui/tray";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { apiFetch, DEFAULT_EXAM_ID } from "@/lib/api";
 
@@ -32,25 +32,32 @@ export default function IntegrityPage() {
   const [typeFilter, setTypeFilter] = useState("");
   const [events, setEvents] = useState<Event[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [q, setQ] = useState("");
 
   const load = useCallback(async () => {
-    setError(null);
     try {
       const rows = await apiFetch<Event[]>(
         `/admin/integrity-events?examId=${encodeURIComponent(examId)}&limit=500`,
       );
       setEvents(rows);
+      setError(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load events");
     }
   }, [examId]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- setState happens only after await (data fetch); the sync path sets no state
     void load();
   }, [load]);
 
-  // Type filter is client-side (the endpoint has no type param).
-  const shown = typeFilter ? events.filter((e) => e.type === typeFilter) : events;
+  // Type and username filters are client-side (the endpoint has no type param).
+  const needle = q.trim().toLowerCase();
+  const shown = events.filter(
+    (e) =>
+      (!typeFilter || e.type === typeFilter) &&
+      (!needle || e.username.toLowerCase().includes(needle)),
+  );
   const types = Array.from(new Set(events.map((e) => e.type))).sort();
 
   return (
@@ -85,7 +92,17 @@ export default function IntegrityPage() {
 
       {error && <p className="text-destructive text-sm">{error}</p>}
 
-      <Card className="overflow-hidden py-0">
+      <Tray>
+        <TrayStrip className="flex items-center justify-between gap-3 px-3 py-2">
+          <TrayLabel>Events</TrayLabel>
+          <Input
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            placeholder="Search username…"
+            className="h-7 w-56"
+          />
+        </TrayStrip>
+        <TrayInner className="overflow-hidden p-0">
         {shown.length > 0 ? (
           <Table>
             <TableHeader>
@@ -114,7 +131,8 @@ export default function IntegrityPage() {
         ) : (
           <p className="text-muted-foreground px-6 py-16 text-center text-sm">No integrity events recorded.</p>
         )}
-      </Card>
+        </TrayInner>
+      </Tray>
     </main>
   );
 }

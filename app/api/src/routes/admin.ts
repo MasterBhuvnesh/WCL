@@ -187,7 +187,7 @@ adminRouter.get(
       .innerJoin(participants, eq(examSessions.participantId, participants.id))
       .where(eq(examSessions.examId, examId))
       .orderBy(desc(examSessions.createdAt))
-      .limit(200);
+      .limit(1000);
 
     res.json({
       counts,
@@ -772,7 +772,23 @@ adminRouter.delete(
   }),
 );
 
-// --- 15. Participant import ---------------------------------------------
+// --- 15. Participants ------------------------------------------------------
+
+adminRouter.get(
+  "/participants",
+  h(async (_req, res) => {
+    const rows = await db
+      .select({
+        id: participants.id,
+        username: participants.username,
+        displayName: participants.displayName,
+        createdAt: participants.createdAt,
+      })
+      .from(participants)
+      .orderBy(asc(participants.username));
+    res.json(rows.map((r) => ({ ...r, createdAt: iso(r.createdAt) })));
+  }),
+);
 
 const importBody = z.object({
   participants: z

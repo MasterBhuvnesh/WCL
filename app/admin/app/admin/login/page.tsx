@@ -4,8 +4,8 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Tray, TrayInner, TrayLabel, TrayStrip } from "@/components/ui/tray";
 import { apiFetch, setToken } from "@/lib/api";
 
 export default function LoginPage() {
@@ -40,12 +40,11 @@ export default function LoginPage() {
 
   return (
     <main className="flex flex-1 items-center justify-center px-6 py-10">
-      <Card className="w-full max-w-sm">
-        <CardHeader>
-          <CardTitle>Admin sign in</CardTitle>
-          <CardDescription>WCL examination administration</CardDescription>
-        </CardHeader>
-        <CardContent>
+      <Tray className="w-full max-w-sm">
+        <TrayStrip className="px-3 py-2">
+          <TrayLabel>Admin sign in</TrayLabel>
+        </TrayStrip>
+        <TrayInner>
           <form onSubmit={onSubmit} className="flex flex-col gap-3">
             <label className="flex flex-col gap-1 text-sm">
               <span className="text-muted-foreground">Email</span>
@@ -79,12 +78,15 @@ export default function LoginPage() {
               />
             </label>
             {error && <p className="text-destructive text-sm">{error}</p>}
-            <Button type="submit" disabled={busy} className="mt-1">
+            <Button type="submit" variant="cta" disabled={busy} className="mt-1">
               {busy ? "Signing in…" : "Sign in"}
             </Button>
           </form>
-        </CardContent>
-      </Card>
+        </TrayInner>
+        <TrayStrip className="py-2 text-xs text-muted-foreground">
+          WCL examination administration
+        </TrayStrip>
+      </Tray>
     </main>
   );
 }

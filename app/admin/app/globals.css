@@ -128,3 +128,24 @@
     @apply font-sans;
   }
 }
+
+/* Ultra-thin scrollbar: 4px hairline, barely-there thumb, invisible track.
+   Thumb derives from --foreground so it adapts to dark mode automatically. */
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: color-mix(in oklab, var(--foreground) 10%, transparent);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--background);
+}
+
+/* Track must match the surface it scrolls over — the sidebar nav sits on --card. */
+aside nav::-webkit-scrollbar-track {
+  background: var(--card);
+}

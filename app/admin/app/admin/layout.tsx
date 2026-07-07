@@ -23,6 +23,7 @@ export default function AdminLayout({
 
   useEffect(() => {
     if (isLogin) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- client-only auth gate: the token lives in localStorage, so readiness can only be known after mount
       setReady(true);
       return;
     }

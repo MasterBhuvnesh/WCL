@@ -19,6 +19,11 @@ const buttonVariants = cva(
         destructive:
           "bg-destructive/10 text-destructive hover:bg-destructive/20 focus-visible:border-destructive/40 focus-visible:ring-destructive/20 dark:bg-destructive/20 dark:hover:bg-destructive/30 dark:focus-visible:ring-destructive/40",
         link: "text-primary underline-offset-4 hover:underline",
+        // Glossy pills: radial gradient pools light at the top rim, inset
+        // shadow catches it. No borders, no outer shadow. Black = selected
+        // state; blue = the one primary CTA per screen.
+        pill: "rounded-full border-0 bg-[radial-gradient(ellipse_120%_100%_at_50%_-20%,#6b6b6b,#000_65%)] text-white shadow-[inset_0_1px_2px_rgba(255,255,255,0.25)]",
+        cta: "rounded-full border-0 bg-[radial-gradient(ellipse_120%_100%_at_50%_-20%,#4d94ff,#1d6ff2_65%)] text-white shadow-[inset_0_1px_2px_rgba(255,255,255,0.4)] hover:brightness-110",
       },
       size: {
         default:

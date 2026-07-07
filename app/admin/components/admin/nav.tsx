@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
   ClipboardList,
+  FileCheck2,
   ListChecks,
   LogOut,
   ShieldAlert,
@@ -21,6 +22,7 @@ const LINKS = [
   { href: "/admin/participants", label: "Participants", icon: Users },
   { href: "/admin/leaderboard", label: "Leaderboard", icon: Trophy },
   { href: "/admin/sessions", label: "Sessions", icon: UploadCloud },
+  { href: "/admin/results", label: "Results", icon: FileCheck2 },
   { href: "/admin/integrity", label: "Integrity", icon: ShieldAlert },
 ];
 
@@ -45,9 +47,9 @@ export function AdminNav() {
               key={href}
               href={href}
               className={cn(
-                "flex items-center gap-2 rounded-lg px-2 py-1.5 text-sm transition-colors",
+                "flex items-center gap-2 rounded-full px-3 py-1.5 text-sm transition-colors",
                 active
-                  ? "bg-muted font-medium text-foreground"
+                  ? "bg-[radial-gradient(ellipse_120%_100%_at_50%_-20%,#6b6b6b,#000_65%)] font-medium text-white shadow-[inset_0_1px_2px_rgba(255,255,255,0.25)]"
                   : "text-muted-foreground hover:bg-muted/50 hover:text-foreground",
               )}
             >
@@ -59,7 +61,7 @@ export function AdminNav() {
       </nav>
       <button
         onClick={logout}
-        className="flex items-center gap-2 rounded-lg px-2 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground"
+        className="flex items-center gap-2 rounded-full px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground"
       >
         <LogOut className="size-4" /> Sign out
       </button>

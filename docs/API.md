@@ -545,6 +545,18 @@ Delete a question and its options. Refused if any session was ever served it.
 
 **Response `200`:** `{ "ok": true }` · **Errors:** `404` unknown, `409` already served.
 
+### GET /admin/participants
+
+All participants, sorted by username.
+
+**Response `200`**
+
+```json
+[
+  { "id": "a1b2...", "username": "user001", "displayName": "Candidate 001", "createdAt": "2026-07-07T09:00:00.000Z" }
+]
+```
+
 ### POST /admin/participants/import
 
 Bulk import (max 1000 per call). Secrets are argon2id-hashed on ingest; existing usernames are skipped, duplicates within the batch collapse to the first. Audited.
