@@ -90,7 +90,8 @@ Real event: set the `.env` first — `NODE_ENV=production`, a long random
 `EXAM_QUESTIONS_TO_SERVE`), the common candidate password
 (`PARTICIPANT_PASSWORD`), and the image store (`S3_ENDPOINT`, `S3_BUCKET`,
 `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`, and `S3_PUBLIC_URL` — set this to
-your public S3/CloudFront base URL so candidates' image links resolve) — then:
+your public S3/CloudFront base URL so candidates' image links resolve; the
+full Floci→AWS switch is step-by-step in [S3_MIGRATION.md](./S3_MIGRATION.md)) — then:
 
 ```bash
 bun run start
