@@ -594,10 +594,13 @@ async function main(): Promise<void> {
   const participantRows: ParticipantRow[] = [];
   for (let n = 1; n <= PARTICIPANT_COUNT; n += 1) {
     const suffix = String(n).padStart(3, "0");
+    // Deterministic demo DOB: cycles through 2004-2007, all 12 months, days 1-28.
+    const dob = `${2004 + (n % 4)}-${String(1 + (n % 12)).padStart(2, "0")}-${String(1 + (n % 28)).padStart(2, "0")}`;
     participantRows.push({
       username: `user${suffix}`,
       secretHash: participantSecretHash,
       displayName: `Candidate ${suffix}`,
+      dob,
     });
   }
   for (const part of chunk(participantRows, CHUNK_SIZE)) {

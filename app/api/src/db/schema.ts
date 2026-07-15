@@ -10,6 +10,7 @@
 import {
   bigserial,
   boolean,
+  date,
   index,
   integer,
   jsonb,
@@ -87,6 +88,8 @@ export const participants = pgTable(
     /** Argon2id hash (Bun.password). Plaintext secrets are never stored. */
     secretHash: text("secret_hash").notNull(),
     displayName: text("display_name"),
+    /** Date of birth (YYYY-MM-DD). Used by the external hall-ticket site; not part of login. */
+    dob: date("dob", { mode: "string" }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (table) => [uniqueIndex("participants_username_uq").on(table.username)],
