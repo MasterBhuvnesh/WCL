@@ -4,6 +4,8 @@ import { AlertCircle, Clock, FileText, Loader2 } from 'lucide-react'
 import { useExam } from '@renderer/context/ExamProvider'
 import { Button } from '@renderer/components/ui/button'
 import { Separator } from '@renderer/components/ui/separator'
+import wclLogo from '@renderer/assets/images/wcl.png'
+import rbuLogo from '@renderer/assets/images/rbu.png'
 
 /**
  * Pre-exam lobby. Presents the exam metadata, the authored instructions, and
@@ -46,19 +48,25 @@ export default function TermsPage(): React.JSX.Element {
   return (
     <div className="flex h-full w-full flex-col">
       <header className="border-b px-6 py-5">
-        <div className="mx-auto w-full max-w-3xl">
-          <h1 className="text-foreground text-2xl font-semibold tracking-tight">
-            {exam?.title ?? 'Examination'}
-          </h1>
-          <div className="text-muted-foreground mt-2 flex flex-wrap items-center gap-x-5 gap-y-1 text-sm">
-            <span className="flex items-center gap-1.5">
-              <Clock className="size-4" />
-              {durationMinutes} minute{durationMinutes === 1 ? '' : 's'}
-            </span>
-            <span className="flex items-center gap-1.5">
-              <FileText className="size-4" />
-              {questionCount} question{questionCount === 1 ? '' : 's'}
-            </span>
+        <div className="mx-auto flex w-full max-w-3xl items-center justify-between gap-4">
+          <div>
+            <h1 className="text-foreground text-2xl font-semibold tracking-tight">
+              {exam?.title ?? 'Examination'}
+            </h1>
+            <div className="text-muted-foreground mt-2 flex flex-wrap items-center gap-x-5 gap-y-1 text-sm">
+              <span className="flex items-center gap-1.5">
+                <Clock className="size-4" />
+                {durationMinutes} minute{durationMinutes === 1 ? '' : 's'}
+              </span>
+              <span className="flex items-center gap-1.5">
+                <FileText className="size-4" />
+                {questionCount} question{questionCount === 1 ? '' : 's'}
+              </span>
+            </div>
+          </div>
+          <div className="flex shrink-0 items-center gap-4">
+            <img src={wclLogo} alt="Western Coalfields Limited" className="h-10 object-contain" />
+            <img src={rbuLogo} alt="Ramdeobaba University" className="h-10 object-contain" />
           </div>
         </div>
       </header>

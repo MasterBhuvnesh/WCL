@@ -4,6 +4,8 @@ import { useExam } from '@renderer/context/ExamProvider'
 import { Button } from '@renderer/components/ui/button'
 import { api } from '@renderer/lib/api'
 import { buffer } from '@renderer/lib/buffer'
+import wclLogo from '@renderer/assets/images/wcl.png'
+import rbuLogo from '@renderer/assets/images/rbu.png'
 import { cn } from '@renderer/lib/utils'
 import type { ExamResult, ResultOutcome } from '@renderer/types/exam'
 
@@ -120,6 +122,10 @@ export default function SubmittedPage(): React.JSX.Element {
                 Examination submitted
               </h1>
               {exam?.title && <p className="text-muted-foreground text-sm">{exam.title}</p>}
+            </div>
+            <div className="ml-auto flex shrink-0 items-center gap-4">
+              <img src={wclLogo} alt="Western Coalfields Limited" className="h-10 object-contain" />
+              <img src={rbuLogo} alt="Ramdeobaba University" className="h-10 object-contain" />
             </div>
           </div>
 

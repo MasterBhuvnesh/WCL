@@ -40,7 +40,12 @@ export default function LoginPage() {
 
   return (
     <main className="flex flex-1 items-center justify-center px-6 py-10">
-      <Tray className="w-full max-w-sm">
+      <div className="flex w-full max-w-sm flex-col gap-6">
+        <div className="flex items-center justify-center gap-5">
+          <img src="/assets/wcl.png" alt="Western Coalfields Limited" className="h-12 object-contain" />
+          <img src="/assets/rbu.png" alt="Ramdeobaba University" className="h-12 object-contain" />
+        </div>
+        <Tray className="w-full">
         <TrayStrip className="px-3 py-2">
           <TrayLabel>Admin sign in</TrayLabel>
         </TrayStrip>
@@ -86,7 +91,8 @@ export default function LoginPage() {
         <TrayStrip className="py-2 text-xs text-muted-foreground">
           WCL examination administration
         </TrayStrip>
-      </Tray>
+        </Tray>
+      </div>
     </main>
   );
 }

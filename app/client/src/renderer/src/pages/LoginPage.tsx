@@ -4,6 +4,8 @@ import { AlertCircle, KeyRound, Loader2, User, WifiOff } from 'lucide-react'
 import { useExam } from '@renderer/context/ExamProvider'
 import { Button } from '@renderer/components/ui/button'
 import { Input } from '@renderer/components/ui/input'
+import wclLogo from '@renderer/assets/images/wcl.png'
+import rbuLogo from '@renderer/assets/images/rbu.png'
 
 /**
  * Authentication screen. Collects the candidate credentials and an optional
@@ -44,6 +46,10 @@ export default function LoginPage(): React.JSX.Element {
     <div className="bg-muted/40 flex h-full w-full items-center justify-center p-6">
       <div className="w-full max-w-md">
         <div className="mb-6 flex flex-col items-center text-center">
+          <div className="flex items-center justify-center gap-6">
+            <img src={wclLogo} alt="Western Coalfields Limited" className="h-14 object-contain" />
+            <img src={rbuLogo} alt="Ramdeobaba University" className="h-14 object-contain" />
+          </div>
           <h1 className="text-foreground mt-4 text-3xl font-semibold tracking-tight">
              WCL Examination Login
           </h1>
@@ -128,10 +134,6 @@ export default function LoginPage(): React.JSX.Element {
             </Button>
           </form>
         </div>
-
-        <p className="text-muted-foreground mt-4 text-center text-xs">
-          Demo access: any username with password &quot;password&quot;.
-        </p>
 
         {!online && (
           <div className="text-muted-foreground mt-3 flex items-center justify-center gap-1.5 text-xs">
