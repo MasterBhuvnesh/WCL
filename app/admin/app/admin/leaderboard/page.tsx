@@ -2,12 +2,15 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 
+import { Download } from "lucide-react";
+
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Pager } from "@/components/ui/pager";
 import { Tray, TrayInner, TrayLabel, TrayStrip } from "@/components/ui/tray";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { adminWsUrl, apiFetch, DEFAULT_EXAM_ID } from "@/lib/api";
+import { adminWsUrl, apiFetch, API_BASE, DEFAULT_EXAM_ID, getToken } from "@/lib/api";
 
 interface Entry {
   rank: number;
@@ -71,6 +74,24 @@ export default function LeaderboardPage() {
     return () => ws.close();
   }, [examId]);
 
+  async function exportCsv() {
+    try {
+      const res = await fetch(
+        `${API_BASE}/admin/export/leaderboard.csv?examId=${encodeURIComponent(examId)}`,
+        { headers: { authorization: `Bearer ${getToken() ?? ""}` } },
+      );
+      if (!res.ok) throw new Error(`Export failed (${res.status})`);
+      const url = URL.createObjectURL(await res.blob());
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `leaderboard-${examId}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Export failed");
+    }
+  }
+
   const needle = q.trim().toLowerCase();
   const shownEntries = (board?.entries ?? []).filter(
     (e) =>
@@ -87,6 +108,11 @@ export default function LeaderboardPage() {
           <p className="text-muted-foreground text-sm">Live standings · {board?.total ?? 0} ranked</p>
         </div>
         <div className="flex items-end gap-3">
+          {(board?.total ?? 0) > 0 && (
+            <Button variant="outline" size="sm" onClick={exportCsv}>
+              <Download /> Export CSV
+            </Button>
+          )}
           <label className="flex flex-col gap-1 text-sm">
             <span className="text-muted-foreground">Exam ID</span>
             <Input value={examId} onChange={(e) => { setOffset(0); setExamId(e.target.value); }} className="w-44" />

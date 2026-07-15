@@ -119,8 +119,13 @@ class Lockdown {
     const shouldEnforce = this.isEnforcing()
     this.enforcing = shouldEnforce
 
-    if (shouldEnforce) {
-      // Trap the window: kiosk + fullscreen + always-on-top above the shell.
+    if (this.devMode) {
+      // (a) Developer mode: release everything so the app stays debuggable.
+      this.unregisterShortcuts()
+      if (win.isAlwaysOnTop()) win.setAlwaysOnTop(false)
+      if (win.isKiosk()) win.setKiosk(false)
+    } else if (shouldEnforce) {
+      // (b) Active exam: trap the window with kiosk + fullscreen + always-on-top.
       // 'screen-saver' is the highest level: it keeps the window over the
       // taskbar and any Start menu / other window the user manages to open, and
       // combined with the blur refocus makes the desktop effectively unreachable.
@@ -132,11 +137,12 @@ class Lockdown {
       win.focus()
       this.registerShortcuts()
     } else {
-      // Release the trap and allow normal behaviour.
+      // (c) Pre-exam / post-submit (non-dev): assert kiosk + fullscreen only.
+      // No always-on-top, no global shortcut grabbing, and no integrity events.
       this.unregisterShortcuts()
       if (win.isAlwaysOnTop()) win.setAlwaysOnTop(false)
-      if (win.isKiosk()) win.setKiosk(false)
-      // Do not force the user out of fullscreen here; simply stop trapping them.
+      if (!win.isKiosk()) win.setKiosk(true)
+      if (!win.isFullScreen()) win.setFullScreen(true)
     }
   }
 
@@ -152,18 +158,20 @@ class Lockdown {
   // --- Window event handlers ---------------------------------------------
 
   private handleLeaveFullScreen(): void {
-    if (!this.isEnforcing()) return
+    // Re-assert kiosk whenever we are not in dev mode (login screen included);
+    // only an active exam records it as an integrity event.
+    if (this.devMode) return
     const win = this.window
     if (!win || win.isDestroyed()) return
     // Immediately restore and re-enter fullscreen.
     if (!win.isFullScreen()) win.setFullScreen(true)
     if (!win.isKiosk()) win.setKiosk(true)
     win.focus()
-    this.recordIntegrity({ type: 'fullscreen_exit_blocked' })
+    if (this.isEnforcing()) this.recordIntegrity({ type: 'fullscreen_exit_blocked' })
   }
 
   private handleMinimize(): void {
-    if (!this.isEnforcing()) return
+    if (this.devMode) return
     const win = this.window
     if (!win || win.isDestroyed()) return
     // Immediately restore and re-enter fullscreen.
@@ -171,7 +179,7 @@ class Lockdown {
     if (!win.isFullScreen()) win.setFullScreen(true)
     if (!win.isKiosk()) win.setKiosk(true)
     win.focus()
-    this.recordIntegrity({ type: 'minimize_blocked' })
+    if (this.isEnforcing()) this.recordIntegrity({ type: 'minimize_blocked' })
   }
 
   private handleBlur(): void {

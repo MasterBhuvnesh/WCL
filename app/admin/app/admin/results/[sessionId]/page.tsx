@@ -21,6 +21,7 @@ interface ReviewAnswer {
   questionId: string;
   type: "SCQ" | "MCQ" | null;
   text: string;
+  imageUrl?: string | null;
   options: ReviewOption[];
   selectedOptionIds: string[];
   outcome: "correct" | "wrong" | "unanswered";
@@ -185,6 +186,10 @@ export default function ResultReviewPage() {
                     </TrayStrip>
                     <TrayInner className="flex flex-col gap-3">
                       <p className="text-sm font-medium">{answer.text}</p>
+                      {answer.imageUrl && (
+                        // plain img: external emulator host, next/image would need remote-pattern config
+                        <img src={answer.imageUrl} alt="Question image" className="max-h-72 rounded-lg border object-contain" />
+                      )}
                       <ul className="flex flex-col gap-1.5">
                         {answer.options.map((option) => {
                           const isSelected = selected.has(option.id);

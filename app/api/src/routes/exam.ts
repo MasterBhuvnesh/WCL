@@ -37,6 +37,7 @@ import {
   applyBatch,
   buildExamBlock,
   buildManifest,
+  buildResultReview,
   cacheSession,
   finalize,
   getBank,
@@ -411,6 +412,24 @@ examRouter.post(
       serverTime: new Date().toISOString(),
       status: session.status,
     });
+  }),
+);
+
+/** GET /exam/result: candidate result review (outcome + marks only; never correct answers). */
+examRouter.get(
+  "/exam/result",
+  requireParticipant,
+  asyncHandler(async (req, res) => {
+    const { sessionId } = req.participant!;
+    const session = await getSession(sessionId);
+    if (!session) throw new HttpError(401, "Session not found");
+    if (session.status !== "submitted" && session.status !== "auto_submitted") {
+      throw new HttpError(409, "Exam not submitted");
+    }
+    // Grading can lag the status flip; a null review means "retry shortly".
+    const review = await buildResultReview(session);
+    if (!review) throw new HttpError(409, "Result not ready");
+    res.status(200).json(review);
   }),
 );
 

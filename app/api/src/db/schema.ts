@@ -15,6 +15,7 @@ import {
   integer,
   jsonb,
   pgTable,
+  real,
   text,
   timestamp,
   uniqueIndex,
@@ -61,6 +62,8 @@ export const questions = pgTable(
     type: text("type").$type<QuestionType>().notNull(),
     text: text("text").notNull(),
     marks: integer("marks").notNull().default(1),
+    /** Optional image shown with the question (S3 object URL). Null when text-only. */
+    imageUrl: text("image_url"),
   },
   (table) => [index("questions_exam_idx").on(table.examId)],
 );
@@ -154,7 +157,7 @@ export const results = pgTable(
     examId: text("exam_id")
       .notNull()
       .references(() => exams.id),
-    score: integer("score").notNull(),
+    score: real("score").notNull(),
     maxScore: integer("max_score").notNull(),
     correct: integer("correct").notNull(),
     wrong: integer("wrong").notNull(),

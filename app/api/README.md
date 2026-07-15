@@ -5,7 +5,8 @@ Express, PostgreSQL, and Redis.
 
 ## Prerequisites
 
-- **Docker** and Docker Compose, used to run PostgreSQL and Redis locally.
+- **Docker** and Docker Compose, used to run PostgreSQL, Redis, and Floci (a
+  local S3-compatible store for question images) locally.
 - **Bun** version 1.1 or newer, used to install dependencies and run the server.
 
 ## Quick start
@@ -13,8 +14,11 @@ Express, PostgreSQL, and Redis.
 Run these commands from the repository root, then from `app/api`:
 
 ```bash
-# From the repository root: start PostgreSQL and Redis.
+# From the repository root: start PostgreSQL, Redis, and Floci.
 docker compose up -d
+
+# One-time: create the image bucket in Floci (only needed for question images).
+curl -X PUT http://localhost:4566/wcl-images
 
 # From app/api: install dependencies, apply migrations, seed, and run.
 cd app/api
@@ -34,7 +38,7 @@ following accounts.
 
 | Role      | Identifier                    | Secret      | Notes                     |
 | --------- | ----------------------------- | ----------- | ------------------------- |
-| Candidate | `user001` through `user700`   | `password`  | Log in with `examId` `WCL-EXAM`. |
+| Candidate | `user001` through `user700`   | `wclrbu2026` | Shared common exam password; log in with `examId` `WCL-EXAM`. |
 | Admin     | `admin@wcl.local`             | `adminpass` | TOTP MFA is not enrolled. |
 
 ## Fast-clock mode
@@ -47,6 +51,14 @@ so `CLOCK_MULTIPLIER=60` makes the hour-long exam last one minute. A value of
 ```bash
 CLOCK_MULTIPLIER=60 bun run dev
 ```
+
+## Scoring
+
+Each correct answer scores the question's marks; **each wrong answer deducts 0.5
+marks**; unanswered questions score zero. Totals may therefore go negative. After
+submitting, a candidate can fetch their own score and a per-question breakdown
+(outcome and marks only — never the correct answers) from `GET /exam/result`;
+this is available immediately and does not require results to be published.
 
 ## Environment variables
 
@@ -61,6 +73,12 @@ defaults, so a local run works without an `.env` file.
 | `JWT_SECRET`      | `dev-only-secret-change-me`            | HMAC secret for session tokens. Override in production. |
 | `CLOCK_MULTIPLIER`| `1`                                    | Fast-clock factor. `60` makes a 1-hour exam last 1 minute. |
 | `LOG_LEVEL`       | `info`                                 | Pino log level (`debug`, `info`, `warn`, `error`).      |
+| `PARTICIPANT_PASSWORD` | `wclrbu2026`                      | Common candidate password for seeded users and secret-less imports. |
+| `S3_ENDPOINT`     | `http://localhost:4566`                | S3-compatible endpoint for question images (Floci locally). |
+| `S3_BUCKET`       | `wcl-images`                           | Bucket that holds uploaded question images.             |
+| `S3_ACCESS_KEY_ID`| `test`                                 | S3 access key (any value works for Floci).              |
+| `S3_SECRET_ACCESS_KEY` | `test`                            | S3 secret key (any value works for Floci).              |
+| `S3_PUBLIC_URL`   | `${S3_ENDPOINT}/${S3_BUCKET}`          | Public base URL for image links; override when fronting real S3/CloudFront. |
 
 ## Endpoint summary
 
@@ -76,6 +94,7 @@ defaults, so a local run works without an `.env` file.
 | POST   | `/exam/answer`    | Save or update a single answer.                    |
 | POST   | `/exam/heartbeat` | Autosave a batch of answers and keep the session alive. |
 | POST   | `/exam/submit`    | Submit the exam.                                   |
+| GET    | `/exam/result`    | Candidate's own score and per-question review (no correct answers). |
 | POST   | `/exam/resume`    | Resume an in-progress session.                     |
 | POST   | `/exam/integrity` | Report a client integrity event.                   |
 
@@ -100,14 +119,14 @@ defaults, so a local run works without an `.env` file.
 | GET    | `/admin/questions`                  | Question bank for an exam.                    |
 | POST   | `/admin/questions`                  | Create or update questions.                  |
 | DELETE | `/admin/questions/:questionId`      | Delete a question.                           |
+| POST   | `/admin/upload`                     | Upload a question image; returns its URL.    |
 | POST   | `/admin/participants/import`        | Bulk import participants.                     |
 
 ## Postman usage
 
 A ready-made collection lives in the `postman` directory at the repository root.
 
-1. Import both `postman/WCL.postman_collection.json` and
-   `postman/WCL.local.postman_environment.json` into Postman.
+1. Import both `postman/WCL.postman_collection.json` into Postman.
 2. Select the **WCL Local** environment.
 3. Run the **Candidate > Login** request first. Its test script stores the
    returned `token` and `sessionId` in the environment, which the remaining

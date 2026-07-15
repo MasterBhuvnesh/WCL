@@ -63,7 +63,7 @@ async function bootstrap(): Promise<void> {
       instructions: [
         `The examination duration is ${minutes} minutes, measured from the moment you begin.`,
         `You will be served ${env.EXAM_QUESTIONS_TO_SERVE} questions.`,
-        "There is no negative marking; questions left unanswered simply score zero.",
+        "Each wrong answer deducts 0.5 marks; unanswered questions score zero.",
         "For multiple correct questions, the mark is awarded only when your selection exactly matches the correct set of options.",
         "Your responses are saved automatically and synchronised with the server at regular intervals.",
         "The server clock is authoritative; the timer shown on your screen is provided only for guidance.",

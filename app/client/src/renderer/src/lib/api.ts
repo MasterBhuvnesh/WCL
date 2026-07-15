@@ -10,6 +10,7 @@ import type {
   AnswerUpsert,
   BeginResponse,
   ExamManifest,
+  ExamResult,
   HeartbeatRequest,
   HeartbeatResponse,
   LoginRequest,
@@ -95,5 +96,7 @@ export const api = {
     request<SubmitResponse>('/exam/submit', { method: 'POST', token }),
 
   resume: (token: string) =>
-    request<ResumeResponse>('/exam/resume', { method: 'POST', token })
+    request<ResumeResponse>('/exam/resume', { method: 'POST', token }),
+
+  result: (token: string) => request<ExamResult>('/exam/result', { token })
 }

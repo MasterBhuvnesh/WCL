@@ -27,5 +27,16 @@ services:
       timeout: 3s
       retries: 10
 
+  # S3-compatible object storage for question images (Floci emulator locally;
+  # swap for real S3 via env vars in production).
+  floci:
+    image: floci/floci:latest
+    container_name: wcl-floci
+    ports:
+      - "4566:4566"
+    volumes:
+      - wcl-floci-data:/app/data
+
 volumes:
   wcl-pgdata:
+  wcl-floci-data:

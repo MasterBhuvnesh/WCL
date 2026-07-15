@@ -58,8 +58,10 @@ function createWindow(): void {
     height: 670,
     show: false,
     autoHideMenuBar: true,
-    // Launch in fullscreen for the kiosk exam experience.
+    // Launch in kiosk + fullscreen for the exam experience (login included).
     fullscreen: true,
+    kiosk: true,
+    resizable: false,
     ...(process.platform === 'linux' ? { icon } : {}),
     title: 'WCL',
     center: true,

@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input, Textarea } from "@/components/ui/input";
 import { Tray, TrayInner, TrayLabel, TrayStrip } from "@/components/ui/tray";
-import { apiFetch, DEFAULT_EXAM_ID } from "@/lib/api";
+import { API_BASE, apiFetch, DEFAULT_EXAM_ID, getToken } from "@/lib/api";
 import { cn } from "@/lib/utils";
 
 interface Option {
@@ -20,6 +20,7 @@ interface Question {
   type: "SCQ" | "MCQ";
   text: string;
   marks: number;
+  imageUrl?: string | null;
   options: Option[];
 }
 type Draft = {
@@ -27,6 +28,7 @@ type Draft = {
   type: "SCQ" | "MCQ";
   text: string;
   marks: number;
+  imageUrl?: string | null;
   options: Option[];
 };
 
@@ -95,6 +97,7 @@ export default function QuestionsPage() {
               type: draft.type,
               text: draft.text,
               marks: draft.marks,
+              imageUrl: draft.imageUrl ?? null,
               options: draft.options,
             },
           ],
@@ -190,6 +193,7 @@ export default function QuestionsPage() {
         <QuestionEditor
           draft={draft}
           onChange={setDraft}
+          onError={setError}
           onCancel={() => setDraft(null)}
           onSave={saveDraft}
         />
@@ -206,7 +210,7 @@ export default function QuestionsPage() {
                 <Button
                   size="xs"
                   variant="outline"
-                  onClick={() => setDraft({ id: q.id, type: q.type, text: q.text, marks: q.marks, options: q.options.map((o) => ({ ...o })) })}
+                  onClick={() => setDraft({ id: q.id, type: q.type, text: q.text, marks: q.marks, imageUrl: q.imageUrl, options: q.options.map((o) => ({ ...o })) })}
                 >
                   Edit
                 </Button>
@@ -251,17 +255,36 @@ export default function QuestionsPage() {
 function QuestionEditor({
   draft,
   onChange,
+  onError,
   onCancel,
   onSave,
 }: {
   draft: Draft;
   onChange: (d: Draft) => void;
+  onError: (msg: string | null) => void;
   onCancel: () => void;
   onSave: () => void;
 }) {
   function setOption(i: number, patch: Partial<Option>) {
     const options = draft.options.map((o, idx) => (idx === i ? { ...o, ...patch } : o));
     onChange({ ...draft, options });
+  }
+
+  // Raw upload (not apiFetch — that forces JSON); mirrors the results-page exportCsv fetch.
+  async function uploadImage(file: File) {
+    onError(null);
+    try {
+      const res = await fetch(`${API_BASE}/admin/upload`, {
+        method: "POST",
+        headers: { authorization: `Bearer ${getToken() ?? ""}`, "content-type": file.type },
+        body: file,
+      });
+      const body = (await res.json().catch(() => null)) as { url?: string; error?: string } | null;
+      if (!res.ok || !body?.url) throw new Error(body?.error ?? `Upload failed (${res.status})`);
+      onChange({ ...draft, imageUrl: body.url });
+    } catch (err) {
+      onError(err instanceof Error ? err.message : "Upload failed");
+    }
   }
   // SCQ keeps a single correct option; MCQ allows many.
   function toggleCorrect(i: number) {
@@ -304,6 +327,28 @@ function QuestionEditor({
         <label className="flex flex-col gap-1 text-sm">
           <span className="text-muted-foreground">Question text</span>
           <Textarea value={draft.text} onChange={(e) => onChange({ ...draft, text: e.target.value })} />
+        </label>
+        <label className="flex flex-col gap-1 text-sm">
+          <span className="text-muted-foreground">Image (optional)</span>
+          <input
+            type="file"
+            accept="image/*"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) void uploadImage(file);
+              e.target.value = ""; // let the same file re-trigger after a Remove
+            }}
+            className="text-muted-foreground text-sm file:mr-3 file:rounded-md file:border file:border-border file:bg-background file:px-2.5 file:py-1 file:text-sm"
+          />
+          {draft.imageUrl && (
+            <div className="mt-1 flex items-center gap-3">
+              {/* plain img: external emulator host, next/image would need remote-pattern config */}
+              <img src={draft.imageUrl} alt="Question image" className="max-h-24 rounded-md border object-contain" />
+              <Button type="button" size="xs" variant="outline" onClick={() => onChange({ ...draft, imageUrl: null })}>
+                Remove
+              </Button>
+            </div>
+          )}
         </label>
         <div className="flex flex-col gap-2">
           <span className="text-muted-foreground text-sm">Options (tick the correct one{draft.type === "MCQ" ? "(s)" : ""})</span>

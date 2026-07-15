@@ -35,7 +35,7 @@ bun run seed                         # 1 exam (WCL-EXAM), 100-Q bank, 700 candid
 
 | Who | Username / email | Secret | Notes |
 |---|---|---|---|
-| Candidates | `user001` .. `user700` | `password` | exam id `WCL-EXAM`, all share the same secret |
+| Candidates | `user001` .. `user700` | `wclrbu2026` | exam id `WCL-EXAM`, all share the common exam password |
 | Admin | `admin@wcl.local` | `adminpass` | no TOTP by default |
 
 The exam bank is 100 questions; each session is served a frozen 60-question

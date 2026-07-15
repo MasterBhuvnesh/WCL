@@ -13,6 +13,7 @@ interface Participant {
   id: string;
   username: string;
   displayName: string | null;
+  dob: string | null;
   createdAt: string | null;
 }
 
@@ -22,8 +23,8 @@ function fmt(iso: string | null): string {
 }
 
 const SAMPLE = `[
-  { "username": "roll-001", "secret": "s3cret-1", "displayName": "Asha R" },
-  { "username": "roll-002", "secret": "s3cret-2" }
+  { "username": "roll-001", "secret": "s3cret-1", "displayName": "Asha R", "dob": "2001-05-14" },
+  { "username": "roll-002", "dob": "2000-11-02" }
 ]`;
 
 export default function ParticipantsPage() {
@@ -94,8 +95,9 @@ export default function ParticipantsPage() {
       <header>
         <h1 className="text-2xl font-semibold tracking-tight">Participant import</h1>
         <p className="text-muted-foreground text-sm">
-          Paste a JSON array. Each row needs <code>username</code> and <code>secret</code>;{" "}
-          <code>displayName</code> is optional. Existing usernames are skipped.
+          Paste a JSON array. Each row needs <code>username</code>; <code>secret</code>,{" "}
+          <code>displayName</code>, and <code>dob</code> are optional. Rows without a{" "}
+          <code>secret</code> get the common exam password. Existing usernames are skipped.
         </p>
       </header>
 
@@ -153,6 +155,7 @@ export default function ParticipantsPage() {
                 <TableRow>
                   <TableHead>Username</TableHead>
                   <TableHead>Display name</TableHead>
+                  <TableHead>DOB</TableHead>
                   <TableHead className="text-right">Created</TableHead>
                 </TableRow>
               </TableHeader>
@@ -161,6 +164,7 @@ export default function ParticipantsPage() {
                   <TableRow key={p.id}>
                     <TableCell className="font-medium">{p.username}</TableCell>
                     <TableCell className="text-muted-foreground">{p.displayName ?? "-"}</TableCell>
+                    <TableCell className="text-muted-foreground tabular-nums">{p.dob ?? "-"}</TableCell>
                     <TableCell className="text-muted-foreground text-right">{fmt(p.createdAt)}</TableCell>
                   </TableRow>
                 ))}

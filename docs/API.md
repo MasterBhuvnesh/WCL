@@ -47,7 +47,7 @@ Server time, used by the client to compute its clock offset. No auth.
 
 ## Candidate flow
 
-The client calls these in order: login → begin → manifest → (answer/heartbeat loop) → submit. `resume` replaces begin+manifest after a relaunch.
+The client calls these in order: login → begin → manifest → (answer/heartbeat loop) → submit → result. `resume` replaces begin+manifest after a relaunch.
 
 ### POST /auth/login
 
@@ -111,7 +111,7 @@ Start the clock. Idempotent — calling it again returns the same deadline. Part
 
 ### GET /exam/manifest
 
-The candidate's served questions (subset of the bank, shuffled per session; options shuffled per question). **Never contains `isCorrect`.** Participant token required.
+The candidate's served questions (subset of the bank, shuffled per session; options shuffled per question). Each question may carry an `imageUrl` (an admin-uploaded URL) or `null`. **Never contains `isCorrect`.** Participant token required.
 
 **Response `200`**
 
@@ -124,6 +124,7 @@ The candidate's served questions (subset of the bank, shuffled per session; opti
       "questionId": "Q-001",
       "type": "SCQ",
       "text": "Which planet is known as the Red Planet?",
+      "imageUrl": null,
       "marks": 1,
       "options": [
         { "optionId": "O-003", "text": "Mars" },
@@ -204,6 +205,56 @@ Finish the exam. Idempotent — a second call returns the already-final status. 
 ```json
 { "status": "submitted", "submittedAt": "2026-07-07T10:45:12.000Z" }
 ```
+
+### GET /exam/result
+
+The candidate's own graded result: the final score plus a per-question review of
+what they picked and how it scored. Available **immediately after submit** —
+results publishing is not enforced here. **Never exposes the correct answers** —
+only the outcome and marks per question. Options are listed in the same shuffled
+order the candidate saw. Participant token required.
+
+**Response `200`**
+
+```json
+{
+  "sessionId": "d3b0...",
+  "examId": "WCL-EXAM",
+  "status": "submitted",
+  "submittedAt": "2026-07-07T10:45:12.000Z",
+  "score": 41.5,
+  "maxScore": 60,
+  "correct": 42,
+  "wrong": 10,
+  "unanswered": 8,
+  "questions": [
+    {
+      "questionId": "Q-001",
+      "type": "SCQ",
+      "text": "Which planet is known as the Red Planet?",
+      "imageUrl": null,
+      "marks": 1,
+      "options": [
+        { "optionId": "O-003", "text": "Mars" },
+        { "optionId": "O-001", "text": "Venus" }
+      ],
+      "selectedOptionIds": ["O-003"],
+      "outcome": "correct",
+      "marksAwarded": 1
+    }
+  ]
+}
+```
+
+`outcome` is `correct | wrong | unanswered`; `marksAwarded` is `+marks` when
+correct, `-0.5` when wrong, and `0` when unanswered (so `score` can be negative).
+
+**Errors**
+
+| Status | When |
+|---|---|
+| `409` | Exam not submitted yet (`"Exam not submitted"`) |
+| `409` | Submitted but grading hasn't landed yet (`"Result not ready"`) — retry shortly |
 
 ### POST /exam/resume
 
@@ -363,6 +414,7 @@ Per-candidate answer review — every served question with the correct options a
       "questionId": "Q-001",
       "type": "SCQ",
       "text": "Which planet is known as the Red Planet?",
+      "imageUrl": null,
       "options": [
         { "id": "O-001", "text": "Venus", "isCorrect": false },
         { "id": "O-003", "text": "Mars", "isCorrect": true }
@@ -386,6 +438,9 @@ Edit a final score (audited as `result.score_edit`; leaderboard and live WS upda
 { "finalScore": 45, "reason": "question Q-017 thrown out" }
 ```
 
+`finalScore` may be any number — fractional and negative values are accepted
+(negative marking can push a raw score below zero).
+
 **Response `200`** — the updated result row (same shape as one entry of `GET /admin/results`).
 
 **Errors:** `404` — no graded result for that session yet.
@@ -393,6 +448,10 @@ Edit a final score (audited as `result.score_edit`; leaderboard and live WS upda
 ### GET /admin/export/results.csv?examId=WCL-EXAM
 
 CSV download of the results list. Response is `text/csv`, columns: Username, Exam, Status, Score, Max score, Correct, Wrong, Unanswered, Started at, Submitted at.
+
+### GET /admin/export/leaderboard.csv?examId=WCL-EXAM
+
+CSV download of the full leaderboard (all ranked entries, not paged). Response is `text/csv`, columns: Rank, Username, Name, Score.
 
 ### POST /admin/sessions/:sessionId/reset
 
@@ -505,6 +564,7 @@ Full question bank **including answers** — admin-only.
     "id": "Q-001",
     "type": "SCQ",
     "text": "Which planet is known as the Red Planet?",
+    "imageUrl": null,
     "marks": 1,
     "options": [
       { "id": "O-001", "text": "Venus", "isCorrect": false },
@@ -544,11 +604,39 @@ Create or update questions (upsert by `id`; omit `id` to create). Options are re
 { "ok": true, "ids": ["Q-a1b2c3d4"] }
 ```
 
+Each question may include an optional `imageUrl` (a URL returned by
+`POST /admin/upload`, or `null` to clear it); it is echoed back by
+`GET /admin/questions`, the candidate manifest, and the result review.
+
 ### DELETE /admin/questions/:id
 
 Delete a question and its options. Refused if any session was ever served it.
 
 **Response `200`:** `{ "ok": true }` · **Errors:** `404` unknown, `409` already served.
+
+### POST /admin/upload
+
+Upload a question image. The body is the **raw image bytes** (not multipart); set
+`Content-Type` to the image's own type — one of `image/png`, `image/jpeg`,
+`image/webp`, `image/gif`. Max **5 MB**. The file is stored in the configured
+S3-compatible bucket (Floci locally, real S3 in production); put the returned
+`url` in a question's `imageUrl`. Audited.
+
+**Request**
+
+```
+Content-Type: image/png
+
+<raw image bytes>
+```
+
+**Response `200`**
+
+```json
+{ "url": "http://localhost:4566/wcl-images/q/2f1c8e4a-....png" }
+```
+
+**Errors:** `400` — missing body, unsupported content-type, or larger than 5 MB.
 
 ### GET /admin/participants
 
@@ -558,20 +646,29 @@ All participants, sorted by username.
 
 ```json
 [
-  { "id": "a1b2...", "username": "user001", "displayName": "Candidate 001", "createdAt": "2026-07-07T09:00:00.000Z" }
+  { "id": "a1b2...", "username": "user001", "displayName": "Candidate 001", "dob": "2001-04-12", "createdAt": "2026-07-07T09:00:00.000Z" }
 ]
 ```
 
+`dob` (`YYYY-MM-DD`, or `null`) is stored for a future external hall-ticket site
+and shown in admin only; it plays no part in login.
+
 ### POST /admin/participants/import
 
-Bulk import (max 1000 per call). Secrets are argon2id-hashed on ingest; existing usernames are skipped, duplicates within the batch collapse to the first. Audited.
+Bulk import (max 1000 per call). `secret` and `dob` are **optional**: a row
+without a `secret` gets the common exam password from `PARTICIPANT_PASSWORD`
+(default `wclrbu2026`), and `dob` is `"YYYY-MM-DD"`, stored and shown in admin
+only (for a future external hall-ticket site) — it plays no part in login.
+Secrets are argon2id-hashed on ingest; existing usernames are skipped,
+duplicates within the batch collapse to the first. Audited.
 
 **Request**
 
 ```json
 {
   "participants": [
-    { "username": "user701", "secret": "s3cret", "displayName": "New Candidate" }
+    { "username": "user701", "displayName": "New Candidate", "dob": "2003-11-02" },
+    { "username": "user702", "secret": "s3cret", "displayName": "Own Password" }
   ]
 }
 ```

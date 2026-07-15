@@ -61,6 +61,7 @@ export interface BankQuestion {
   questionId: string;
   type: QuestionType;
   text: string;
+  imageUrl: string | null;
   marks: number;
   options: BankOption[];
 }
@@ -170,6 +171,7 @@ export async function getBank(examId: string): Promise<BankQuestion[]> {
       questionId: q.id,
       type: q.type,
       text: q.text,
+      imageUrl: q.imageUrl,
       marks: q.marks,
       options: optionsByQuestion.get(q.id) ?? [],
     }));
@@ -213,6 +215,7 @@ export function buildManifest(
     questionId: string;
     type: QuestionType;
     text: string;
+    imageUrl: string | null;
     marks: number;
     options: { optionId: string; text: string }[];
   }[];
@@ -231,6 +234,7 @@ export function buildManifest(
       questionId: question.questionId,
       type: question.type,
       text: question.text,
+      imageUrl: question.imageUrl,
       marks: question.marks,
       options: shuffled.map((o) => ({ optionId: o.optionId, text: o.text })),
     });
@@ -423,6 +427,7 @@ async function gradeAndPersist(session: SessionRow): Promise<void> {
       correct += 1;
       outcome = "correct";
     } else {
+      score -= 0.5;
       wrong += 1;
       outcome = "wrong";
     }
@@ -486,6 +491,100 @@ async function gradeAndPersist(session: SessionRow): Promise<void> {
     gradedAt: new Date().toISOString(),
     answers: gradedAnswers,
   });
+}
+
+/** Per-question entry in the candidate result review. NEVER carries `isCorrect`. */
+interface ReviewQuestion {
+  questionId: string;
+  type: QuestionType;
+  text: string;
+  imageUrl: string | null;
+  marks: number;
+  options: { optionId: string; text: string }[];
+  selectedOptionIds: string[];
+  outcome: "correct" | "wrong" | "unanswered";
+  marksAwarded: number;
+}
+
+/**
+ * Build the candidate-facing result review for a finalized session: the stored
+ * totals plus a per-question breakdown (outcome and marks only, options in the
+ * seed order the candidate saw). Recomputes each outcome exactly like grading.
+ * Returns null when no results row exists yet (status flips before grading
+ * finishes), so the route can tell the client to retry. NEVER emits `isCorrect`.
+ */
+export async function buildResultReview(session: CachedSession): Promise<{
+  sessionId: string;
+  examId: string;
+  status: SessionStatus;
+  submittedAt: string | null;
+  score: number;
+  maxScore: number;
+  correct: number;
+  wrong: number;
+  unanswered: number;
+  questions: ReviewQuestion[];
+} | null> {
+  const [result] = await db
+    .select()
+    .from(results)
+    .where(eq(results.sessionId, session.id))
+    .limit(1);
+  if (!result) return null;
+
+  const bank = await getBank(session.examId);
+  const bankById = new Map(bank.map((q) => [q.questionId, q]));
+  const answerRows = await db.select().from(answers).where(eq(answers.sessionId, session.id));
+  const selectionByQuestion = new Map(answerRows.map((a) => [a.questionId, a.selectedOptionIds]));
+
+  const seed = session.shuffleSeed ?? "";
+  const questionsOut: ReviewQuestion[] = [];
+  for (const questionId of session.servedQuestionIds) {
+    const question = bankById.get(questionId);
+    if (!question) continue;
+    const selected = selectionByQuestion.get(questionId) ?? [];
+    const correctIds = question.options.filter((o) => o.isCorrect).map((o) => o.optionId);
+
+    let outcome: ReviewQuestion["outcome"];
+    let marksAwarded: number;
+    if (selected.length === 0) {
+      outcome = "unanswered";
+      marksAwarded = 0;
+    } else if (isExactMatch(selected, correctIds)) {
+      outcome = "correct";
+      marksAwarded = question.marks;
+    } else {
+      outcome = "wrong";
+      marksAwarded = -0.5;
+    }
+
+    // Same option order the candidate saw in the exam (manifest uses this seed).
+    const shuffled = seededShuffle(question.options, `${seed}:${questionId}`);
+    questionsOut.push({
+      questionId: question.questionId,
+      type: question.type,
+      text: question.text,
+      imageUrl: question.imageUrl,
+      marks: question.marks,
+      options: shuffled.map((o) => ({ optionId: o.optionId, text: o.text })),
+      selectedOptionIds: selected,
+      outcome,
+      marksAwarded,
+    });
+  }
+
+  return {
+    sessionId: session.id,
+    examId: session.examId,
+    status: session.status,
+    submittedAt: session.submittedAt,
+    score: result.score,
+    maxScore: result.maxScore,
+    correct: result.correct,
+    wrong: result.wrong,
+    unanswered: result.unanswered,
+    questions: questionsOut,
+  };
 }
 
 // --- File result feed (read by the Next.js admin panel) --------------------

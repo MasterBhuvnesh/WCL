@@ -9,7 +9,7 @@
  */
 
 import { randomUUID } from "node:crypto";
-import { Router, type NextFunction, type Request, type Response } from "express";
+import express, { Router, type NextFunction, type Request, type Response } from "express";
 import { and, asc, count, desc, eq, inArray, isNotNull, sql } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "../db/index.ts";
@@ -24,6 +24,7 @@ import {
   questions,
   results,
 } from "../db/schema.ts";
+import { env, s3PublicUrl } from "../env.ts";
 import {
   HttpError,
   rateLimit,
@@ -44,9 +45,33 @@ declare const Bun: {
     hash(password: string): Promise<string>;
     verify(password: string, hash: string): Promise<boolean>;
   };
+  S3Client: new (options: {
+    endpoint: string;
+    bucket: string;
+    accessKeyId: string;
+    secretAccessKey: string;
+  }) => {
+    write(key: string, data: Uint8Array | Buffer, opts?: { type?: string }): Promise<number>;
+  };
 };
 
 const DEFAULT_EXAM_ID = "WCL-EXAM";
+
+/** S3-compatible client for question images (Bun runtime built-in). */
+const s3 = new Bun.S3Client({
+  endpoint: env.S3_ENDPOINT,
+  bucket: env.S3_BUCKET,
+  accessKeyId: env.S3_ACCESS_KEY_ID,
+  secretAccessKey: env.S3_SECRET_ACCESS_KEY,
+});
+
+/** Accepted image content types mapped to the stored file extension. */
+const IMAGE_EXTENSIONS: Record<string, string> = {
+  "image/png": "png",
+  "image/jpeg": "jpg",
+  "image/webp": "webp",
+  "image/gif": "gif",
+};
 
 export const adminRouter = Router();
 
@@ -99,6 +124,30 @@ adminRouter.post(
 
 // Everything below requires a valid admin token.
 adminRouter.use(requireAdmin);
+
+// --- 1b. Question image upload -------------------------------------------
+
+/**
+ * Store a question image in S3-compatible storage and return its public URL.
+ * A route-level raw parser handles the binary body; the global express.json
+ * only parses application/json, so the two coexist.
+ */
+adminRouter.post(
+  "/upload",
+  express.raw({ type: "image/*", limit: "5mb" }),
+  h(async (req, res) => {
+    const contentType = (req.headers["content-type"] ?? "").split(";")[0].trim();
+    const ext = IMAGE_EXTENSIONS[contentType];
+    if (!ext) throw new HttpError(400, "Unsupported image type; use PNG, JPEG, WebP, or GIF");
+    const body = req.body as Buffer;
+    if (!Buffer.isBuffer(body) || body.length === 0) throw new HttpError(400, "Empty image upload");
+
+    const key = `q/${randomUUID()}.${ext}`;
+    await s3.write(key, body, { type: contentType });
+    await audit(req.admin!.adminId, "image-upload", key, { contentType, bytes: body.length });
+    res.json({ url: `${s3PublicUrl}/${key}` });
+  }),
+);
 
 // --- 2. MFA setup --------------------------------------------------------
 
@@ -313,6 +362,7 @@ adminRouter.get(
         questionId: qid,
         type: q?.type ?? null,
         text: q?.text ?? "",
+        imageUrl: q?.imageUrl ?? null,
         options: opts.map((o) => ({ id: o.id, text: o.text, isCorrect: o.isCorrect })),
         selectedOptionIds: selected,
         outcome,
@@ -337,7 +387,7 @@ adminRouter.get(
 
 adminRouter.patch(
   "/results/:sessionId",
-  validate(z.object({ finalScore: z.number().int().min(0), reason: z.string().optional() })),
+  validate(z.object({ finalScore: z.number(), reason: z.string().optional() })),
   h(async (req, res) => {
     const sessionId = req.params.sessionId;
     const { finalScore, reason } = req.body as { finalScore: number; reason?: string };
@@ -425,6 +475,44 @@ adminRouter.get(
     }
     res.setHeader("Content-Type", "text/csv; charset=utf-8");
     res.setHeader("Content-Disposition", `attachment; filename="results-${examId}.csv"`);
+    res.send(`${lines.join("\r\n")}\r\n`);
+  }),
+);
+
+adminRouter.get(
+  "/export/leaderboard.csv",
+  h(async (req, res) => {
+    const examId = (req.query.examId as string) || DEFAULT_EXAM_ID;
+    const key = `leaderboard:${examId}`;
+
+    if ((await redis.zcard(key)) === 0) await rebuildLeaderboard(examId);
+    const flat = await redis.zrevrange(key, 0, -1, "WITHSCORES");
+
+    const ids: string[] = [];
+    for (let i = 0; i < flat.length; i += 2) ids.push(flat[i]);
+    const names = ids.length
+      ? await db
+          .select({
+            id: participants.id,
+            username: participants.username,
+            displayName: participants.displayName,
+          })
+          .from(participants)
+          .where(inArray(participants.id, ids))
+      : [];
+    const nameById = new Map(names.map((n) => [n.id, n]));
+
+    const lines = [["Rank", "Username", "Name", "Score"].join(",")];
+    for (let i = 0; i < flat.length; i += 2) {
+      const p = nameById.get(flat[i]);
+      lines.push(
+        [i / 2 + 1, p?.username ?? flat[i], p?.displayName ?? "", Number(flat[i + 1])]
+          .map(csvField)
+          .join(","),
+      );
+    }
+    res.setHeader("Content-Type", "text/csv; charset=utf-8");
+    res.setHeader("Content-Disposition", `attachment; filename="leaderboard-${examId}.csv"`);
     res.send(`${lines.join("\r\n")}\r\n`);
   }),
 );
@@ -665,6 +753,7 @@ adminRouter.get(
         type: q.type,
         text: q.text,
         marks: q.marks,
+        imageUrl: q.imageUrl,
         options: (optsByQ.get(q.id) ?? []).map((o) => ({
           id: o.id,
           text: o.text,
@@ -684,6 +773,7 @@ const questionsUpsertBody = z.object({
         type: z.enum(["SCQ", "MCQ"]),
         text: z.string().min(1),
         marks: z.number().int().min(1).optional(),
+        imageUrl: z.string().max(2048).nullable().optional(),
         options: z
           .array(
             z.object({
@@ -719,12 +809,13 @@ adminRouter.post(
         const qid = q.id ?? `Q-${randomUUID().slice(0, 8)}`;
         ids.push(qid);
         const marks = q.marks ?? 1;
+        const imageUrl = q.imageUrl ?? null;
         await tx
           .insert(questions)
-          .values({ id: qid, examId: body.examId, type: q.type, text: q.text, marks })
+          .values({ id: qid, examId: body.examId, type: q.type, text: q.text, marks, imageUrl })
           .onConflictDoUpdate({
             target: questions.id,
-            set: { examId: body.examId, type: q.type, text: q.text, marks },
+            set: { examId: body.examId, type: q.type, text: q.text, marks, imageUrl },
           });
         // Replace options wholesale.
         await tx.delete(options).where(eq(options.questionId, qid));
@@ -782,6 +873,7 @@ adminRouter.get(
         id: participants.id,
         username: participants.username,
         displayName: participants.displayName,
+        dob: participants.dob,
         createdAt: participants.createdAt,
       })
       .from(participants)
@@ -795,8 +887,9 @@ const importBody = z.object({
     .array(
       z.object({
         username: z.string().min(1),
-        secret: z.string().min(1),
+        secret: z.string().min(1).optional(),
         displayName: z.string().optional(),
+        dob: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
       }),
     )
     .min(1)
@@ -810,7 +903,7 @@ adminRouter.post(
     const { participants: list } = req.body as z.infer<typeof importBody>;
 
     // De-duplicate within the batch (first occurrence wins).
-    const byUsername = new Map<string, { username: string; secret: string; displayName?: string }>();
+    const byUsername = new Map<string, (typeof list)[number]>();
     for (const p of list) if (!byUsername.has(p.username)) byUsername.set(p.username, p);
 
     const usernames = [...byUsername.keys()];
@@ -821,15 +914,20 @@ adminRouter.post(
     const existingSet = new Set(existing.map((e) => e.username));
     const toInsert = usernames.filter((u) => !existingSet.has(u));
 
+    // Rows without an explicit secret fall back to the common candidate
+    // password; hash it once (lazily) and reuse it across every such row.
+    let commonHash: string | null = null;
     let created = 0;
     // ponytail: sequential argon2 hashing bounds memory at the 1000-row ceiling;
     // batch/parallelise only if import throughput becomes a problem.
     for (const username of toInsert) {
       const p = byUsername.get(username)!;
-      const secretHash = await Bun.password.hash(p.secret);
+      const secretHash = p.secret
+        ? await Bun.password.hash(p.secret)
+        : (commonHash ??= await Bun.password.hash(env.PARTICIPANT_PASSWORD));
       const inserted = await db
         .insert(participants)
-        .values({ username, secretHash, displayName: p.displayName ?? null })
+        .values({ username, secretHash, displayName: p.displayName ?? null, dob: p.dob ?? null })
         .onConflictDoNothing()
         .returning({ id: participants.id });
       if (inserted.length) created += 1;

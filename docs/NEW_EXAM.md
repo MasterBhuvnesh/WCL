@@ -54,16 +54,27 @@ Stop the API, then either:
 
 ```bash
 cd app/api
-bun run seed --fresh                 # dev: wipe + demo data (700 users / password)
+bun run seed --fresh                 # dev: wipe + demo data (700 users / common password wclrbu2026)
 ```
 
 or, for a **real event** (no demo data at all):
 
 ```bash
-docker compose down -v && docker compose up -d   # empty Postgres + Redis
+docker compose down -v && docker compose up -d   # empty Postgres + Redis + Floci
 cd app/api
 bun run db:migrate                               # recreate tables
 ```
+
+`docker compose up -d` also starts **Floci**, the local S3-compatible store for
+question images (container `wcl-floci`, port 4566). After the first bring-up,
+create the image bucket once — a fresh Floci volume is empty:
+
+```bash
+curl -X PUT http://localhost:4566/wcl-images
+```
+
+For a real event, point the `S3_*` vars at real AWS S3 instead (step 2); the
+bucket already exists there.
 
 ### 2. Start the API
 
@@ -74,9 +85,12 @@ bun run dev            # port 4000
 ```
 
 Real event: set the `.env` first — `NODE_ENV=production`, a long random
-`JWT_SECRET`, a real `ADMIN_PASSWORD`, and the exam settings
+`JWT_SECRET`, a real `ADMIN_PASSWORD`, the exam settings
 (`EXAM_ID=WCL-EXAM`, `EXAM_TITLE`, `EXAM_DURATION_SECONDS`,
-`EXAM_QUESTIONS_TO_SERVE`) — then:
+`EXAM_QUESTIONS_TO_SERVE`), the common candidate password
+(`PARTICIPANT_PASSWORD`), and the image store (`S3_ENDPOINT`, `S3_BUCKET`,
+`S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`, and `S3_PUBLIC_URL` — set this to
+your public S3/CloudFront base URL so candidates' image links resolve) — then:
 
 ```bash
 bun run start
@@ -103,12 +117,24 @@ Admin panel → **Questions** → add/paste your questions, or one call to
 MCQ ≥ 1). The exam serves a random subset of `questions_to_serve` per candidate,
 so the bank must have **at least** that many questions — more is better.
 
+To attach an image to a question, use the **Questions** editor's image upload (it
+stores the file via `POST /admin/upload` and saves the returned URL as the
+question's `imageUrl`); the image then renders in the exam and in each
+candidate's result review.
+
 ### 5. Import participants
 
-Admin panel → **Participants** → paste a JSON array
-(`[{ "username": "...", "secret": "...", "displayName": "..." }]`, max 1000 per
-call). Passwords are hashed on ingest — keep the plaintext list somewhere safe
-to distribute to candidates; it cannot be recovered from the DB.
+Admin panel → **Participants** → paste a JSON array (max 1000 per call). Each row
+is `{ "username", "displayName", "secret"?, "dob"? }`:
+
+- `secret` is **optional** — rows without one get the common exam password from
+  `PARTICIPANT_PASSWORD` (default `wclrbu2026`). Set an explicit `secret` only for
+  candidates who need their own.
+- `dob` is optional, `"YYYY-MM-DD"`, stored and shown in admin only (for a future
+  external hall-ticket site); it is not used for login.
+
+Explicit secrets are hashed on ingest — keep any plaintext list somewhere safe to
+distribute to candidates; it cannot be recovered from the DB.
 
 ### 6. Dry run (recommended)
 

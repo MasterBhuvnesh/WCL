@@ -76,11 +76,12 @@ function AppRoutes(): React.JSX.Element {
 }
 
 function AppShell(): React.JSX.Element {
-  const { devMode, isStarted, integrityWarning, dismissIntegrityWarning } = useExam()
+  const { devMode, isSubmitted, integrityWarning, dismissIntegrityWarning } = useExam()
 
-  // During an active exam (and not in developer mode) the window controls are
-  // hidden; the title bar remains as a drag region only.
-  const showControls = devMode || !isStarted
+  // The window is kiosk from launch, so controls stay hidden through login and
+  // the exam; they return only after submission (or in developer mode). The
+  // title bar otherwise remains as a drag region only.
+  const showControls = devMode || isSubmitted
 
   // Prevent selecting and copying exam content. Selection is also disabled in
   // CSS; here we block copy, cut, the context menu, and drag. Developer mode

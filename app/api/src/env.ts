@@ -36,9 +36,21 @@ const EnvSchema = z.object({
   EXAM_TITLE: z.string().default("WCL Examination"),
   EXAM_DURATION_SECONDS: z.coerce.number().int().positive().default(3600),
   EXAM_QUESTIONS_TO_SERVE: z.coerce.number().int().positive().default(60),
+  /** Common candidate password used by seed + import for rows without an explicit secret. */
+  PARTICIPANT_PASSWORD: z.string().default("wclrbu2026"),
+  /** S3-compatible image storage: Floci locally (any creds), real S3 via these in production. */
+  S3_ENDPOINT: z.string().default("http://localhost:4566"),
+  S3_BUCKET: z.string().default("wcl-images"),
+  S3_ACCESS_KEY_ID: z.string().default("test"),
+  S3_SECRET_ACCESS_KEY: z.string().default("test"),
+  /** Public base URL for uploaded images; when unset it is derived (see s3PublicUrl). */
+  S3_PUBLIC_URL: z.string().optional(),
 });
 
 export const env = EnvSchema.parse(process.env);
+
+/** Public base URL for uploaded images. Zod defaults can't cross-reference fields, so derive it here. */
+export const s3PublicUrl = env.S3_PUBLIC_URL ?? `${env.S3_ENDPOINT}/${env.S3_BUCKET}`;
 
 export const isProduction = env.NODE_ENV === "production";
 

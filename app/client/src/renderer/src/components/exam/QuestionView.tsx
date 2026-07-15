@@ -71,6 +71,13 @@ export function QuestionView({
           <p className="text-foreground mt-4 whitespace-pre-wrap text-lg leading-relaxed">
             {question.text}
           </p>
+          {question.imageUrl && (
+            <img
+              src={question.imageUrl}
+              className="mt-4 max-h-72 rounded-lg border object-contain"
+              alt=""
+            />
+          )}
 
           <div className="mt-6 flex flex-col gap-3">
             {question.options.map((option, optionIndex) => {

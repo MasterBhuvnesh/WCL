@@ -109,14 +109,14 @@ export const DEMO_EXAM: ExamMeta = {
   questionsToServe: 10,
   instructions: [
     "The total duration of this examination is 60 minutes. The countdown begins when you select Begin and cannot be paused.",
-    "This paper contains 10 questions. Each question carries 1 mark and there is no negative marking.",
+    "This paper contains 10 questions. Each question carries 1 mark. Each wrong answer deducts 0.5 marks; unanswered questions score zero.",
     "Questions are of two types: single correct answer and multiple correct answers. Read each question carefully before responding.",
     "For multiple correct answer questions, marks are awarded only when the selected set of options exactly matches the correct set.",
     "Your answers are saved automatically and synchronised with the server. Do not refresh or close the application during the examination.",
     "Use the question palette to navigate. You may mark questions for review and return to them while time remains.",
     "The server clock is authoritative. The examination will be submitted automatically when the time expires.",
     "Do not switch to other applications or leave full-screen mode. Such activity is recorded for review by the invigilator.",
-    "Your individual score is not displayed on submission. Results are published separately by the administrator.",
+    "Your score is displayed immediately after submission.",
     "Ensure a stable network connection. In the event of a disruption, relaunch the application to resume your session.",
   ],
 };

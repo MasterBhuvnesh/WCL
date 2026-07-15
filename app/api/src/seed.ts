@@ -16,6 +16,7 @@
 
 import { eq } from "drizzle-orm";
 import { db, pgClient, schema } from "./db/index.ts";
+import { env } from "./env.ts";
 import { redis } from "./redis.ts";
 
 /**
@@ -473,14 +474,14 @@ async function flushPattern(pattern: string): Promise<number> {
 const EXAM_INSTRUCTIONS: string[] = [
   "The examination duration is 60 minutes, measured from the moment you begin.",
   "You will be served 60 questions, each carrying 1 mark, for a total of 60 marks.",
-  "There is no negative marking; questions left unanswered simply score zero.",
+  "Each wrong answer deducts 0.5 marks; unanswered questions score zero.",
   "Questions are of two types: single correct answer (SCQ) and multiple correct answer (MCQ).",
   "For multiple correct questions, the mark is awarded only when your selection exactly matches the correct set of options.",
   "Your responses are saved automatically and synchronised with the server at regular intervals.",
   "Use the question palette to navigate between questions and to review your progress at any time.",
   "The server clock is authoritative; the timer shown on your screen is provided only for guidance.",
   "Do not switch browser tabs, minimise the window, or leave full screen, as such actions are recorded.",
-  "Results are published by the administrator and will not be available immediately upon submission.",
+  "Your score is displayed immediately after submission.",
 ];
 
 /** Delete every table row in a foreign-key-safe order. */
@@ -590,7 +591,7 @@ async function main(): Promise<void> {
   /* Participants ---------------------------------------------------------- */
   // Every candidate shares the same secret; the hash is computed exactly once
   // and reused across all rows.
-  const participantSecretHash = await Bun.password.hash("password");
+  const participantSecretHash = await Bun.password.hash(env.PARTICIPANT_PASSWORD);
   const participantRows: ParticipantRow[] = [];
   for (let n = 1; n <= PARTICIPANT_COUNT; n += 1) {
     const suffix = String(n).padStart(3, "0");
@@ -626,7 +627,7 @@ async function main(): Promise<void> {
   console.log(`Admins:        1`);
   console.log("--------------------------------------------------");
   console.log("Development credentials:");
-  console.log("  Candidates: user001 .. user700  / password  (examId WCL-EXAM)");
+  console.log(`  Candidates: user001 .. user700  / ${env.PARTICIPANT_PASSWORD}  (examId WCL-EXAM)`);
   console.log("  Admin:      admin@wcl.local      / adminpass");
   console.log("--------------------------------------------------");
 

@@ -279,8 +279,8 @@ panel's Sessions screen. Always record a reason.
    ```bash
    curl -s $API/admin/results/$SID -H "$AUTH" | jq '{score,maxScore,status}'
    ```
-   Policy check: no negative marking, all-or-nothing; MCQ correct only on exact
-   set match.
+   Policy check: −0.5 per wrong answer (totals may go negative), all-or-nothing;
+   MCQ correct only on exact set match.
 
 4. **Publish results** (flips `results_published`; gates visibility):
    ```bash
@@ -356,3 +356,13 @@ cd app/api    # leaderboard/session/deadline caches repopulate lazily on demand;
 3. **All AWS monitoring/alarms and RDS backups are unbuilt** — production only /
    pending.
 4. **Restore drill not yet executed/dated** (§5.3).
+5. **Candidate result view is one-time per machine** — by design for PC
+   turnover: once the results screen has displayed the score, the client wipes
+   its persisted session (`SubmittedPage.tsx` → `buffer.clearSession()`), and
+   login for a submitted session returns 409 "already submitted", so the
+   candidate cannot log back in to re-view the result (admins still see it in
+   the panel). To allow re-viewing later: in `POST /auth/login`
+   (`app/api/src/routes/exam.ts`), instead of 409-ing a submitted session,
+   issue a token with `sessionStatus: "submitted"` — the client already routes
+   that status to the results screen and `GET /exam/result` already works for
+   submitted sessions; no other change needed.

@@ -48,6 +48,7 @@ export interface ManifestQuestion {
   type: QuestionType
   text: string
   marks: number
+  imageUrl: string | null
   options: ManifestOption[]
 }
 
@@ -133,4 +134,37 @@ export interface PaletteCounts {
   answered: number
   markedForReview: number
   answeredMarked: number
+}
+
+export type ResultOutcome = 'correct' | 'wrong' | 'unanswered'
+
+/**
+ * One reviewed question in the post-submit result. Deliberately carries no
+ * correct-answer marker — only the candidate's own selections, the outcome, and
+ * the marks awarded (+marks | −0.5 | 0). Options keep the shuffled order shown
+ * during the exam.
+ */
+export interface ResultQuestion {
+  questionId: string
+  type: QuestionType
+  text: string
+  imageUrl: string | null
+  marks: number
+  options: ManifestOption[]
+  selectedOptionIds: string[]
+  outcome: ResultOutcome
+  marksAwarded: number
+}
+
+export interface ExamResult {
+  sessionId: string
+  examId: string
+  status: SessionStatus
+  submittedAt: string
+  score: number
+  maxScore: number
+  correct: number
+  wrong: number
+  unanswered: number
+  questions: ResultQuestion[]
 }

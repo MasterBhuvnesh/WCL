@@ -368,6 +368,11 @@ export function ExamProvider({ children }: { children: ReactNode }): React.JSX.E
   // --- session lifecycle -------------------------------------------------------
   const hydrateFromManifest = useCallback(
     (m: ExamManifest, restored: Record<string, AnswerState>) => {
+      // Warm Chromium's HTTP cache with every question image the moment the
+      // manifest arrives, so navigating to a question never waits on the network.
+      for (const q of m.questions) {
+        if (q.imageUrl) new Image().src = q.imageUrl
+      }
       setManifest(m)
       setAnswers(restored)
       answersRef.current = restored
@@ -443,7 +448,6 @@ export function ExamProvider({ children }: { children: ReactNode }): React.JSX.E
       await sync()
       const res = await api.submit(t)
       finalizeSubmitted(res.status)
-      if (sessionIdRef.current) buffer.clearSession()
     } catch (err) {
       // Even if the network submit fails, lock locally; the server enforces the
       // deadline regardless and buffered answers will reconcile.

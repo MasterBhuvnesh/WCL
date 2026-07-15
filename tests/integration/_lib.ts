@@ -7,14 +7,14 @@
  * Config via env (all optional):
  *   BASE_URL        API base URL              (default http://localhost:4000)
  *   EXAM_ID         exam to log in against    (default WCL-EXAM)
- *   PARTICIPANT_PW  shared candidate secret   (default "password", per seed.ts)
+ *   PARTICIPANT_PW  shared candidate secret   (default "wclrbu2026", per seed.ts)
  *   ADMIN_EMAIL     admin login email         (default admin@wcl.local, per seed)
  *   ADMIN_PASSWORD  admin login password      (default adminpass, per seed)
  */
 
 export const BASE_URL = (process.env.BASE_URL ?? "http://localhost:4000").replace(/\/$/, "");
 export const EXAM_ID = process.env.EXAM_ID ?? "WCL-EXAM";
-export const PARTICIPANT_PW = process.env.PARTICIPANT_PW ?? "password";
+export const PARTICIPANT_PW = process.env.PARTICIPANT_PW ?? "wclrbu2026";
 export const ADMIN_EMAIL = process.env.ADMIN_EMAIL ?? "admin@wcl.local";
 export const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD ?? "adminpass";
 
