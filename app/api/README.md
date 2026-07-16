@@ -18,12 +18,132 @@ hall-ticket data.
 
 </div>
 
+## Architecture
+
+- **Express over Bun.** Bun executes the TypeScript sources directly, so
+  there is no build step. `src/index.ts` wires middleware, the two routers,
+  and the WebSocket upgrade.
+- **PostgreSQL via Drizzle ORM** is the system of record. Migrations live in
+  `drizzle/` and are applied with `bun run db:migrate`.
+- **Redis** carries the hot state: `session:{id}` (cached candidate session),
+  `bank:{examId}` (question bank cache, 600 second TTL, invalidated by admin
+  question edits and by the question importer), `leaderboard:{examId}`
+  (sorted set behind the leaderboard and its CSV export), rate-limit buckets,
+  and a `wcl:*` pub/sub namespace.
+- **Admin live updates**: a single Redis subscriber (`PSUBSCRIBE wcl:*`) fans
+  events out to admin panels connected on the `/admin/ws` WebSocket.
+- **Server-authoritative time.** Deadlines are computed and enforced on the
+  server; clients only display them. `GET /time` lets clients estimate their
+  clock offset.
+- **Question images** are stored in S3-compatible object storage (Floci
+  locally, Amazon S3 in production) through Bun's built-in S3 client; the
+  database stores only the public object URL.
+- **Rate limiting**: login is limited to 10 requests per minute per client
+  and the exam routes to 300 per minute per session.
+
+## Candidate exam flow
+
+1. `POST /auth/login` with username, password, and optional exam and device
+   identifiers. Logging in again on another machine records a double-login
+   integrity event; a submitted session cannot log in again (409).
+2. `POST /exam/begin` freezes that candidate's random subset of the question
+   bank (`questions_to_serve` of them, shuffled per candidate with a session
+   seed) and stamps the deadline. Instructions are shown before this call, so
+   the timer starts at begin, not at login.
+3. `GET /exam/manifest` returns the served questions and options without
+   correct-answer flags.
+4. `POST /exam/answer` saves one answer; `POST /exam/heartbeat` batches
+   buffered answers, keeps the session alive, and reconciles the clock. Every
+   write carries a client sequence number, so a stale or replayed write can
+   never overwrite a newer answer.
+5. `POST /exam/submit` grades and persists exactly once; sessions that reach
+   the deadline are auto-submitted with the same grading path. Correct
+   answers score the question's marks, wrong answers deduct 0.5, unanswered
+   score zero, and totals may go negative.
+6. `GET /exam/result` returns the candidate's score and a per-question review
+   (own selections, outcome, and marks awarded; correct answers are never
+   sent). `POST /exam/resume` restores an in-progress session after a crash
+   or restart.
+
+## Database
+
+Eleven tables, defined in `src/db/schema.ts`: `exams`, `questions`,
+`options` (per-option `is_correct`, never serialized to candidates),
+`participants`, `hallticket_seats` (seat allocation for the hall-ticket
+portal), `exam_sessions`, `answers`, `results`, `admins`, `audit_logs`
+(every admin mutation is audited), and `integrity_events`.
+
+## Endpoints
+
+Candidate:
+
+| Method | Path | Description |
+| --- | --- | --- |
+| GET | `/health` | Service health check. |
+| GET | `/time` | Authoritative server time. |
+| POST | `/auth/login` | Candidate login; returns a session token. |
+| POST | `/exam/begin` | Start the exam; freezes served questions and the deadline. |
+| GET | `/exam/manifest` | Served questions without correct-answer flags. |
+| POST | `/exam/answer` | Save or update a single answer. |
+| POST | `/exam/heartbeat` | Batch-save buffered answers and keep the session alive. |
+| POST | `/exam/submit` | Submit the exam and grade it. |
+| POST | `/exam/resume` | Resume an in-progress session. |
+| GET | `/exam/result` | Own score and per-question review. |
+| POST | `/exam/integrity` | Report a client integrity event. |
+
+Administrative (bearer token from `/admin/login`; TOTP MFA once enrolled):
+
+| Method | Path | Description |
+| --- | --- | --- |
+| POST | `/admin/login` | Administrator login. |
+| POST | `/admin/mfa/setup` | Begin TOTP enrollment. |
+| GET | `/admin/sessions` | Session list with live status. |
+| POST | `/admin/sessions/:sessionId/reset` | Reset a session (destroys its answers). |
+| POST | `/admin/sessions/:sessionId/release-device` | Release the device lock so the candidate can move machines. |
+| POST | `/admin/sessions/:sessionId/add-time` | Extend one candidate's deadline. |
+| POST | `/admin/exams/:examId/add-time` | Extend every active session of an exam. |
+| POST | `/admin/exams/:examId/open` / `close` | Open or close the exam for login. |
+| POST | `/admin/exams/:examId/publish` | Publish or unpublish results. |
+| GET | `/admin/questions` / POST `/admin/questions` | Read or upsert the question bank (SCQ/MCQ validation). |
+| DELETE | `/admin/questions/:id` | Delete a question. |
+| POST | `/admin/upload` | Upload a question image; returns its public URL. |
+| GET | `/admin/participants` | Participant list (includes date of birth). |
+| POST | `/admin/participants/import` | Bulk participant import; secret-less rows get the common password. |
+| GET | `/admin/hallticket` | Seat allocations joined with participants. |
+| GET | `/admin/results` / `/admin/results/:sessionId` | Result list and per-session review. |
+| PATCH | `/admin/results/:sessionId` | Override a final score (audited). |
+| GET | `/admin/leaderboard` | Ranked scores. |
+| GET | `/admin/export/results.csv` / `/admin/export/leaderboard.csv` | CSV exports. |
+| GET | `/admin/integrity-events` | Integrity events for review. |
+| WS | `/admin/ws` | Live event stream for the admin panel. |
+
+Request and response bodies for every endpoint are documented in
+[`docs/API.md`](../../docs/API.md).
+
+## Project layout
+
+```
+app/api
+  drizzle/            SQL migrations (bun run db:migrate applies them)
+  scripts/            CSV/XLSX importers and the clean command (see scripts/README.md)
+  data/               sample import workbooks and sample image
+  src/
+    index.ts          app wiring: middleware, routers, /health, /time, WebSocket
+    routes/exam.ts    candidate routes (auth + exam lifecycle)
+    routes/admin.ts   administrative routes
+    services/         exam engine (grading, bank cache, sessions) and admin helpers
+    db/               Drizzle client and schema.ts
+    env.ts            zod-validated environment with development defaults
+    redis.ts          Redis client
+    ws.ts             /admin/ws fan-out of wcl:* pub/sub events
+    seed.ts           demo data (exam, 700 candidates, seats, admin)
+```
+
 ## Prerequisites
 
 - **Docker** and Docker Compose, used to run PostgreSQL, Redis, and Floci (a
   local S3-compatible store for question images).
-- **Bun** 1.1 or newer, used to install dependencies and run the server. Bun
-  executes TypeScript directly, so there is no build step.
+- **Bun** 1.1 or newer.
 
 ## Quick start
 
@@ -66,13 +186,6 @@ The importers validate the whole file first, report every error at once, and
 write nothing when any row is invalid. All of them support `--dry-run`.
 Column contracts, sample XLSX workbooks, spreadsheet-preparation steps, and
 undo SQL are documented in [`scripts/README.md`](./scripts/README.md).
-
-## Scoring
-
-Each correct answer scores the question's marks. Each wrong answer deducts
-0.5 marks, so totals may go negative. Unanswered questions score zero. After
-submitting, a candidate can fetch their own score and a per-question review
-(outcome and marks only, never the correct answers) from `GET /exam/result`.
 
 ## Fast-clock mode
 
