@@ -15,14 +15,17 @@ Public portal where candidates view and download their examination admit card.
 
 ## How it works
 
-- Candidates sign in with **employee ID + date of birth** (dd/mm/yyyy).
+- Candidates sign in with their **employee ID and date of birth** (dd/mm/yyyy).
 - Per-candidate data comes from the exam database: `participants` (username,
-  name, dob) joined with `hallticket_seats` (building / floor / lab / seat).
-- Exam-wide details — date, reporting/gate/exam times, venue, instructions —
-  live in [`data/exam.json`](./data/exam.json); edit that one file per event.
-- The on-screen ticket is real DOM (`HallTicketPreview`) so it always renders;
-  the downloadable PDF (`HallTicketDocument`, @react-pdf/renderer) is built
-  from the same data. **Keep the two components in step.**
+  name, date of birth) joined with `hallticket_seats` (building, floor, lab,
+  seat).
+- Exam-wide details (date, reporting, gate-close and start times, venue, and
+  instructions) live in [`data/exam.json`](./data/exam.json). Edit that single
+  file for each event.
+- The on-screen ticket is real DOM (`HallTicketPreview`), so it always
+  renders. The downloadable PDF (`HallTicketDocument`, built with
+  @react-pdf/renderer) is produced from the same data. Keep the two
+  components in step when changing the layout.
 
 ## Quick start
 
@@ -32,27 +35,29 @@ npm install
 npm run dev        # http://localhost:5001
 ```
 
-Set `DATABASE_URL` to point at the exam database (defaults to the local dev
-Postgres from `docker compose up -d`). The roster is queried server-side only —
-it is never shipped to the browser.
+Set `DATABASE_URL` to point at the exam database (it defaults to the local
+development Postgres from `docker compose up -d`). The roster is queried
+server-side only and is never shipped to the browser.
 
 ## Loading data
 
 From `app/api`:
 
 ```bash
-bun run import:participants candidates.xlsx   # usernames, names, DOBs
+bun run import:participants candidates.xlsx   # usernames, names, dates of birth
 bun run import:seats seats.xlsx               # building/floor/lab/seat per candidate
 ```
 
-Column contracts and sample workbooks: [`app/api/scripts/README.md`](../api/scripts/README.md).
-A candidate only gets a hall ticket once both their participant row **and**
-seat row exist, and DOB is required for login — import it.
+Column contracts and sample workbooks are documented in
+[`app/api/scripts/README.md`](../api/scripts/README.md). A candidate receives
+a hall ticket only when both their participant row and their seat row exist,
+and the date of birth is required for portal login, so include it in the
+participant import.
 
 ## Commands
 
-| Command | What it does |
+| Command | Purpose |
 | --- | --- |
-| `npm run dev` | Dev server on port 5001. |
-| `npm run build` / `npm run start` | Production build / serve. |
+| `npm run dev` | Development server on port 5001. |
+| `npm run build` / `npm run start` | Production build and serve. |
 | `npm run lint` | ESLint. |
