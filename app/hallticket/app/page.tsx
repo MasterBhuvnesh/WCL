@@ -83,7 +83,7 @@ export default function LoginPage() {
       <div className="flex w-full max-w-sm flex-col gap-6">
         <div className="flex items-center justify-center gap-5">
           <img
-            src="/assets/wcl.png"
+            src="/assets/wcl.logo.png"
             alt="Western Coalfields Limited"
             className="h-12 object-contain"
           />

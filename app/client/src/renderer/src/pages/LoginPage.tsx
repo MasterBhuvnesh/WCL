@@ -4,7 +4,7 @@ import { AlertCircle, KeyRound, Loader2, User, WifiOff } from 'lucide-react'
 import { useExam } from '@renderer/context/ExamProvider'
 import { Button } from '@renderer/components/ui/button'
 import { Input } from '@renderer/components/ui/input'
-import wclLogo from '@renderer/assets/images/wcl.png'
+import wclLogo from '@renderer/assets/images/wcl.logo.png'
 import rbuLogo from '@renderer/assets/images/rbu.png'
 
 /**

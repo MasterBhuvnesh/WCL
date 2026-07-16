@@ -51,7 +51,7 @@ export default function TicketPage() {
       <header className="flex items-center justify-between gap-4 border-b pb-4">
         <div className="flex items-center gap-4">
           <img
-            src="/assets/wcl.png"
+            src="/assets/wcl.logo.png"
             alt="Western Coalfields Limited"
             className="h-10 object-contain"
           />

@@ -4,7 +4,7 @@ import { AlertCircle, Clock, FileText, Loader2 } from 'lucide-react'
 import { useExam } from '@renderer/context/ExamProvider'
 import { Button } from '@renderer/components/ui/button'
 import { Separator } from '@renderer/components/ui/separator'
-import wclLogo from '@renderer/assets/images/wcl.png'
+import wclLogo from '@renderer/assets/images/wcl.logo.png'
 import rbuLogo from '@renderer/assets/images/rbu.png'
 
 /**
