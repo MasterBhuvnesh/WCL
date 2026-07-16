@@ -4,7 +4,11 @@
  * import these types.
  */
 
-/** One seeded candidate record (see data/candidates.json). */
+/**
+ * One candidate's hall ticket. Per-candidate fields come from the exam
+ * database (participants + hallticket_seats); the exam-wide fields (date,
+ * timings, venue) are stamped in from data/exam.json at login.
+ */
 export interface Candidate {
   employeeId: string;
   name: string;
@@ -30,5 +34,12 @@ export interface ExamMeta {
   durationMinutes: number;
   totalQuestions: number;
   markingScheme: string;
+  /** ISO YYYY-MM-DD; same for every candidate. */
+  examDate: string;
+  reportingTime: string;
+  gateClosesTime: string;
+  examTime: string;
+  venueName: string;
+  venueAddress: string;
   instructions: string[];
 }

@@ -2,8 +2,9 @@ import { findCandidate, parseDob } from "@/lib/candidates";
 
 /**
  * Candidate login. Accepts an employee ID and a date of birth in dd/mm/yyyy
- * form, and returns the matching candidate record. The roster lives server-side
- * (lib/candidates.ts) so the full list is never exposed to the browser.
+ * form, and returns the matching candidate record. The lookup hits the exam
+ * database server-side (lib/candidates.ts) so the roster is never exposed to
+ * the browser.
  */
 export async function POST(request: Request) {
   let body: unknown;
@@ -31,7 +32,7 @@ export async function POST(request: Request) {
     );
   }
 
-  const candidate = findCandidate(employeeId, dobIso);
+  const candidate = await findCandidate(employeeId, dobIso);
   if (!candidate) {
     return Response.json(
       { error: "No hall ticket found for those details. Please check and try again." },

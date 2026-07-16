@@ -33,6 +33,7 @@ const {
   questions,
   options,
   participants,
+  hallticketSeats,
   admins,
   auditLogs,
   answers,
@@ -493,6 +494,7 @@ async function wipeDatabase(): Promise<void> {
   await db.delete(examSessions);
   await db.delete(options);
   await db.delete(questions);
+  await db.delete(hallticketSeats);
   await db.delete(participants);
   await db.delete(admins);
   await db.delete(exams);
@@ -606,6 +608,29 @@ async function main(): Promise<void> {
   }
   for (const part of chunk(participantRows, CHUNK_SIZE)) {
     await db.insert(participants).values(part);
+  }
+
+  /* Hall-ticket seats ------------------------------------------------------ */
+  // Deterministic demo allocation: 140 candidates per lab across five floors
+  // of the Digital Tower, seats A-001..E-140.
+  const FLOORS = ["Ground Floor", "First Floor", "Second Floor", "Third Floor", "Fourth Floor"];
+  const inserted = await db
+    .select({ id: participants.id, username: participants.username })
+    .from(participants);
+  const seatRows = inserted.map(({ id, username }) => {
+    const n = Number(username.replace(/\D/g, "")) || 1;
+    const lab = Math.min(Math.floor((n - 1) / 140), FLOORS.length - 1);
+    const seat = ((n - 1) % 140) + 1;
+    return {
+      participantId: id,
+      blockNo: "Digital Tower",
+      floorNo: FLOORS[lab],
+      labNo: `Lab ${lab + 1}`,
+      seatNo: `${String.fromCharCode(65 + lab)}-${String(seat).padStart(3, "0")}`,
+    };
+  });
+  for (const part of chunk(seatRows, CHUNK_SIZE)) {
+    await db.insert(hallticketSeats).values(part);
   }
 
   /* Administrator --------------------------------------------------------- */

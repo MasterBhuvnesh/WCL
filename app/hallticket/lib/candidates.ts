@@ -1,15 +1,24 @@
-import candidatesData from "@/data/candidates.json";
-import type { Candidate } from "@/lib/types";
+import postgres from "postgres";
+
+import examData from "@/data/exam.json";
+import type { Candidate, ExamMeta } from "@/lib/types";
 
 /**
- * Seeded candidate roster. Loaded from JSON for now; this module is the single
- * place that would later be swapped to query the participants table
- * (app/api/src/db/schema.ts) once the portal talks to the exam API.
+ * Candidate lookup against the exam database: participants (username =
+ * employeeId, display_name = name, dob) joined with hallticket_seats
+ * (block/floor/lab/seat). Exam-wide fields (date, timings, venue) come from
+ * data/exam.json.
  *
- * Import this only from server code (route handlers / server components) so the
- * full roster is never shipped to the browser.
+ * Import this only from server code (route handlers / server components) —
+ * it opens a database connection.
  */
-const candidates = candidatesData as Candidate[];
+const exam = examData as ExamMeta;
+
+const sql = postgres(
+  process.env.DATABASE_URL ?? "postgres://wcl:wcl@localhost:5432/wcl",
+  // ponytail: tiny pool; this portal only does point lookups at login.
+  { max: 5 },
+);
 
 /**
  * Convert a dd/mm/yyyy date string into ISO YYYY-MM-DD, or return null when the
@@ -43,14 +52,35 @@ export function parseDob(input: string): string | null {
  * Both must match; returns null otherwise. DOB acts as the shared secret, so it
  * is compared exactly.
  */
-export function findCandidate(
+export async function findCandidate(
   employeeId: string,
   dobIso: string,
-): Candidate | null {
-  const id = employeeId.trim().toLowerCase();
-  return (
-    candidates.find(
-      (c) => c.employeeId.toLowerCase() === id && c.dob === dobIso,
-    ) ?? null
-  );
+): Promise<Candidate | null> {
+  const rows = await sql`
+    select p.username, p.display_name, p.dob::text as dob,
+           h.block_no, h.floor_no, h.lab_no, h.seat_no
+    from participants p
+    join hallticket_seats h on h.participant_id = p.id
+    where lower(p.username) = ${employeeId.trim().toLowerCase()}
+      and p.dob = ${dobIso}
+    limit 1
+  `;
+  const row = rows[0];
+  if (!row) return null;
+
+  return {
+    employeeId: row.username,
+    name: row.display_name ?? row.username,
+    dob: row.dob,
+    examDate: exam.examDate,
+    reportingTime: exam.reportingTime,
+    gateClosesTime: exam.gateClosesTime,
+    examTime: exam.examTime,
+    venueName: exam.venueName,
+    venueAddress: exam.venueAddress,
+    blockNo: row.block_no,
+    floorNo: row.floor_no,
+    labNo: row.lab_no,
+    seatNo: row.seat_no,
+  };
 }

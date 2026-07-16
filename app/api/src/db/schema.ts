@@ -98,6 +98,20 @@ export const participants = pgTable(
   (table) => [uniqueIndex("participants_username_uq").on(table.username)],
 );
 
+/**
+ * Seat allocation for the external hall-ticket portal. One row per candidate;
+ * exam-wide details (date, venue, timings) live in the portal's exam.json.
+ */
+export const hallticketSeats = pgTable("hallticket_seats", {
+  participantId: uuid("participant_id")
+    .primaryKey()
+    .references(() => participants.id, { onDelete: "cascade" }),
+  blockNo: text("block_no").notNull(),
+  floorNo: text("floor_no").notNull(),
+  labNo: text("lab_no").notNull(),
+  seatNo: text("seat_no").notNull(),
+});
+
 export const examSessions = pgTable(
   "exam_sessions",
   {

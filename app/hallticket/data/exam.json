@@ -2,6 +2,12 @@
   "title": "WCL Examination",
   "subtitle": "Computer-Based Test",
   "durationMinutes": 60,
+  "examDate": "2026-07-26",
+  "reportingTime": "11:30 AM",
+  "gateClosesTime": "12:15 PM",
+  "examTime": "12:30 PM",
+  "venueName": "Ramdeobaba University",
+  "venueAddress": "Ramdeo Tekdi, Gittikhadan, Katol Road, Nagpur, Maharashtra 440013",
   "totalQuestions": 100,
   "markingScheme": "+1 for correct, -0.5 for wrong, no partial marking",
   "instructions": [
