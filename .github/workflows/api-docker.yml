@@ -1,0 +1,43 @@
+name: API Docker image
+
+# Typechecks app/api, builds the Docker image, and pushes it to Docker Hub as
+# <DOCKERHUB_USERNAME>/wclapi tagged both v<package.json version> and latest.
+# Needs two repo secrets: DOCKERHUB_USERNAME and DOCKERHUB_TOKEN (an access
+# token from hub.docker.com -> Account Settings -> Personal access tokens).
+# Bump "version" in app/api/package.json to cut a new v-tag.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "app/api/**"
+      - ".github/workflows/api-docker.yml"
+  workflow_dispatch:
+
+jobs:
+  build-push:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: app/api
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install --frozen-lockfile
+      - run: bun run typecheck
+
+      - name: Read image version from package.json
+        id: meta
+        run: echo "version=v$(jq -r .version package.json)" >> "$GITHUB_OUTPUT"
+
+      - uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and push (${{ steps.meta.outputs.version }} + latest)
+        run: |
+          IMAGE="${{ secrets.DOCKERHUB_USERNAME }}/wclapi"
+          docker build -t "$IMAGE:${{ steps.meta.outputs.version }}" -t "$IMAGE:latest" .
+          docker push "$IMAGE:${{ steps.meta.outputs.version }}"
+          docker push "$IMAGE:latest"
