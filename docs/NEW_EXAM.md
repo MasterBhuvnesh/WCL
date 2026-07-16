@@ -39,6 +39,19 @@ cd app/api
 bun run seed --fresh     # wipes ALL tables + Redis state, reseeds WCL-EXAM demo
 ```
 
+**Remove only imported data** (questions / participants / hall-ticket seats,
+leaving sessions, results, exams and admins alone):
+
+```bash
+cd app/api
+bun run clean <questions|participants|seats|all>          # preview: prints DB host + counts
+bun run clean <questions|participants|seats|all> --yes    # actually delete
+```
+
+Both commands follow `DATABASE_URL` — the preview prints which database they
+target, check it before `--yes`. Details in
+[app/api/scripts/README.md](../app/api/scripts/README.md).
+
 ---
 
 ## B. Everything new (clean start)
@@ -123,6 +136,11 @@ stores the file via `POST /admin/upload` and saves the returned URL as the
 question's `imageUrl`); the image then renders in the exam and in each
 candidate's result review.
 
+Bulk path: `cd app/api && bun run import:questions your.xlsx` loads a whole
+spreadsheet (CSV or XLSX; image paths in the sheet are uploaded to S3
+automatically). Column contract, sample workbook, and data-cleaning steps are
+in [app/api/scripts/README.md](../app/api/scripts/README.md).
+
 ### 5. Import participants
 
 Admin panel → **Participants** → paste a JSON array (max 1000 per call). Each row
@@ -136,6 +154,12 @@ is `{ "username", "displayName", "secret"?, "dob"? }`:
 
 Explicit secrets are hashed on ingest — keep any plaintext list somewhere safe to
 distribute to candidates; it cannot be recovered from the DB.
+
+Bulk path: `cd app/api && bun run import:participants your.xlsx`, then
+`bun run import:seats seats.xlsx` for the hall-ticket seat allocations
+(building / floor / lab / seat per candidate, served by the hall-ticket
+portal). Samples and column contracts in
+[app/api/scripts/README.md](../app/api/scripts/README.md).
 
 ### 6. Dry run (recommended)
 
