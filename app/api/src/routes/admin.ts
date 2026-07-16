@@ -18,6 +18,7 @@ import {
   answers,
   examSessions,
   exams,
+  hallticketSeats,
   integrityEvents,
   options,
   participants,
@@ -879,6 +880,28 @@ adminRouter.get(
       .from(participants)
       .orderBy(asc(participants.username));
     res.json(rows.map((r) => ({ ...r, createdAt: iso(r.createdAt) })));
+  }),
+);
+
+/** Hall-ticket seat allocations, one row per allocated participant. */
+adminRouter.get(
+  "/hallticket",
+  h(async (_req, res) => {
+    const rows = await db
+      .select({
+        id: participants.id,
+        username: participants.username,
+        displayName: participants.displayName,
+        dob: participants.dob,
+        blockNo: hallticketSeats.blockNo,
+        floorNo: hallticketSeats.floorNo,
+        labNo: hallticketSeats.labNo,
+        seatNo: hallticketSeats.seatNo,
+      })
+      .from(hallticketSeats)
+      .innerJoin(participants, eq(participants.id, hallticketSeats.participantId))
+      .orderBy(asc(participants.username));
+    res.json(rows);
   }),
 );
 

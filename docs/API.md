@@ -650,8 +650,21 @@ All participants, sorted by username.
 ]
 ```
 
-`dob` (`YYYY-MM-DD`, or `null`) is stored for a future external hall-ticket site
-and shown in admin only; it plays no part in login.
+`dob` (`YYYY-MM-DD`, or `null`) is used by the external hall-ticket portal
+(username + dob login) and shown in admin; it plays no part in exam login.
+
+### GET /admin/hallticket
+
+Hall-ticket seat allocations (participants ⋈ hallticket_seats), sorted by
+username. Load rows with `bun run import:seats` in `app/api`.
+
+**Response `200`**
+
+```json
+[
+  { "id": "a1b2...", "username": "user001", "displayName": "Candidate 001", "dob": "2001-04-12", "blockNo": "Digital Tower", "floorNo": "Ground Floor", "labNo": "Lab 1", "seatNo": "A-001" }
+]
+```
 
 ### POST /admin/participants/import
 
