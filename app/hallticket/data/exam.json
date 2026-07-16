@@ -1,0 +1,19 @@
+{
+  "title": "WCL Examination",
+  "subtitle": "Computer-Based Test",
+  "durationMinutes": 60,
+  "totalQuestions": 100,
+  "markingScheme": "+1 for correct, -0.5 for wrong, no partial marking",
+  "instructions": [
+    "Carry a printed copy of this hall ticket and a valid photo identity card (Aadhaar, PAN, or Employee ID) to the examination centre. Entry is not permitted without both.",
+    "Report to the venue by the reporting time printed on this hall ticket. Candidates arriving after the gate closing time will not be allowed to enter.",
+    "The examination is conducted on a computer. The duration is 60 minutes, measured from the moment you begin.",
+    "You will be served 100 questions. Every question has a single correct answer, and there is no partial marking.",
+    "Each correct answer is awarded 1 mark, and each wrong answer is penalised 0.5 marks. Unanswered questions score zero.",
+    "Your responses are saved automatically and synchronised with the server at regular intervals. The server clock is authoritative, and the on-screen timer is provided only for guidance.",
+    "Use the on-screen question palette to navigate between questions and to review your progress at any time.",
+    "Do not switch browser tabs, minimise the window, or leave full screen during the test, as such actions are recorded and may be treated as malpractice.",
+    "Mobile phones, smart watches, calculators, books, and any other electronic or reference material are strictly prohibited inside the examination hall.",
+    "Follow all instructions given by the invigilators. Your score is displayed immediately after you submit."
+  ]
+}
