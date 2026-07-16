@@ -62,7 +62,9 @@ function createWindow(): void {
     fullscreen: true,
     kiosk: true,
     resizable: false,
-    ...(process.platform === 'linux' ? { icon } : {}),
+    // Window/taskbar icon in dev and on Linux; packaged Windows/mac builds
+    // use build/icon.ico / icon.icns via electron-builder.
+    icon,
     title: 'WCL',
     center: true,
     frame: false,
