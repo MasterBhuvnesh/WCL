@@ -37,6 +37,11 @@ export default function ParticipantsPage() {
   const [offset, setOffset] = useState(0);
   const PAGE = 50;
 
+  const [one, setOne] = useState({ username: "", displayName: "", dob: "", secret: "" });
+  const [oneMsg, setOneMsg] = useState<string | null>(null);
+  const [oneErr, setOneErr] = useState<string | null>(null);
+  const [oneBusy, setOneBusy] = useState(false);
+
   const load = useCallback(async () => {
     try {
       const rows = await apiFetch<Participant[]>("/admin/participants");
@@ -80,6 +85,33 @@ export default function ParticipantsPage() {
     }
   }
 
+  async function addOne() {
+    setOneErr(null);
+    setOneMsg(null);
+    setOneBusy(true);
+    try {
+      const row: Record<string, string> = { username: one.username.trim() };
+      if (one.displayName.trim()) row.displayName = one.displayName.trim();
+      if (one.dob) row.dob = one.dob;
+      if (one.secret) row.secret = one.secret;
+      const res = await apiFetch<{ created: number; skipped: number }>(
+        "/admin/participants/import",
+        { method: "POST", body: JSON.stringify({ participants: [row] }) },
+      );
+      if (res.created === 1) {
+        setOneMsg(`Added ${row.username}${row.secret ? "" : " (common exam password)"}`);
+        setOne({ username: "", displayName: "", dob: "", secret: "" });
+        await load();
+      } else {
+        setOneErr(`Username "${row.username}" already exists — nothing added.`);
+      }
+    } catch (err) {
+      setOneErr(err instanceof Error ? err.message : "Add failed");
+    } finally {
+      setOneBusy(false);
+    }
+  }
+
   const needle = q.trim().toLowerCase();
   const filtered = needle
     ? list.filter(
@@ -100,6 +132,56 @@ export default function ParticipantsPage() {
           <code>secret</code> get the common exam password. Existing usernames are skipped.
         </p>
       </header>
+
+      <Tray>
+        <TrayStrip className="flex items-center justify-between px-3 py-2">
+          <TrayLabel>Add one participant</TrayLabel>
+          <span className="text-xs text-muted-foreground">Leave secret blank for the common exam password</span>
+        </TrayStrip>
+        <TrayInner className="flex flex-col gap-3">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <label className="flex flex-col gap-1 text-sm">
+              <span className="text-muted-foreground text-xs">Username *</span>
+              <Input
+                value={one.username}
+                onChange={(e) => setOne({ ...one, username: e.target.value })}
+                placeholder="roll-001"
+              />
+            </label>
+            <label className="flex flex-col gap-1 text-sm">
+              <span className="text-muted-foreground text-xs">Display name</span>
+              <Input
+                value={one.displayName}
+                onChange={(e) => setOne({ ...one, displayName: e.target.value })}
+                placeholder="Asha R"
+              />
+            </label>
+            <label className="flex flex-col gap-1 text-sm">
+              <span className="text-muted-foreground text-xs">Date of birth</span>
+              <Input
+                type="date"
+                value={one.dob}
+                onChange={(e) => setOne({ ...one, dob: e.target.value })}
+              />
+            </label>
+            <label className="flex flex-col gap-1 text-sm">
+              <span className="text-muted-foreground text-xs">Secret</span>
+              <Input
+                value={one.secret}
+                onChange={(e) => setOne({ ...one, secret: e.target.value })}
+                placeholder="optional"
+              />
+            </label>
+          </div>
+          {oneErr && <p className="text-destructive text-sm">{oneErr}</p>}
+          {oneMsg && <p className="text-sm text-emerald-600">{oneMsg}</p>}
+          <div>
+            <Button variant="cta" onClick={addOne} disabled={oneBusy || !one.username.trim()}>
+              {oneBusy ? "Adding…" : "Add participant"}
+            </Button>
+          </div>
+        </TrayInner>
+      </Tray>
 
       <Tray>
         <TrayStrip className="flex items-center justify-between px-3 py-2">
