@@ -1,30 +1,50 @@
-import { formatDateLong } from "@/lib/format";
+import { formatDateLong, isoToDdmmyyyy } from "@/lib/format";
 import type { Candidate, ExamMeta } from "@/lib/types";
 
 /**
  * On-screen HTML replica of the hall ticket. Rendering the preview as real DOM
  * (rather than embedding the PDF in an iframe) means it always displays and is
  * responsive — the browser's PDF handling can't blank it out or auto-download
- * it. The downloadable PDF is produced separately from the same data, so the
- * two never diverge in content.
+ * it. The downloadable PDF is produced separately from the same data
+ * (HallTicketDocument.tsx); keep the two layouts in step.
  */
 
-function Field({
-  label,
-  value,
-  className = "",
-}: {
-  label: string;
-  value: string;
-  className?: string;
-}) {
+/**
+ * One table row: [label, value] renders the value across the full width;
+ * [label, value, label, value] renders two label/value pairs side by side.
+ */
+type RowSpec = [string, string] | [string, string, string, string];
+
+const LABEL_TD =
+  "w-[22%] border border-slate-300 bg-slate-50 px-2 py-1.5 align-middle text-[10px] font-medium uppercase tracking-wide text-slate-500";
+const VALUE_TD =
+  "border border-slate-300 px-2 py-1.5 align-middle text-sm font-semibold text-slate-900";
+
+function DetailTable({ rows }: { rows: RowSpec[] }) {
   return (
-    <div className={className}>
-      <p className="text-[10px] font-medium uppercase tracking-wide text-slate-500">
-        {label}
-      </p>
-      <p className="text-sm font-semibold text-slate-900">{value}</p>
-    </div>
+    <table className="w-full border-collapse">
+      <tbody>
+        {rows.map((cells, i) => (
+          <tr key={i}>
+            {cells.length === 2 ? (
+              <>
+                <td className={LABEL_TD}>{cells[0]}</td>
+                <td className={VALUE_TD} colSpan={3}>
+                  {cells[1]}
+                </td>
+              </>
+            ) : (
+              <>
+                <td className={LABEL_TD}>{cells[0]}</td>
+                <td className={`${VALUE_TD} w-[28%]`}>{cells[1]}</td>
+                <td className={LABEL_TD}>{cells[2]}</td>
+                <td className={`${VALUE_TD} w-[28%]`}>{cells[3]}</td>
+              </>
+            )}
+          </tr>
+        ))}
+      </tbody>
+    </table>
   );
 }
 
@@ -48,7 +68,7 @@ export function HallTicketPreview({
       {/* Header */}
       <div className="flex items-center justify-between gap-3 border-b border-slate-300 bg-slate-100 px-4 py-3">
         <img
-          src="/assets/wcl.png"
+          src="/assets/wcl.logo.png"
           alt="Western Coalfields Limited"
           className="h-11 w-auto object-contain"
         />
@@ -72,43 +92,42 @@ export function HallTicketPreview({
 
       {/* Candidate details */}
       <SectionBar>Candidate Details</SectionBar>
-      <div className="grid grid-cols-1 gap-x-6 gap-y-3 px-4 py-4 sm:grid-cols-2">
-        <Field label="Candidate Name" value={candidate.name} />
-        <Field label="Employee ID" value={candidate.employeeId} />
+      <div className="px-4 py-3">
+        <DetailTable
+          rows={[
+            ["Candidate Name", candidate.name, "Employee ID", candidate.employeeId],
+            ["Date of Birth", isoToDdmmyyyy(candidate.dob)],
+          ]}
+        />
       </div>
 
       {/* Venue, seating and schedule */}
       <SectionBar>Venue, Seating and Schedule</SectionBar>
-      <div className="grid grid-cols-1 gap-x-6 gap-y-3 px-4 py-4 sm:grid-cols-2">
-        <Field
-          label="Examination Centre"
-          value={candidate.venueName}
-          className="sm:col-span-2"
-        />
-        <Field
-          label="Address"
-          value={candidate.venueAddress}
-          className="sm:col-span-2"
-        />
-        <Field label="Building" value={candidate.blockNo} />
-        <Field label="Floor" value={candidate.floorNo} />
-        <Field label="Lab" value={candidate.labNo} />
-        <Field label="Seat Number" value={candidate.seatNo} />
-        <Field
-          label="Examination Date"
-          value={formatDateLong(candidate.examDate)}
-        />
-        <Field
-          label="Pattern"
-          value={`${exam.totalQuestions} questions, single choice, ${exam.durationMinutes} minutes`}
-        />
-        <Field label="Reporting Time" value={candidate.reportingTime} />
-        <Field label="Gate Closes" value={candidate.gateClosesTime} />
-        <Field label="Examination Begins" value={candidate.examTime} />
-        <Field
-          label="Marking"
-          value={exam.markingScheme}
-          className="sm:col-span-2"
+      <div className="px-4 py-3">
+        <DetailTable
+          rows={[
+            ["Examination Centre", candidate.venueName],
+            ["Address", candidate.venueAddress],
+            ["Building", candidate.blockNo, "Floor", candidate.floorNo],
+            ["Lab", candidate.labNo, "Seat Number", candidate.seatNo],
+            [
+              "Examination Date",
+              formatDateLong(candidate.examDate),
+              "Reporting Time",
+              candidate.reportingTime,
+            ],
+            [
+              "Gate Closes",
+              candidate.gateClosesTime,
+              "Examination Begins",
+              candidate.examTime,
+            ],
+            [
+              "Pattern",
+              `${exam.totalQuestions} questions, single choice, ${exam.durationMinutes} minutes`,
+            ],
+            ["Marking", exam.markingScheme],
+          ]}
         />
       </div>
 
@@ -134,8 +153,8 @@ export function HallTicketPreview({
         </div>
 
         <p className="mt-6 border-t border-slate-300 pt-3 text-center text-[10px] leading-relaxed text-slate-500">
-          This is a computer-generated hall ticket. Please verify all details and
-          report any discrepancy before the examination date.
+          This is a computer-generated hall ticket. Please verify all details
+          and report any discrepancy before the examination date.
           <br />
           Western Coalfields Limited. Examination conducted at Ramdeobaba
           University, Nagpur.

@@ -9,7 +9,7 @@ import {
   View,
 } from "@react-pdf/renderer";
 
-import { formatDateLong } from "@/lib/format";
+import { formatDateLong, isoToDdmmyyyy } from "@/lib/format";
 import type { Candidate, ExamMeta } from "@/lib/types";
 
 const INK = "#0f172a";
@@ -17,6 +17,7 @@ const MUTED = "#475569";
 const BORDER = "#cbd5e1";
 const ACCENT = "#1d6ff2";
 const HEADBG = "#f1f5f9";
+const LABELBG = "#f8fafc";
 
 const styles = StyleSheet.create({
   page: {
@@ -68,21 +69,45 @@ const styles = StyleSheet.create({
     paddingVertical: 4.5,
     paddingHorizontal: 10,
   },
-  body: { paddingHorizontal: 12, paddingTop: 13, paddingBottom: 9 },
+  body: { paddingHorizontal: 12, paddingTop: 12, paddingBottom: 12 },
   /** The instructions body grows to fill the page so the footer sits at the bottom. */
   bodyGrow: { flexGrow: 1 },
 
-  grid: { flexDirection: "row", flexWrap: "wrap" },
-  cell: { width: "50%", marginBottom: 10, paddingRight: 10 },
-  cellWide: { width: "100%", marginBottom: 10, paddingRight: 10 },
-  label: {
+  /* Bordered label/value table */
+  table: {
+    borderWidth: 1,
+    borderColor: BORDER,
+  },
+  tr: {
+    flexDirection: "row",
+    borderBottomWidth: 1,
+    borderBottomColor: BORDER,
+  },
+  trLast: { flexDirection: "row" },
+  tdLabel: {
+    backgroundColor: LABELBG,
+    borderRightWidth: 1,
+    borderRightColor: BORDER,
+    paddingVertical: 5.5,
+    paddingHorizontal: 8,
+    justifyContent: "center",
+  },
+  tdValue: {
+    paddingVertical: 5.5,
+    paddingHorizontal: 8,
+    justifyContent: "center",
+  },
+  tdBorderRight: {
+    borderRightWidth: 1,
+    borderRightColor: BORDER,
+  },
+  labelText: {
     fontSize: 7.5,
     color: MUTED,
     letterSpacing: 0.5,
     textTransform: "uppercase",
-    marginBottom: 2,
   },
-  value: { fontSize: 11, fontFamily: "Helvetica-Bold", color: INK },
+  valueText: { fontSize: 9.5, fontFamily: "Helvetica-Bold", color: INK },
 
   instrItem: { flexDirection: "row", marginBottom: 5, paddingRight: 6 },
   instrNum: { width: 15, fontSize: 9, color: ACCENT, fontFamily: "Helvetica-Bold" },
@@ -117,31 +142,60 @@ const styles = StyleSheet.create({
   },
 });
 
-function Field({
-  label,
-  value,
-  wide = false,
-}: {
-  label: string;
-  value: string;
-  wide?: boolean;
-}) {
+/**
+ * One table row: [label, value] renders the value across the full width;
+ * [label, value, label, value] renders two label/value pairs side by side.
+ */
+type RowSpec = [string, string] | [string, string, string, string];
+
+function DetailTable({ rows }: { rows: RowSpec[] }) {
   return (
-    <View style={wide ? styles.cellWide : styles.cell}>
-      <Text style={styles.label}>{label}</Text>
-      <Text style={styles.value}>{value}</Text>
+    <View style={styles.table}>
+      {rows.map((cells, i) => {
+        const last = i === rows.length - 1;
+        return (
+          <View style={last ? styles.trLast : styles.tr} key={i}>
+            {cells.length === 2 ? (
+              <>
+                <View style={[styles.tdLabel, { width: "22%" }]}>
+                  <Text style={styles.labelText}>{cells[0]}</Text>
+                </View>
+                <View style={[styles.tdValue, { width: "78%" }]}>
+                  <Text style={styles.valueText}>{cells[1]}</Text>
+                </View>
+              </>
+            ) : (
+              <>
+                <View style={[styles.tdLabel, { width: "22%" }]}>
+                  <Text style={styles.labelText}>{cells[0]}</Text>
+                </View>
+                <View style={[styles.tdValue, styles.tdBorderRight, { width: "28%" }]}>
+                  <Text style={styles.valueText}>{cells[1]}</Text>
+                </View>
+                <View style={[styles.tdLabel, { width: "22%" }]}>
+                  <Text style={styles.labelText}>{cells[2]}</Text>
+                </View>
+                <View style={[styles.tdValue, { width: "28%" }]}>
+                  <Text style={styles.valueText}>{cells[3]}</Text>
+                </View>
+              </>
+            )}
+          </View>
+        );
+      })}
     </View>
   );
 }
 
 /**
  * The hall ticket itself — a single A4 page. This is the one source of truth
- * for both the on-screen preview and the downloaded PDF.
+ * for both the on-screen preview and the downloaded PDF; keep
+ * HallTicketPreview.tsx in step with any layout change here.
  */
 export function HallTicketDocument({
   candidate,
   exam,
-  wclLogoSrc = "/assets/wcl.png",
+  wclLogoSrc = "/assets/wcl.logo.png",
   rbuLogoSrc = "/assets/rbu.png",
 }: {
   candidate: Candidate;
@@ -173,35 +227,42 @@ export function HallTicketDocument({
           {/* Candidate details */}
           <Text style={styles.sectionBar}>CANDIDATE DETAILS</Text>
           <View style={styles.body}>
-            <View style={styles.grid}>
-              <Field label="Candidate Name" value={candidate.name} />
-              <Field label="Employee ID" value={candidate.employeeId} />
-            </View>
+            <DetailTable
+              rows={[
+                ["Candidate Name", candidate.name, "Employee ID", candidate.employeeId],
+                ["Date of Birth", isoToDdmmyyyy(candidate.dob)],
+              ]}
+            />
           </View>
 
           {/* Venue & schedule */}
           <Text style={styles.sectionBar}>VENUE, SEATING AND SCHEDULE</Text>
           <View style={styles.body}>
-            <View style={styles.grid}>
-              <Field label="Examination Centre" value={candidate.venueName} wide />
-              <Field label="Address" value={candidate.venueAddress} wide />
-              <Field label="Building" value={candidate.blockNo} />
-              <Field label="Floor" value={candidate.floorNo} />
-              <Field label="Lab" value={candidate.labNo} />
-              <Field label="Seat Number" value={candidate.seatNo} />
-              <Field
-                label="Examination Date"
-                value={formatDateLong(candidate.examDate)}
-              />
-              <Field
-                label="Pattern"
-                value={`${exam.totalQuestions} questions, single choice, ${exam.durationMinutes} minutes`}
-              />
-              <Field label="Reporting Time" value={candidate.reportingTime} />
-              <Field label="Gate Closes" value={candidate.gateClosesTime} />
-              <Field label="Examination Begins" value={candidate.examTime} />
-              <Field label="Marking" value={exam.markingScheme} />
-            </View>
+            <DetailTable
+              rows={[
+                ["Examination Centre", candidate.venueName],
+                ["Address", candidate.venueAddress],
+                ["Building", candidate.blockNo, "Floor", candidate.floorNo],
+                ["Lab", candidate.labNo, "Seat Number", candidate.seatNo],
+                [
+                  "Examination Date",
+                  formatDateLong(candidate.examDate),
+                  "Reporting Time",
+                  candidate.reportingTime,
+                ],
+                [
+                  "Gate Closes",
+                  candidate.gateClosesTime,
+                  "Examination Begins",
+                  candidate.examTime,
+                ],
+                [
+                  "Pattern",
+                  `${exam.totalQuestions} questions, single choice, ${exam.durationMinutes} minutes`,
+                ],
+                ["Marking", exam.markingScheme],
+              ]}
+            />
           </View>
 
           {/* Instructions */}
