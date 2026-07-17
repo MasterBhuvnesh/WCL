@@ -51,7 +51,7 @@ export default function LoginPage(): React.JSX.Element {
             <img src={rbuLogo} alt="Ramdeobaba University" className="h-14 object-contain" />
           </div>
           <h1 className="text-foreground mt-4 text-3xl font-semibold tracking-tight">
-             WCL Examination Login
+            WCL Examination Login
           </h1>
           <p className="text-muted-foreground mt-1 text-sm">
             Sign in with your assigned credentials to continue.
@@ -138,7 +138,9 @@ export default function LoginPage(): React.JSX.Element {
         {!online && (
           <div className="text-muted-foreground mt-3 flex items-center justify-center gap-1.5 text-xs">
             <WifiOff className="size-3.5" />
-            <span>You appear to be offline. Sign in may not succeed until the connection returns.</span>
+            <span>
+              You appear to be offline. Sign in may not succeed until the connection returns.
+            </span>
           </div>
         )}
       </div>

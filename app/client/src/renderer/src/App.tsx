@@ -97,8 +97,7 @@ function AppShell(): React.JSX.Element {
     root.classList.remove('dev-mode')
 
     const isEditable = (target: EventTarget | null): boolean =>
-      target instanceof HTMLElement &&
-      !!target.closest('input, textarea, [contenteditable="true"]')
+      target instanceof HTMLElement && !!target.closest('input, textarea, [contenteditable="true"]')
 
     const block = (event: Event): void => {
       if (isEditable(event.target)) return
@@ -117,7 +116,10 @@ function AppShell(): React.JSX.Element {
   }, [devMode])
 
   return (
-    <div className="bg-background text-foreground flex h-screen flex-col" style={{ paddingTop: 32 }}>
+    <div
+      className="bg-background text-foreground flex h-screen flex-col"
+      style={{ paddingTop: 32 }}
+    >
       <TitleBar title="WCL Examination" showControls={showControls} />
       <main className="flex flex-1 flex-col overflow-hidden">
         <AppRoutes />

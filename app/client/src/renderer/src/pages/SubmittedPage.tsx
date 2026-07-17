@@ -1,5 +1,13 @@
 import { useCallback, useEffect, useState } from 'react'
-import { AlertCircle, Check, CheckCircle2, Loader2, MinusCircle, RotateCw, XCircle } from 'lucide-react'
+import {
+  AlertCircle,
+  Check,
+  CheckCircle2,
+  Loader2,
+  MinusCircle,
+  RotateCw,
+  XCircle
+} from 'lucide-react'
 import { useExam } from '@renderer/context/ExamProvider'
 import { Button } from '@renderer/components/ui/button'
 import { api } from '@renderer/lib/api'
@@ -27,14 +35,12 @@ function formatMarks(n: number): string {
   return '0'
 }
 
-const OUTCOME: Record<
-  ResultOutcome,
-  { label: string; badge: string; icon: typeof CheckCircle2 }
-> = {
-  correct: { label: 'Correct', badge: 'bg-success/10 text-success', icon: CheckCircle2 },
-  wrong: { label: 'Incorrect', badge: 'bg-destructive/10 text-destructive', icon: XCircle },
-  unanswered: { label: 'Unanswered', badge: 'bg-muted text-muted-foreground', icon: MinusCircle }
-}
+const OUTCOME: Record<ResultOutcome, { label: string; badge: string; icon: typeof CheckCircle2 }> =
+  {
+    correct: { label: 'Correct', badge: 'bg-success/10 text-success', icon: CheckCircle2 },
+    wrong: { label: 'Incorrect', badge: 'bg-destructive/10 text-destructive', icon: XCircle },
+    unanswered: { label: 'Unanswered', badge: 'bg-muted text-muted-foreground', icon: MinusCircle }
+  }
 
 export default function SubmittedPage(): React.JSX.Element {
   const { token, exam } = useExam()
@@ -190,9 +196,7 @@ export default function SubmittedPage(): React.JSX.Element {
                   </div>
                 </div>
 
-                <p className="text-foreground mt-3 whitespace-pre-wrap leading-relaxed">
-                  {q.text}
-                </p>
+                <p className="text-foreground mt-3 whitespace-pre-wrap leading-relaxed">{q.text}</p>
                 {q.imageUrl && (
                   <img
                     src={q.imageUrl}
@@ -209,7 +213,9 @@ export default function SubmittedPage(): React.JSX.Element {
                         key={option.optionId}
                         className={cn(
                           'flex items-center gap-3 rounded-lg border p-3',
-                          selected ? 'border-primary bg-primary/5 ring-primary/40 ring-1' : 'bg-card'
+                          selected
+                            ? 'border-primary bg-primary/5 ring-primary/40 ring-1'
+                            : 'bg-card'
                         )}
                       >
                         <span

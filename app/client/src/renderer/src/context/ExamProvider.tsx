@@ -96,9 +96,10 @@ export function ExamProvider({ children }: { children: ReactNode }): React.JSX.E
   const [error, setError] = useState<string | null>(null)
   const [online, setOnline] = useState(true)
   const [devMode, setDevMode] = useState(false)
-  const [integrityWarning, setIntegrityWarning] = useState<{ type: string; message: string } | null>(
-    null
-  )
+  const [integrityWarning, setIntegrityWarning] = useState<{
+    type: string
+    message: string
+  } | null>(null)
 
   const [token, setToken] = useState<string | null>(null)
   const [username, setUsername] = useState<string | null>(null)
@@ -393,7 +394,8 @@ export function ExamProvider({ children }: { children: ReactNode }): React.JSX.E
     try {
       // Stable machine fingerprint (main process) binds the session to this
       // device; harmless to omit in web dev where the bridge is absent.
-      const deviceId = req.deviceId ?? (await window.examBridge?.getDeviceId().catch(() => undefined))
+      const deviceId =
+        req.deviceId ?? (await window.examBridge?.getDeviceId().catch(() => undefined))
       const res = await api.login({ ...req, deviceId })
       setToken(res.token)
       tokenRef.current = res.token
@@ -590,7 +592,7 @@ export function ExamProvider({ children }: { children: ReactNode }): React.JSX.E
   useEffect(() => stopLoops, [stopLoops])
 
   // --- derived -----------------------------------------------------------------
-  const questions = manifest?.questions ?? []
+  const questions = useMemo(() => manifest?.questions ?? [], [manifest])
   const currentQuestion = questions[currentIndex] ?? null
 
   const counts = useMemo<PaletteCounts>(() => {
@@ -650,6 +652,7 @@ export function ExamProvider({ children }: { children: ReactNode }): React.JSX.E
   return <ExamContext.Provider value={value}>{children}</ExamContext.Provider>
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useExam(): ExamContextValue {
   const ctx = useContext(ExamContext)
   if (!ctx) throw new Error('useExam must be used within an ExamProvider')

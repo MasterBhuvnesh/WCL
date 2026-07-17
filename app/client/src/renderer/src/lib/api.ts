@@ -78,11 +78,9 @@ export const api = {
   login: (req: LoginRequest) =>
     request<LoginResponse>('/auth/login', { method: 'POST', body: req }),
 
-  begin: (token: string) =>
-    request<BeginResponse>('/exam/begin', { method: 'POST', token }),
+  begin: (token: string) => request<BeginResponse>('/exam/begin', { method: 'POST', token }),
 
-  manifest: (token: string) =>
-    request<ExamManifest>('/exam/manifest', { token }),
+  manifest: (token: string) => request<ExamManifest>('/exam/manifest', { token }),
 
   time: () => request<TimeResponse>('/time'),
 
@@ -92,11 +90,9 @@ export const api = {
   heartbeat: (token: string, req: HeartbeatRequest) =>
     request<HeartbeatResponse>('/exam/heartbeat', { method: 'POST', token, body: req }),
 
-  submit: (token: string) =>
-    request<SubmitResponse>('/exam/submit', { method: 'POST', token }),
+  submit: (token: string) => request<SubmitResponse>('/exam/submit', { method: 'POST', token }),
 
-  resume: (token: string) =>
-    request<ResumeResponse>('/exam/resume', { method: 'POST', token }),
+  resume: (token: string) => request<ResumeResponse>('/exam/resume', { method: 'POST', token }),
 
   result: (token: string) => request<ExamResult>('/exam/result', { token })
 }

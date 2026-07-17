@@ -7,7 +7,9 @@ interface ExamBridge {
   onDevModeChanged(cb: (enabled: boolean) => void): () => void
   reportIntegrity(event: { type: string; meta?: Record<string, unknown> }): void
   onIntegrityWarning(cb: (info: { type: string; message: string }) => void): () => void
-  onIntegrityEvent(cb: (event: { type: string; meta?: Record<string, unknown> }) => void): () => void
+  onIntegrityEvent(
+    cb: (event: { type: string; meta?: Record<string, unknown> }) => void
+  ): () => void
   setExamLock(locked: boolean): void
   getDeviceId(): Promise<string>
   onUpdateStatus(cb: (status: UpdateStatus) => void): () => void

@@ -97,10 +97,7 @@ export function QuestionPalette({
       <div className="shrink-0 px-4 py-3">
         <ul className="flex flex-col gap-1.5">
           {legend.map((entry) => (
-            <li
-              key={entry.label}
-              className="text-muted-foreground flex items-center gap-2 text-xs"
-            >
+            <li key={entry.label} className="text-muted-foreground flex items-center gap-2 text-xs">
               <span className={cn('size-3 shrink-0 rounded-sm', entry.swatch)} />
               <span className="flex-1">{entry.label}</span>
               <span className="text-foreground font-semibold tabular-nums">{entry.count}</span>

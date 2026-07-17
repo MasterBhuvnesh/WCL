@@ -46,13 +46,13 @@ the API seed (see [`app/api/README.md`](../api/README.md)).
 
 ## Commands
 
-| Command | Purpose |
-| --- | --- |
-| `bun run dev` | Run in development with hot reload. |
-| `bun run typecheck` | Node and web tsconfig checks. |
-| `bun run lint` / `bun run format` | ESLint and Prettier. |
+| Command                                           | Purpose                                  |
+| ------------------------------------------------- | ---------------------------------------- |
+| `bun run dev`                                     | Run in development with hot reload.      |
+| `bun run typecheck`                               | Node and web tsconfig checks.            |
+| `bun run lint` / `bun run format`                 | ESLint and Prettier.                     |
 | `bun run build:win` / `build:mac` / `build:linux` | Package installers via electron-builder. |
-| `bun run build:unpack` | Unpacked build for quick inspection. |
+| `bun run build:unpack`                            | Unpacked build for quick inspection.     |
 
 ## Deployment & auto-update
 

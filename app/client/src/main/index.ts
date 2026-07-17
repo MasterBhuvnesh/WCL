@@ -13,11 +13,7 @@ let mainWindow: BrowserWindow | null = null
 // Deep link protocol registration
 if (process.defaultApp) {
   if (process.argv.length >= 2) {
-    app.setAsDefaultProtocolClient(
-      'wcl',
-      process.execPath,
-      [path.resolve(process.argv[1])]
-    )
+    app.setAsDefaultProtocolClient('wcl', process.execPath, [path.resolve(process.argv[1])])
   }
 } else {
   if (!app.isDefaultProtocolClient('wcl')) {

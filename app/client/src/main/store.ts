@@ -20,7 +20,8 @@ interface KV {
 }
 
 function createSqliteStore(file: string): KV {
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  // require, not import: lets getStore() catch the failure and fall back to JSON
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const { DatabaseSync } = require('node:sqlite') as typeof import('node:sqlite')
   const db = new DatabaseSync(file)
   db.exec('CREATE TABLE IF NOT EXISTS kv (k TEXT PRIMARY KEY, v TEXT NOT NULL)')

@@ -1,5 +1,7 @@
+import type { LucideIcon } from 'lucide-react'
+
 export interface AppIconProps {
-  Icon: React.ComponentType<any>
+  Icon: LucideIcon
   size?: number
   color?: string
   fill?: string
