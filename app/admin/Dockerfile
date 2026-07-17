@@ -6,7 +6,7 @@ RUN bun install --frozen-lockfile
 COPY . .
 # NEXT_PUBLIC_* values are inlined into the client bundle at build time, so
 # the public API URL must be provided here, not at run time.
-ARG NEXT_PUBLIC_API_BASE=http://localhost:4000
+ARG NEXT_PUBLIC_API_BASE=https://api.rbuexam.in/
 ENV NEXT_PUBLIC_API_BASE=$NEXT_PUBLIC_API_BASE
 RUN bun run build
 
