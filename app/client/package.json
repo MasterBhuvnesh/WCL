@@ -28,6 +28,7 @@
     "@tailwindcss/vite": "^4.1.18",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "electron-log": "^5.4.4",
     "electron-updater": "^6.3.9",
     "framer-motion": "^12.34.3",
     "ldrs": "^1.1.9",

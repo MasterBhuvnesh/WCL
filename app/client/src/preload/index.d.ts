@@ -13,6 +13,7 @@ interface ExamBridge {
   setExamLock(locked: boolean): void
   getDeviceId(): Promise<string>
   onUpdateStatus(cb: (status: UpdateStatus) => void): () => void
+  getUpdateStatus(): Promise<UpdateStatus | null>
   restartToUpdate(): Promise<void>
 }
 
