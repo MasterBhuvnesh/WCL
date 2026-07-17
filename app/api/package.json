@@ -15,7 +15,8 @@
     "import:questions": "bun scripts/import-questions.ts",
     "import:participants": "bun scripts/import-participants.ts",
     "import:seats": "bun scripts/import-hallticket-seats.ts",
-    "clean": "bun scripts/clean.ts"
+    "clean": "bun scripts/clean.ts",
+    "wipe": "bun scripts/wipe.ts"
   },
   "dependencies": {
     "cors": "2.8.6",
