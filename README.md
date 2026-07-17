@@ -16,80 +16,40 @@
 
 ## About
 
-Monorepo for the WCL examination system: a proctored desktop exam client,
-its backend API, an admin panel, and a public hall-ticket portal.
+Complete platform for conducting the WCL proctored examination: candidates
+sit the exam in a locked-down desktop client, administrators manage
+questions, participants, and live results from a web panel, and candidates
+download their hall tickets from a public portal beforehand. A single API
+backs all three, with Postgres for persistent data and Redis for live exam
+state.
 
-| App | Stack | README |
+## Applications
+
+| App | What it does | README |
 |---|---|---|
-| `app/api` | Bun, Express, Drizzle, Postgres, Redis | [README](app/api/README.md) |
-| `app/admin` | Next.js admin panel | [README](app/admin/README.md) |
-| `app/hallticket` | Next.js hall-ticket portal | [README](app/hallticket/README.md) |
-| `app/client` | Electron kiosk exam client | [README](app/client/README.md) |
+| `app/api` | Bun/Express API: auth, exam sessions, grading, live admin feed | [README](app/api/README.md) |
+| `app/admin` | Next.js admin panel: questions, participants, monitoring, results | [README](app/admin/README.md) |
+| `app/hallticket` | Next.js public portal: hall-ticket lookup and PDF download | [README](app/hallticket/README.md) |
+| `app/client` | Electron kiosk client the candidates take the exam in | [README](app/client/README.md) |
 
 ## Production
 
-Everything runs in ap-south-1 behind one application load balancer with an
-ACM wildcard certificate:
+| URL | Service |
+|---|---|
+| https://rbuexam.in | Hall-ticket portal |
+| https://admin.rbuexam.in | Admin panel |
+| https://api.rbuexam.in | API |
 
-| URL | Service | Instance |
-|---|---|---|
-| https://rbuexam.in | Hall-ticket portal | `wcl-frontend` (i-0378fc929e8142723, t3.small) |
-| https://admin.rbuexam.in | Admin panel | `wcl-frontend` |
-| https://api.rbuexam.in | API | `wcl-backend` (i-08da393d608685e37, t3.medium) |
+Each service ships as a Docker image built by GitHub Actions and runs on EC2
+behind an application load balancer; watchtower rolls out new images
+automatically after every push to main.
 
-Each instance runs its stack with Docker Compose
-(`docker-compose.frontend.yml`, `docker-compose.backend.yml`) plus
-watchtower, which pulls new images from Docker Hub after every CI build.
-Deployment guides: [docs/DEPLOY_FRONTEND.md](docs/DEPLOY_FRONTEND.md) and
-[docs/DEPLOY_BACKEND.md](docs/DEPLOY_BACKEND.md).
+## Documentation
 
-## SSH access
-
-The instances accept SSH only through the EC2 Instance Connect Endpoint
-tunnel (works over 443, so it also bypasses networks that block port 22).
-Keys live in the gitignored `secret/` folder; on WSL copy them to the Linux
-filesystem first because keys on the D: drive fail the permission check:
-
-```bash
-install -m 600 secret/wcl-frontend.pem /tmp/wcl-frontend.pem
-install -m 600 secret/wcl-backend.pem /tmp/wcl-backend.pem
-```
-
-Frontend (`wcl-frontend`, admin panel + hall-ticket portal):
-
-```bash
-# terminal 1: tunnel (leave running)
-aws ec2-instance-connect open-tunnel --region ap-south-1 \
-  --instance-connect-endpoint-id eice-05efaf3d6de004931 \
-  --instance-id i-0378fc929e8142723 --remote-port 22 --local-port 2222
-
-# terminal 2
-ssh -i /tmp/wcl-frontend.pem -p 2222 ubuntu@127.0.0.1
-```
-
-Backend (`wcl-backend`, API):
-
-```bash
-# terminal 1: tunnel (leave running)
-aws ec2-instance-connect open-tunnel --region ap-south-1 \
-  --instance-connect-endpoint-id eice-05efaf3d6de004931 \
-  --instance-id i-08da393d608685e37 --remote-port 22 --local-port 2223
-
-# terminal 2
-ssh -i /tmp/wcl-backend.pem -p 2223 ubuntu@127.0.0.1
-```
-
-More detail (scp examples, credentials notes): `secret/README.md`.
-
-## Development
-
-```bash
-docker compose up -d          # local Postgres, Redis, Floci (repo root)
-cd app/api && bun install && bun run seed --fresh && bun run dev
-cd app/admin && bun install && bun run dev        # localhost:5000
-cd app/hallticket && bun install && bun run dev   # localhost:5001
-cd app/client && bun install && bun run dev
-```
-
-Guides live in [docs/](docs/): API reference, new-exam runbook, deployment,
-and writing rules (docs/RULES.md) for all prose in this repository.
+| Document | Contents |
+|---|---|
+| [docs/API.md](docs/API.md) | API reference |
+| [docs/NEW_EXAM.md](docs/NEW_EXAM.md) | Runbook for setting up a new exam |
+| [docs/DEPLOY_FRONTEND.md](docs/DEPLOY_FRONTEND.md) | Frontend infrastructure and deployment |
+| [docs/DEPLOY_BACKEND.md](docs/DEPLOY_BACKEND.md) | Backend infrastructure and deployment |
+| [docs/RULES.md](docs/RULES.md) | Writing rules for all prose in this repository |

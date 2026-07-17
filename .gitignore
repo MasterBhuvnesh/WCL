@@ -34,4 +34,5 @@ Thumbs.db
 Credentials.json
 RECORD.md
 secret/
+docs/ACCESS.md
 !.env.prod.backend.example
