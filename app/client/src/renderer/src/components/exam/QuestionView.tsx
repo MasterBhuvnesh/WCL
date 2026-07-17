@@ -1,5 +1,11 @@
 import { ArrowLeft, ArrowRight, Bookmark, Check, Eraser } from 'lucide-react'
 import { Button } from '@renderer/components/ui/button'
+import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  DialogTrigger
+} from '@renderer/components/ui/dialog'
 import { cn } from '@renderer/lib/utils'
 import type { ManifestQuestion } from '@renderer/types/exam'
 
@@ -72,11 +78,32 @@ export function QuestionView({
             {question.text}
           </p>
           {question.imageUrl && (
-            <img
-              src={question.imageUrl}
-              className="mt-4 max-h-72 rounded-lg border object-contain"
-              alt=""
-            />
+            <Dialog>
+              <DialogTrigger asChild>
+                <button
+                  type="button"
+                  className="mt-4 block cursor-zoom-in"
+                  aria-label="Enlarge question image"
+                >
+                  <img
+                    src={question.imageUrl}
+                    className="max-h-72 rounded-lg border object-contain"
+                    alt=""
+                  />
+                </button>
+              </DialogTrigger>
+              <DialogContent
+                className="w-auto max-w-[90vw] border-none bg-transparent p-0 shadow-none"
+                aria-describedby={undefined}
+              >
+                <DialogTitle className="sr-only">Question image</DialogTitle>
+                <img
+                  src={question.imageUrl}
+                  className="max-h-[85vh] max-w-[90vw] rounded-lg object-contain"
+                  alt=""
+                />
+              </DialogContent>
+            </Dialog>
           )}
 
           <div className="mt-6 flex flex-col gap-3">

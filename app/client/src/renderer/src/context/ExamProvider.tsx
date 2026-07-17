@@ -322,17 +322,17 @@ export function ExamProvider({ children }: { children: ReactNode }): React.JSX.E
 
   const clearResponse = useCallback(
     (questionId: string) => {
-      upsertAnswer(questionId, (prev) => {
-        const marked = prev ? isMarked(prev.status) : false
-        return {
-          questionId,
-          selectedOptionIds: [],
-          status: deriveStatus(false, marked),
-          clientSeq: seqRef.current++,
-          answeredAt: nowIso(),
-          synced: false
-        }
-      })
+      // Clearing the response resets the question to unanswered, dropping any
+      // mark-for-review flag: with no selection left it should read as
+      // "not answered" (red), not "marked for review" (purple).
+      upsertAnswer(questionId, () => ({
+        questionId,
+        selectedOptionIds: [],
+        status: 'not_answered',
+        clientSeq: seqRef.current++,
+        answeredAt: nowIso(),
+        synced: false
+      }))
     },
     [upsertAnswer]
   )
