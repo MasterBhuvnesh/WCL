@@ -6,8 +6,15 @@ name: Release Client
 on:
   push:
     branches: [main]
+    # Only rebuild on client code/asset changes — not docs (README) or deploy
+    # scripts — so a docs edit never ships a needless update to every device.
     paths:
-      - 'app/client/**'
+      - 'app/client/src/**'
+      - 'app/client/resources/**'
+      - 'app/client/build/**'
+      - 'app/client/package.json'
+      - 'app/client/electron-builder.yml'
+      - 'app/client/electron.vite.config.ts'
       - '.github/workflows/release-client.yml'
   # Manual trigger for re-publishing without a code change.
   workflow_dispatch:
