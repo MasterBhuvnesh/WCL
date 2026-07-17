@@ -5,6 +5,7 @@ import { TitleBar } from './components/TitleBar'
 import { DevModeBadge } from './components/DevModeBadge'
 import { IntegrityOverlay } from './components/IntegrityOverlay'
 import { Watermark } from './components/Watermark'
+import { Updates } from './components/Updates'
 import LoginPage from './pages/LoginPage'
 import TermsPage from './pages/TermsPage'
 import ExamPage from './pages/ExamPage'
@@ -122,6 +123,7 @@ function AppShell(): React.JSX.Element {
         <AppRoutes />
       </main>
       <Watermark />
+      <Updates />
       {devMode && <DevModeBadge />}
       {integrityWarning && (
         <IntegrityOverlay message={integrityWarning.message} onDismiss={dismissIntegrityWarning} />

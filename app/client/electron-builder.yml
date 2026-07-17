@@ -48,7 +48,7 @@ appImage:
 npmRebuild: false
 publish:
   owner: MasterBhuvnesh
-  repo: wcl
+  repo: WCL
   provider: github
   updaterCacheDirName: wcl-updater
   publisherName:
