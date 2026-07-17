@@ -37,6 +37,7 @@ import type {
   ManifestQuestion,
   PaletteCounts,
   QuestionStatus,
+  ResumeResponse,
   SessionStatus
 } from '../types/exam'
 
@@ -389,6 +390,36 @@ export function ExamProvider({ children }: { children: ReactNode }): React.JSX.E
     [markVisited]
   )
 
+  /**
+   * Apply a /exam/resume payload: exam meta, clock offset, deadline, and the
+   * server's answers merged with any newer local ones (by clientSeq). Shared
+   * by the startup resume and a fresh login onto an already-running session,
+   * e.g. resuming on new hardware after a proctor released the device binding.
+   */
+  const applyResume = useCallback(
+    (res: ResumeResponse, sessionId: string) => {
+      setExam(res.exam)
+      setSessionStatus(res.status)
+      statusRef.current = res.status
+      buffer.saveStatus(res.status)
+      offsetMsRef.current = new Date(res.serverTime).getTime() - Date.now()
+      deadlineMsRef.current = new Date(res.deadlineAt).getTime()
+      const restored: Record<string, AnswerState> = {}
+      for (const a of res.answers) restored[a.questionId] = { ...a, synced: true }
+      const local = buffer.loadAnswers(sessionId)
+      for (const [id, a] of Object.entries(local)) {
+        if (!restored[id] || a.clientSeq > restored[id].clientSeq) restored[id] = a
+      }
+      hydrateFromManifest(res.manifest, restored)
+      setRemainingSeconds(recomputeRemaining())
+      if (res.status === 'in_progress') {
+        window.examBridge?.setExamLock(true)
+        startLoops()
+      }
+    },
+    [hydrateFromManifest, recomputeRemaining, startLoops]
+  )
+
   const login = useCallback(async (req: LoginRequest) => {
     setError(null)
     try {
@@ -411,12 +442,20 @@ export function ExamProvider({ children }: { children: ReactNode }): React.JSX.E
         username: req.username,
         status: res.sessionStatus
       })
+      if (res.sessionStatus === 'in_progress') {
+        // The exam is already running (device-binding release onto a new
+        // machine, or a re-login mid-exam): rehydrate the full server state so
+        // every answer, mark, and the sequence counter carry over. Without
+        // this, a fresh machine would show a blank palette and its restarted
+        // sequence numbers would be silently rejected by the server.
+        applyResume(await api.resume(res.token), res.sessionId)
+      }
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Login failed'
       setError(message)
       throw err
     }
-  }, [])
+  }, [applyResume])
 
   const beginExam = useCallback(async () => {
     const t = tokenRef.current
@@ -483,23 +522,7 @@ export function ExamProvider({ children }: { children: ReactNode }): React.JSX.E
       .resume(persisted.token)
       .then((res) => {
         if (cancelled) return
-        setExam(res.exam)
-        setSessionStatus(res.status)
-        statusRef.current = res.status
-        offsetMsRef.current = new Date(res.serverTime).getTime() - Date.now()
-        deadlineMsRef.current = new Date(res.deadlineAt).getTime()
-        const restored: Record<string, AnswerState> = {}
-        for (const a of res.answers) restored[a.questionId] = { ...a, synced: true }
-        const local = buffer.loadAnswers(persisted.sessionId)
-        for (const [id, a] of Object.entries(local)) {
-          if (!restored[id] || a.clientSeq > restored[id].clientSeq) restored[id] = a
-        }
-        hydrateFromManifest(res.manifest, restored)
-        setRemainingSeconds(recomputeRemaining())
-        if (res.status === 'in_progress') {
-          window.examBridge?.setExamLock(true)
-          startLoops()
-        }
+        applyResume(res, persisted.sessionId)
       })
       .catch((err) => {
         if (cancelled) return

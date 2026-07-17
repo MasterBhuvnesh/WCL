@@ -18,6 +18,7 @@ interface Session {
   startedAt: string | null;
   deadlineAt: string | null;
   submittedAt: string | null;
+  deviceId: string | null;
 }
 interface SessionsResponse {
   counts: Record<Status, number>;
@@ -85,6 +86,22 @@ export default function SessionsPage() {
     void act(
       () => apiFetch(`/admin/sessions/${encodeURIComponent(s.sessionId)}/reset`, { method: "POST" }),
       "Session reset",
+    );
+  }
+
+  function releaseDevice(s: Session) {
+    if (
+      !confirm(
+        `Release ${s.username}'s device binding? They can then log in from another machine and resume with all their answers intact.`,
+      )
+    )
+      return;
+    void act(
+      () =>
+        apiFetch(`/admin/sessions/${encodeURIComponent(s.sessionId)}/release-device`, {
+          method: "POST",
+        }),
+      "Device binding released. The participant can now log in from a new machine.",
     );
   }
 
@@ -222,6 +239,11 @@ export default function SessionsPage() {
                         {s.status === "in_progress" && (
                           <Button size="xs" variant="outline" onClick={() => addTime(s)}>
                             Add time
+                          </Button>
+                        )}
+                        {s.deviceId && (s.status === "not_started" || s.status === "in_progress") && (
+                          <Button size="xs" variant="outline" onClick={() => releaseDevice(s)}>
+                            Release device
                           </Button>
                         )}
                         {/* Edit score — Bhuvnesh has told to comment it out for now.

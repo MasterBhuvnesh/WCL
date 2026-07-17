@@ -201,17 +201,20 @@ curl -s $API/admin/sessions/$SID/reset -X POST -H "$AUTH"
 ```
 Use for a corrupted session or an authorized restart. Destructive — audited.
 
-### 3.4 Release / rebind device binding
+### 3.4 Release / rebind device binding (candidate PC failure, seat move)
 Binding is **strict**: a login from a **different** `deviceId` is blocked with
 `409` and logs a `device_change` integrity event (`allowed:false`). Rebinding
-requires an explicit proctor action:
+requires an explicit proctor action: the **Release device** button on the
+admin panel Sessions page (shown for bound, unfinished sessions), or:
 ```bash
 curl -s $API/admin/sessions/$SID/release-device -X POST -H "$AUTH"
 ```
 Audited (`session-release-device`); nulls the binding and clears the Redis
 session cache. The candidate then logs in on the new machine — the session
-rebinds (logged as `device_change` `allowed:true`), they resume via
-`/exam/resume`, and the timer continues against the fixed deadline.
+rebinds (logged as `device_change` `allowed:true`) and the client pulls the
+full server state on login: every saved answer and mark reappears and the
+timer continues against the fixed deadline. Time lost during the move can be
+compensated with Add time (§3.1).
 - To fully clear state (suspected sharing / corrupted session): **session
   reset** (§3.3) instead — it wipes answers and binding together.
 

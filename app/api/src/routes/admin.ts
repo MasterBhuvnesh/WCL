@@ -232,6 +232,7 @@ adminRouter.get(
         startedAt: examSessions.startedAt,
         deadlineAt: examSessions.deadlineAt,
         submittedAt: examSessions.submittedAt,
+        deviceId: examSessions.deviceId,
       })
       .from(examSessions)
       .innerJoin(participants, eq(examSessions.participantId, participants.id))
@@ -248,6 +249,7 @@ adminRouter.get(
         startedAt: iso(r.startedAt),
         deadlineAt: iso(r.deadlineAt),
         submittedAt: iso(r.submittedAt),
+        deviceId: r.deviceId,
       })),
     });
   }),
