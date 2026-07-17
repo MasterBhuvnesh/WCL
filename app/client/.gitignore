@@ -6,3 +6,4 @@ out
 *.log
 *.log.*
 .env.*
+!.env.example
