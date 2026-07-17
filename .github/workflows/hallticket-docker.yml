@@ -1,0 +1,40 @@
+name: Hallticket Docker image
+
+# Builds the hall-ticket portal image and pushes it to Docker Hub as
+# <DOCKERHUB_USERNAME>/wclhallticket tagged both v<package.json version> and
+# latest. Needs the DOCKERHUB_USERNAME and DOCKERHUB_TOKEN repo secrets.
+# DATABASE_URL is a run-time setting, not a build argument. Type checking
+# runs inside `next build` in the Dockerfile.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "app/hallticket/**"
+      - ".github/workflows/hallticket-docker.yml"
+  workflow_dispatch:
+
+jobs:
+  build-push:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: app/hallticket
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Read image version from package.json
+        id: meta
+        run: echo "version=v$(jq -r .version package.json)" >> "$GITHUB_OUTPUT"
+
+      - uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and push (${{ steps.meta.outputs.version }} + latest)
+        run: |
+          IMAGE="${{ secrets.DOCKERHUB_USERNAME }}/wclhallticket"
+          docker build -t "$IMAGE:${{ steps.meta.outputs.version }}" -t "$IMAGE:latest" .
+          docker push "$IMAGE:${{ steps.meta.outputs.version }}"
+          docker push "$IMAGE:latest"

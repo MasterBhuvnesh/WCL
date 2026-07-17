@@ -1,0 +1,33 @@
+# Frontend EC2 stack: admin panel + hall-ticket portal + watchtower.
+# TLS and host routing (rbuexam.in / admin.rbuexam.in) are handled by the
+# AWS application load balancer in front, so there is no nginx here.
+#
+# Usage on the instance (see docs/DEPLOY_FRONTEND.md):
+#   cp .env.prod.frontend.example .env.prod.frontend   # then fill in real values
+#   docker compose -f docker-compose.frontend.yml up -d
+
+services:
+  admin:
+    image: ${DOCKERHUB_USER:-bhuvneshverma}/wcladmin:latest
+    restart: unless-stopped
+    env_file: .env.prod.frontend
+    ports:
+      - "5000:5000"
+    labels:
+      - com.centurylinklabs.watchtower.enable=true
+
+  hallticket:
+    image: ${DOCKERHUB_USER:-bhuvneshverma}/wclhallticket:latest
+    restart: unless-stopped
+    env_file: .env.prod.frontend
+    ports:
+      - "5001:5001"
+    labels:
+      - com.centurylinklabs.watchtower.enable=true
+
+  watchtower:
+    image: containrrr/watchtower
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    command: --label-enable --cleanup --interval 300

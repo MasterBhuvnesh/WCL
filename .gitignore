@@ -15,6 +15,7 @@ pnpm-debug.log*
 .env
 .env.*
 !.env.example
+!.env.prod.frontend.example
 
 # Local data / SQLite write-buffers
 *.sqlite
@@ -31,3 +32,6 @@ Thumbs.db
 
 # Credentials
 Credentials.json
+RECORD.md
+secret/
+!.env.prod.backend.example

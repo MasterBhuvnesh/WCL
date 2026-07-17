@@ -1,0 +1,43 @@
+name: Admin Docker image
+
+# Builds the admin panel image and pushes it to Docker Hub as
+# <DOCKERHUB_USERNAME>/wcladmin tagged both v<package.json version> and latest.
+# Needs the DOCKERHUB_USERNAME and DOCKERHUB_TOKEN repo secrets, plus the
+# NEXT_PUBLIC_API_BASE repo variable (Settings -> Secrets and variables ->
+# Actions -> Variables): the public API URL is baked into the client bundle
+# at build time. Type checking runs inside `next build` in the Dockerfile.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "app/admin/**"
+      - ".github/workflows/admin-docker.yml"
+  workflow_dispatch:
+
+jobs:
+  build-push:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: app/admin
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Read image version from package.json
+        id: meta
+        run: echo "version=v$(jq -r .version package.json)" >> "$GITHUB_OUTPUT"
+
+      - uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and push (${{ steps.meta.outputs.version }} + latest)
+        run: |
+          IMAGE="${{ secrets.DOCKERHUB_USERNAME }}/wcladmin"
+          docker build \
+            --build-arg NEXT_PUBLIC_API_BASE="${{ vars.NEXT_PUBLIC_API_BASE || 'http://localhost:4000' }}" \
+            -t "$IMAGE:${{ steps.meta.outputs.version }}" -t "$IMAGE:latest" .
+          docker push "$IMAGE:${{ steps.meta.outputs.version }}"
+          docker push "$IMAGE:latest"
