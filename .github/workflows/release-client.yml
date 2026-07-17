@@ -49,6 +49,9 @@ jobs:
         run: npm version "1.0.${{ github.run_number }}" --no-git-tag-version --allow-same-version
 
       - run: bun run build # typecheck + electron-vite build
+        env:
+          # Baked into the renderer at build time (import.meta.env.VITE_API_BASE).
+          VITE_API_BASE: ${{ vars.VITE_API_BASE || 'https://api.rbuexam.in' }}
 
       - name: Build and publish Windows installer
         run: bunx electron-builder --win --publish always
