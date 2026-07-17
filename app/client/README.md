@@ -54,6 +54,29 @@ the API seed (see [`app/api/README.md`](../api/README.md)).
 | `bun run build:win` / `build:mac` / `build:linux` | Package installers via electron-builder. |
 | `bun run build:unpack` | Unpacked build for quick inspection. |
 
+## Deployment & auto-update
+
+Every push to `main` that touches the client is built on Windows by
+[`release-client.yml`](../../.github/workflows/release-client.yml) and published
+to [GitHub Releases](https://github.com/MasterBhuvnesh/WCL/releases). Installed
+clients check on launch (and every 30 min), download in the background, and
+prompt **"Update ready — Restart now?"** — except during an active exam, where
+the update installs quietly on the next quit so a candidate is never interrupted.
+
+### Install on a device
+
+Paste into **cmd** on the target machine. Downloads the latest installer and
+installs it silently for the current user (no admin, no UAC), then drops a
+desktop shortcut:
+
+```bat
+powershell -NoProfile -ExecutionPolicy Bypass -Command "iex (irm https://raw.githubusercontent.com/MasterBhuvnesh/WCL/main/app/client/scripts/install-wcl.ps1)"
+```
+
+Add `-WindowStyle Hidden` for a fully silent push from a login script or MDM.
+See [`scripts/README.md`](scripts/README.md) for machine-wide installs and
+other options.
+
 ## Configuration
 
 Renderer settings live in `src/renderer/src/config.ts` (API base, heartbeat
