@@ -37,7 +37,7 @@ jobs:
         run: |
           IMAGE="${{ secrets.DOCKERHUB_USERNAME }}/wcladmin"
           docker build \
-            --build-arg NEXT_PUBLIC_API_BASE="${{ vars.NEXT_PUBLIC_API_BASE || 'http://localhost:4000' }}" \
+            --build-arg NEXT_PUBLIC_API_BASE="${{ vars.NEXT_PUBLIC_API_BASE || 'https://api.rbuexam.in' }}" \
             -t "$IMAGE:${{ steps.meta.outputs.version }}" -t "$IMAGE:latest" .
           docker push "$IMAGE:${{ steps.meta.outputs.version }}"
           docker push "$IMAGE:latest"
