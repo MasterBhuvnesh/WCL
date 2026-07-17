@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="app/admin/public/assets/wcl.logo.png" alt="WCL" width="96">
+<img src="../app\client\build\icon.png" alt="WCL" width="96">
 
 # WCL Examination Platform
 
