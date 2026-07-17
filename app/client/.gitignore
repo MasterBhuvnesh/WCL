@@ -7,3 +7,7 @@ out
 *.log.*
 .env.*
 !.env.example
+
+# electron-vite writes a timestamped compiled config next to the source when it
+# can't load the .ts directly; it's a transient build artifact.
+electron.vite.config.*.mjs

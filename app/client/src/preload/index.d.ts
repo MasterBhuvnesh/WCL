@@ -10,6 +10,15 @@ interface ExamBridge {
   onIntegrityEvent(cb: (event: { type: string; meta?: Record<string, unknown> }) => void): () => void
   setExamLock(locked: boolean): void
   getDeviceId(): Promise<string>
+  onUpdateStatus(cb: (status: UpdateStatus) => void): () => void
+  restartToUpdate(): Promise<void>
+}
+
+interface UpdateStatus {
+  state: 'checking' | 'available' | 'not-available' | 'downloading' | 'downloaded' | 'error'
+  version?: string
+  percent?: number
+  message?: string
 }
 
 interface StoreBridge {

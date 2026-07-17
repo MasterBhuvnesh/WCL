@@ -6,6 +6,7 @@ import { lockdown, registerLockdownIpc } from './lockdown'
 import { registerDevModeShortcut } from './devmode'
 import { registerStoreIpc } from './store'
 import { deviceId } from './fingerprint'
+import { initAutoUpdates } from './updater'
 
 let mainWindow: BrowserWindow | null = null
 
@@ -183,6 +184,10 @@ app.whenReady().then(() => {
   })
 
   createWindow()
+
+  // Background auto-updates: check on startup, download silently, install on the
+  // next quit and launch the new version. No-op in dev.
+  initAutoUpdates()
 
   app.on('activate', function () {
     // On macOS it's common to re-create a window in the app when the

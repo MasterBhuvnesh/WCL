@@ -14,6 +14,17 @@ interface ExamBridge {
   onIntegrityEvent(cb: (event: { type: string; meta?: Record<string, unknown> }) => void): () => void
   setExamLock(locked: boolean): void
   getDeviceId(): Promise<string>
+  onUpdateStatus(cb: (status: UpdateStatus) => void): () => void
+  /** Apply the downloaded update now: quit, install, and relaunch. */
+  restartToUpdate(): Promise<void>
+}
+
+/** Auto-update lifecycle status pushed from the main process. */
+interface UpdateStatus {
+  state: 'checking' | 'available' | 'not-available' | 'downloading' | 'downloaded' | 'error'
+  version?: string
+  percent?: number
+  message?: string
 }
 
 /**
@@ -68,7 +79,15 @@ const examBridge: ExamBridge = {
   },
   setExamLock: (locked) => {
     ipcRenderer.send('exam:set-lock', locked)
-  }
+  },
+  onUpdateStatus: (cb) => {
+    const listener = (_event: Electron.IpcRendererEvent, status: UpdateStatus): void => cb(status)
+    ipcRenderer.on('updates:status', listener)
+    return () => {
+      ipcRenderer.removeListener('updates:status', listener)
+    }
+  },
+  restartToUpdate: () => ipcRenderer.invoke('updates:quit-and-install')
 }
 
 // Use `contextBridge` APIs to expose Electron APIs to
