@@ -1,0 +1,50 @@
+name: Release Client
+
+# Publishes a new Windows build to GitHub Releases on every push to main that
+# touches the client. electron-updater on installed clients reads the resulting
+# `latest.yml` + installer and applies the update on their next launch.
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'app/client/**'
+      - '.github/workflows/release-client.yml'
+  # Manual trigger for re-publishing without a code change.
+  workflow_dispatch:
+
+# Only the newest release build for a given ref matters; cancel older ones.
+concurrency:
+  group: release-client-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  release:
+    runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: app/client
+    permissions:
+      # Required for electron-builder to create the GitHub Release via GITHUB_TOKEN.
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.3.8"
+
+      - run: bun install --frozen-lockfile
+
+      # Derive a monotonically increasing version from the run number so every
+      # push out-ranks the previous release. Not committed back to the repo —
+      # only the published artifact carries it, which avoids a CI loop.
+      - name: Set build version
+        run: npm version "1.0.${{ github.run_number }}" --no-git-tag-version --allow-same-version
+
+      - run: bun run build # typecheck + electron-vite build
+
+      - name: Build and publish Windows installer
+        run: bunx electron-builder --win --publish always
+        env:
+          # Built-in token; electron-builder uses it to create the Release.
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

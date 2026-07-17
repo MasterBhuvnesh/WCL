@@ -1,7 +1,7 @@
 owner: MasterBhuvnesh
-repo: wcl
+repo: WCL
 provider: github
-repository: 'https://github.com/MasterBhuvnesh/wcl'
+repository: 'https://github.com/MasterBhuvnesh/WCL'
 updaterCacheDirName: wcl-updater
 publisherName:
   - MasterBhuvnesh
