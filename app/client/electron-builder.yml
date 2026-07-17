@@ -50,6 +50,9 @@ publish:
   owner: MasterBhuvnesh
   repo: WCL
   provider: github
+  # Publish a real release, not a draft. Drafts are invisible in the Releases
+  # panel AND unreadable by electron-updater, so auto-update needs this.
+  releaseType: release
   updaterCacheDirName: wcl-updater
   publisherName:
     - MasterBhuvnesh
