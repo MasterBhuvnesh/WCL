@@ -105,5 +105,10 @@ export const api = {
 
   resume: (token: string) => request<ResumeResponse>('/exam/resume', { method: 'POST', token }),
 
-  result: (token: string) => request<ExamResult>('/exam/result', { token })
+  result: (token: string) => request<ExamResult>('/exam/result', { token }),
+
+  feedback: (
+    token: string,
+    body: { platformRating: number; infrastructureRating: number; comment?: string }
+  ) => request<{ ok: boolean }>('/exam/feedback', { method: 'POST', body, token })
 }

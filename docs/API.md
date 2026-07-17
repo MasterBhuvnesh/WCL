@@ -278,6 +278,26 @@ Full state rehydration after a relaunch or crash: manifest, all saved answers, a
 
 If the deadline passed while the client was away, the session is finalized first and `status` is `auto_submitted`.
 
+### POST /exam/feedback
+
+Submit post-examination feedback. Participant token required, and the session
+must be `submitted` or `auto_submitted` (otherwise `409 Exam not submitted`).
+Ratings are integers from 1 to 5; the comment is optional (max 1000
+characters). Only the first submission per session is stored; repeats still
+return `200`.
+
+**Request**
+
+```json
+{ "platformRating": 4, "infrastructureRating": 5, "comment": "Smooth experience" }
+```
+
+**Response `200`**
+
+```json
+{ "ok": true }
+```
+
 ### POST /exam/integrity
 
 Report a proctoring event (the client sends these on focus loss etc.). Participant token required.

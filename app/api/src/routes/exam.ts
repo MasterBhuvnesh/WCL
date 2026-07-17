@@ -16,6 +16,7 @@ import {
   answers,
   examSessions,
   exams,
+  feedback,
   integrityEvents,
   participants,
   questions,
@@ -430,6 +431,41 @@ examRouter.get(
     const review = await buildResultReview(session);
     if (!review) throw new HttpError(409, "Result not ready");
     res.status(200).json(review);
+  }),
+);
+
+const feedbackSchema = z.object({
+  platformRating: z.number().int().min(1).max(5),
+  infrastructureRating: z.number().int().min(1).max(5),
+  comment: z.string().trim().max(1000).optional(),
+});
+
+/** POST /exam/feedback: post-submission candidate feedback (once per session). */
+examRouter.post(
+  "/exam/feedback",
+  requireParticipant,
+  validate(feedbackSchema),
+  asyncHandler(async (req, res) => {
+    const { sessionId } = req.participant!;
+    const session = await getSession(sessionId);
+    if (!session) throw new HttpError(401, "Session not found");
+    if (session.status !== "submitted" && session.status !== "auto_submitted") {
+      throw new HttpError(409, "Exam not submitted");
+    }
+    const body = req.body as z.infer<typeof feedbackSchema>;
+    // First submission wins; a repeat (relaunch, retry) is acknowledged, not an error.
+    await db
+      .insert(feedback)
+      .values({
+        sessionId,
+        participantId: session.participantId,
+        examId: session.examId,
+        platformRating: body.platformRating,
+        infrastructureRating: body.infrastructureRating,
+        comment: body.comment || null,
+      })
+      .onConflictDoNothing();
+    res.status(200).json({ ok: true });
   }),
 );
 

@@ -181,6 +181,28 @@ export const results = pgTable(
   (table) => [index("results_exam_score_idx").on(table.examId, table.score)],
 );
 
+export const feedback = pgTable(
+  "feedback",
+  {
+    sessionId: uuid("session_id")
+      .primaryKey()
+      .references(() => examSessions.id),
+    participantId: uuid("participant_id")
+      .notNull()
+      .references(() => participants.id),
+    examId: text("exam_id")
+      .notNull()
+      .references(() => exams.id),
+    /** 1-5 rating of the examination platform. */
+    platformRating: integer("platform_rating").notNull(),
+    /** 1-5 rating of the college infrastructure. */
+    infrastructureRating: integer("infrastructure_rating").notNull(),
+    comment: text("comment"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [index("feedback_exam_idx").on(table.examId)],
+);
+
 export const admins = pgTable(
   "admins",
   {
