@@ -50,7 +50,10 @@ if (-not $Installer) {
   # — safe when thousands of devices install from one shared IP.
   $base = "https://github.com/$Repo/releases/latest/download"
   Write-Host "Resolving latest WCL release ..."
-  $yml = (Invoke-WebRequest -Uri "$base/latest.yml" -UseBasicParsing).Content
+  # The release CDN serves latest.yml as application/octet-stream, so
+  # .Content is a byte array, not a string; decode it before parsing.
+  $resp = Invoke-WebRequest -Uri "$base/latest.yml" -UseBasicParsing
+  $yml = if ($resp.Content -is [byte[]]) { [System.Text.Encoding]::UTF8.GetString($resp.Content) } else { $resp.Content }
 
   $name = $null
   foreach ($line in $yml -split "`n") {
