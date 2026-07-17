@@ -8,8 +8,8 @@ import wclLogo from '@renderer/assets/images/wcl.logo.png'
 import rbuLogo from '@renderer/assets/images/rbu.png'
 
 /**
- * Authentication screen. Collects the candidate credentials and an optional
- * exam identifier, then delegates to useExam().login. On success the candidate
+ * Authentication screen. Collects the candidate credentials, then delegates
+ * to useExam().login. On success the candidate
  * advances to the terms/lobby screen; failures surface via useExam().error.
  */
 export default function LoginPage(): React.JSX.Element {
@@ -18,7 +18,6 @@ export default function LoginPage(): React.JSX.Element {
 
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
-  const [examId, setExamId] = useState('')
   const [submitting, setSubmitting] = useState(false)
 
   const canSubmit = username.trim().length > 0 && password.length > 0 && !submitting
@@ -29,11 +28,7 @@ export default function LoginPage(): React.JSX.Element {
     clearError()
     setSubmitting(true)
     try {
-      await login({
-        username: username.trim(),
-        password,
-        examId: examId.trim() || undefined
-      })
+      await login({ username: username.trim(), password })
       navigate('/terms')
     } catch {
       // The error is exposed via useExam().error and rendered below.
@@ -95,21 +90,6 @@ export default function LoginPage(): React.JSX.Element {
                   onChange={(e) => setPassword(e.target.value)}
                 />
               </div>
-            </div>
-
-            <div className="flex flex-col gap-1.5">
-              <label htmlFor="examId" className="text-foreground text-sm font-medium">
-                Exam ID / Engine
-                <span className="text-muted-foreground ml-1 font-normal">(optional)</span>
-              </label>
-              <Input
-                id="examId"
-                type="text"
-                autoComplete="off"
-                placeholder="Optional, leave blank to use the default"
-                value={examId}
-                onChange={(e) => setExamId(e.target.value)}
-              />
             </div>
 
             {error && (

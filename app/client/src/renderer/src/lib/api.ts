@@ -46,18 +46,29 @@ async function request<T>(
       body: body === undefined ? undefined : JSON.stringify(body),
       signal
     })
-  } catch (err) {
-    throw new ApiError(0, err instanceof Error ? err.message : 'Network request failed')
+  } catch {
+    // Raw browser errors ("Failed to fetch") mean nothing to a candidate.
+    throw new ApiError(0, 'Cannot reach the exam server. Check your connection and try again.')
   }
 
   const text = await res.text()
   const data = text ? safeParse(text) : undefined
 
   if (!res.ok) {
-    let message = `Request failed (${res.status})`
+    // Prefer the server's message (already written for humans); fall back to
+    // a friendly status-based one instead of "Request failed (500)".
+    let message: string | undefined
     if (data && typeof data === 'object' && 'error' in data) {
       const e = (data as { error?: unknown }).error
       if (e) message = String(e)
+    }
+    if (!message) {
+      message =
+        res.status === 429
+          ? 'Too many attempts. Please wait a moment and try again.'
+          : res.status >= 500
+            ? 'The exam server had a problem. Please try again in a moment.'
+            : 'Something went wrong. Please try again.'
     }
     throw new ApiError(res.status, message)
   }
