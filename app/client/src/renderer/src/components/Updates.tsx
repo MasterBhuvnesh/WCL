@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Rocket } from 'lucide-react'
 import { AppIcon } from './AppIcon'
@@ -19,36 +19,86 @@ function IconRotate(): React.JSX.Element {
 }
 
 /**
- * Auto-update indicator.
+ * Auto-update indicator — shown on the login screen only, never during or after
+ * an exam. A download that completes mid-exam stays silent and installs on the
+ * next quit (autoInstallOnAppQuit); its prompt is re-offered on the next login.
  *
  * - While downloading: a small progress badge.
- * - Once downloaded, and no exam is in progress: a "Restart now?" prompt so the
- *   user can apply the update immediately. Dismissing ("Later") — or ignoring
- *   it — still installs on the next quit via autoInstallOnAppQuit.
- * - Once downloaded during an active exam: a passive badge only, never an
- *   actionable restart, so a student can't restart mid-exam.
+ * - Once downloaded: a "Restart now?" prompt. Dismissing ("Later") — or ignoring
+ *   it — still installs on the next quit.
+ * - On error: a small dismissible badge so failures are visible (they are also
+ *   written to the updater log file) rather than silently vanishing.
  *
  * Idle / up-to-date states render nothing.
  */
 export function Updates(): React.JSX.Element | null {
-  const { isStarted } = useExam()
+  const { isAuthenticated } = useExam()
   const [status, setStatus] = useState<UpdateStatus | null>(null)
   const [dismissed, setDismissed] = useState(false)
   const [restarting, setRestarting] = useState(false)
+  // Whether a live push has arrived, so a late get-status seed can't overwrite it.
+  const receivedPush = useRef(false)
 
   useEffect(() => {
-    return window.examBridge.onUpdateStatus((next) => {
-      // A fresh downloaded event re-arms the prompt even if a prior one was
-      // dismissed.
+    const off = window.examBridge.onUpdateStatus((next) => {
+      receivedPush.current = true
+      // A fresh downloaded event re-arms the prompt even if a prior one (or an
+      // error) was dismissed.
       if (next.state === 'downloaded') setDismissed(false)
-      setStatus(next)
+      setStatus((prev) => {
+        // Once downloaded, ignore lower-priority lifecycle noise (e.g. the
+        // periodic re-check's `checking`) so the "Restart now" prompt can't be
+        // hidden. Only a fresh `downloaded` or an `error` supersedes it.
+        if (prev?.state === 'downloaded' && next.state !== 'downloaded' && next.state !== 'error') {
+          return prev
+        }
+        return next
+      })
     })
+
+    // Replay a terminal event (downloaded/error) that fired before we
+    // subscribed — the kiosk renderer often mounts after the startup check.
+    window.examBridge
+      .getUpdateStatus()
+      .then((seed) => {
+        if (!seed || receivedPush.current) return
+        if (seed.state === 'downloaded') setDismissed(false)
+        setStatus((prev) => prev ?? seed)
+      })
+      .catch(() => {})
+
+    return off
   }, [])
 
+  // Update UI is confined to the login screen; the user is unauthenticated only
+  // there. During/after an exam the token is set, so this renders nothing.
+  if (isAuthenticated) return null
   if (!status) return null
 
   const shell =
     'fixed bottom-3 right-3 z-50 flex items-center gap-2 rounded-md bg-blue-600 px-3 py-1.5 text-white shadow-lg'
+
+  if (status.state === 'error') {
+    if (dismissed) return null
+    return (
+      <AnimatePresence>
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: 8 }}
+          className="fixed bottom-3 right-3 z-50 flex max-w-sm items-center gap-3 rounded-md bg-red-600 px-3 py-2 text-white shadow-lg"
+        >
+          <span className="text-xs">Update failed. It will retry automatically.</span>
+          <button
+            onClick={() => setDismissed(true)}
+            className="rounded px-2 py-1 text-xs text-red-100 hover:text-white"
+          >
+            Dismiss
+          </button>
+        </motion.div>
+      </AnimatePresence>
+    )
+  }
 
   if (status.state === 'downloading') {
     return (
@@ -67,16 +117,6 @@ export function Updates(): React.JSX.Element | null {
   }
 
   if (status.state !== 'downloaded' || dismissed) return null
-
-  // During an active exam, never offer an actionable restart — just note it.
-  if (isStarted) {
-    return (
-      <div className={shell}>
-        <IconRotate />
-        <span className="text-xs">Update ready — installs on next restart</span>
-      </div>
-    )
-  }
 
   const onRestart = async (): Promise<void> => {
     setRestarting(true)
