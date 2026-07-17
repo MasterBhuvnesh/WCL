@@ -11,10 +11,14 @@ interface ExamBridge {
   onDevModeChanged(cb: (enabled: boolean) => void): () => void
   reportIntegrity(event: { type: string; meta?: Record<string, unknown> }): void
   onIntegrityWarning(cb: (info: { type: string; message: string }) => void): () => void
-  onIntegrityEvent(cb: (event: { type: string; meta?: Record<string, unknown> }) => void): () => void
+  onIntegrityEvent(
+    cb: (event: { type: string; meta?: Record<string, unknown> }) => void
+  ): () => void
   setExamLock(locked: boolean): void
   getDeviceId(): Promise<string>
   onUpdateStatus(cb: (status: UpdateStatus) => void): () => void
+  /** Pull the last-known update status (replays an event that fired pre-mount). */
+  getUpdateStatus(): Promise<UpdateStatus | null>
   /** Apply the downloaded update now: quit, install, and relaunch. */
   restartToUpdate(): Promise<void>
 }
@@ -87,6 +91,7 @@ const examBridge: ExamBridge = {
       ipcRenderer.removeListener('updates:status', listener)
     }
   },
+  getUpdateStatus: () => ipcRenderer.invoke('updates:get-status'),
   restartToUpdate: () => ipcRenderer.invoke('updates:quit-and-install')
 }
 
