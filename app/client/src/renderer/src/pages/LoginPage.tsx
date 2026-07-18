@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { AlertCircle, KeyRound, Loader2, User, WifiOff } from 'lucide-react'
 import { useExam } from '@renderer/context/ExamProvider'
@@ -19,6 +19,16 @@ export default function LoginPage(): React.JSX.Element {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [submitting, setSubmitting] = useState(false)
+  const [version, setVersion] = useState('')
+
+  // App version for the corner label. Harmless no-op in web dev where the
+  // Electron bridge is absent.
+  useEffect(() => {
+    window.examBridge
+      ?.getAppVersion?.()
+      .then(setVersion)
+      .catch(() => {})
+  }, [])
 
   const canSubmit = username.trim().length > 0 && password.length > 0 && !submitting
 
@@ -124,6 +134,12 @@ export default function LoginPage(): React.JSX.Element {
           </div>
         )}
       </div>
+
+      {version && (
+        <span className="text-muted-foreground/70 fixed right-3 bottom-2 z-40 text-[11px] tabular-nums select-none">
+          v{version}
+        </span>
+      )}
     </div>
   )
 }
