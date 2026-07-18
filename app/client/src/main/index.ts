@@ -132,6 +132,10 @@ app.whenReady().then(() => {
   // Stable device fingerprint for session binding (sent as deviceId on login).
   ipcMain.handle('app:get-device-id', () => deviceId())
 
+  // App version (the packaged build's version, e.g. "1.0.14") for the login
+  // screen's version label.
+  ipcMain.handle('app:get-version', () => app.getVersion())
+
   // Default open or close DevTools by F12 in development
   // and ignore CommandOrControl + R in production.
   // see https://github.com/alex8088/electron-toolkit/tree/master/packages/utils

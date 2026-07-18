@@ -16,6 +16,8 @@ interface ExamBridge {
   ): () => void
   setExamLock(locked: boolean): void
   getDeviceId(): Promise<string>
+  /** The packaged build's version string, e.g. "1.0.14". */
+  getAppVersion(): Promise<string>
   onUpdateStatus(cb: (status: UpdateStatus) => void): () => void
   /** Pull the last-known update status (replays an event that fired pre-mount). */
   getUpdateStatus(): Promise<UpdateStatus | null>
@@ -51,6 +53,7 @@ const store: StoreBridge = {
 const examBridge: ExamBridge = {
   getDevMode: () => ipcRenderer.invoke('exam:get-dev-mode'),
   getDeviceId: () => ipcRenderer.invoke('app:get-device-id'),
+  getAppVersion: () => ipcRenderer.invoke('app:get-version'),
   onDevModeChanged: (cb) => {
     const listener = (_event: Electron.IpcRendererEvent, enabled: boolean): void => cb(enabled)
     ipcRenderer.on('dev-mode-changed', listener)

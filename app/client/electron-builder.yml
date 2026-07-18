@@ -54,8 +54,11 @@ publish:
   # panel AND unreadable by electron-updater, so auto-update needs this.
   releaseType: release
   updaterCacheDirName: wcl-updater
-  publisherName:
-    - MasterBhuvnesh
+  # NOTE: publisherName is intentionally NOT set. The build is unsigned, and
+  # setting publisherName makes electron-updater verify the downloaded
+  # installer's Authenticode signature against it — which always fails on an
+  # unsigned build (signerCertificate: null), aborting every auto-update.
+  # Re-add it ONLY once we code-sign with a certificate whose CN matches.
 
 electronDownload:
   mirror: https://npmmirror.com/mirrors/electron/

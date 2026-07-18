@@ -3,8 +3,6 @@ repo: WCL
 provider: github
 repository: 'https://github.com/MasterBhuvnesh/WCL'
 updaterCacheDirName: wcl-updater
-publisherName:
-  - MasterBhuvnesh
 branch: main
 releaseType: release
 private: false

@@ -12,6 +12,7 @@ interface ExamBridge {
   ): () => void
   setExamLock(locked: boolean): void
   getDeviceId(): Promise<string>
+  getAppVersion(): Promise<string>
   onUpdateStatus(cb: (status: UpdateStatus) => void): () => void
   getUpdateStatus(): Promise<UpdateStatus | null>
   restartToUpdate(): Promise<void>
