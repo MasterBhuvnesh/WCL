@@ -16,6 +16,7 @@ interface ExamBridge {
   onUpdateStatus(cb: (status: UpdateStatus) => void): () => void
   getUpdateStatus(): Promise<UpdateStatus | null>
   restartToUpdate(): Promise<void>
+  setUpdatePolling(active: boolean): void
 }
 
 interface UpdateStatus {

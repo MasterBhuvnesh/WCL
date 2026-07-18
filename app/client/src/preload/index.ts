@@ -23,6 +23,8 @@ interface ExamBridge {
   getUpdateStatus(): Promise<UpdateStatus | null>
   /** Apply the downloaded update now: quit, install, and relaunch. */
   restartToUpdate(): Promise<void>
+  /** Enable/disable the 30 s update poll (login screen only). */
+  setUpdatePolling(active: boolean): void
 }
 
 /** Auto-update lifecycle status pushed from the main process. */
@@ -95,7 +97,10 @@ const examBridge: ExamBridge = {
     }
   },
   getUpdateStatus: () => ipcRenderer.invoke('updates:get-status'),
-  restartToUpdate: () => ipcRenderer.invoke('updates:quit-and-install')
+  restartToUpdate: () => ipcRenderer.invoke('updates:quit-and-install'),
+  setUpdatePolling: (active) => {
+    ipcRenderer.send('updates:set-polling', active)
+  }
 }
 
 // Use `contextBridge` APIs to expose Electron APIs to

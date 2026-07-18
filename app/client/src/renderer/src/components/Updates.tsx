@@ -70,6 +70,16 @@ export function Updates(): React.JSX.Element | null {
     return off
   }, [])
 
+  // Gate the main-process update poll (30 s) to the login screen: the user is
+  // unauthenticated only there. Authenticating (rules page, exam, submitted)
+  // turns polling off; logging back out re-enables it.
+  useEffect(() => {
+    window.examBridge.setUpdatePolling(!isAuthenticated)
+    return () => {
+      window.examBridge.setUpdatePolling(false)
+    }
+  }, [isAuthenticated])
+
   // Update UI is confined to the login screen; the user is unauthenticated only
   // there. During/after an exam the token is set, so this renders nothing.
   if (isAuthenticated) return null
