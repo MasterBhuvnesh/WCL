@@ -22,7 +22,7 @@ function statusClasses(status: QuestionStatus): string {
     case 'marked_for_review':
       return 'bg-violet-600 text-white border-transparent'
     case 'answered_marked':
-      return 'bg-orange-500 text-white border-transparent'
+      return 'bg-pink-500 text-white border-transparent'
     case 'not_visited':
     default:
       return 'bg-card text-foreground border-input'
@@ -49,7 +49,7 @@ export function QuestionPalette({
     { label: 'Marked for review', swatch: 'bg-violet-600', count: counts.markedForReview },
     {
       label: 'Answered & marked',
-      swatch: 'bg-orange-500',
+      swatch: 'bg-pink-500',
       count: counts.answeredMarked
     },
     { label: 'Not visited', swatch: 'bg-card border border-input', count: counts.notVisited }
