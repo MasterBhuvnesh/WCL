@@ -5,7 +5,6 @@ import { useExam } from '@renderer/context/ExamProvider'
 import { Button } from '@renderer/components/ui/button'
 import { Input } from '@renderer/components/ui/input'
 import wclLogo from '@renderer/assets/images/wcl.logo.png'
-import rbuLogo from '@renderer/assets/images/rbu.png'
 
 /**
  * Authentication screen. Collects the candidate credentials, then delegates
@@ -51,12 +50,9 @@ export default function LoginPage(): React.JSX.Element {
     <div className="bg-muted/40 flex h-full w-full items-center justify-center p-6">
       <div className="w-full max-w-md">
         <div className="mb-6 flex flex-col items-center text-center">
-          <div className="flex items-center justify-center gap-6">
-            <img src={wclLogo} alt="Western Coalfields Limited" className="h-14 object-contain" />
-            <img src={rbuLogo} alt="Ramdeobaba University" className="h-14 object-contain" />
-          </div>
+          <img src={wclLogo} alt="Western Coalfields Limited" className="h-14 object-contain" />
           <h1 className="text-foreground mt-4 text-3xl font-semibold tracking-tight">
-            WCL Examination Login v3
+            WCL Examination Login
           </h1>
           <p className="text-muted-foreground mt-1 text-sm">
             Sign in with your assigned credentials to continue.

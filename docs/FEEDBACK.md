@@ -6,19 +6,19 @@ changes to the submitted screen in the client.
 ## What the candidate sees
 
 After submitting (or being auto-submitted), the client no longer shows the
-per-question review. The submitted screen now shows:
+per-question review. The submitted screen shows
+the total score only (`score / maxScore`), fetched from `GET /exam/result`.
+If the result is not ready yet (grading race), a Retry button appears.
 
-1. The total score only (`score / maxScore`), fetched from `GET /exam/result`.
-   If the result is not ready yet (grading race), a Retry button appears.
-2. A feedback form with two mandatory 1 to 5 star ratings and an optional
-   comment (max 1000 characters):
-   - How was the examination platform?
-   - How was the college infrastructure (seating, labs, facilities)?
+There is no visible feedback form: the client silently submits a default
+rating of 5 stars for both questions (no comment) as soon as the score loads.
+The API endpoint and table below still accept 1 to 5 ratings and an optional
+comment, so a visible form can be restored without server changes.
 
 The window stays fullscreen throughout; the title bar is hidden once the exam
-is submitted (developer mode keeps it for debugging). After the feedback is
-sent, a thank-you message shows for three seconds and the application closes
-itself, leaving the machine ready for the next candidate.
+is submitted (developer mode keeps it for debugging). Fifteen seconds after
+the score is shown, the application closes itself, leaving the machine ready
+for the next candidate.
 
 ## API
 

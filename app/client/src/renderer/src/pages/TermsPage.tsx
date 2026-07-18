@@ -5,7 +5,6 @@ import { useExam } from '@renderer/context/ExamProvider'
 import { Button } from '@renderer/components/ui/button'
 import { Separator } from '@renderer/components/ui/separator'
 import wclLogo from '@renderer/assets/images/wcl.logo.png'
-import rbuLogo from '@renderer/assets/images/rbu.png'
 
 /**
  * Pre-exam lobby. Presents the exam metadata, the authored instructions, and
@@ -64,10 +63,7 @@ export default function TermsPage(): React.JSX.Element {
               </span>
             </div>
           </div>
-          <div className="flex shrink-0 items-center gap-4">
-            <img src={wclLogo} alt="Western Coalfields Limited" className="h-10 object-contain" />
-            <img src={rbuLogo} alt="Ramdeobaba University" className="h-10 object-contain" />
-          </div>
+          <img src={wclLogo} alt="Western Coalfields Limited" className="h-10 shrink-0 object-contain" />
         </div>
       </header>
 
