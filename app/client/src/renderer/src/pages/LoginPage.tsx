@@ -46,7 +46,7 @@ export default function LoginPage(): React.JSX.Element {
             <img src={rbuLogo} alt="Ramdeobaba University" className="h-14 object-contain" />
           </div>
           <h1 className="text-foreground mt-4 text-3xl font-semibold tracking-tight">
-            WCL Examination Login v2
+            WCL Examination Login v3
           </h1>
           <p className="text-muted-foreground mt-1 text-sm">
             Sign in with your assigned credentials to continue.
