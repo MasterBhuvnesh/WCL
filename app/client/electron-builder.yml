@@ -26,9 +26,6 @@ nsis:
   shortcutName: ${productName}
   uninstallDisplayName: ${productName}
   createDesktopShortcut: always
-  # We ship the full installer, not a web installer; silences the electron-builder
-  # warning and matches the future default.
-  disableWebInstaller: true
 mac:
   entitlementsInherit: build/entitlements.mac.plist
   extendInfo:
