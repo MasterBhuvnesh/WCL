@@ -74,5 +74,5 @@ The image contains drizzle-kit and the `drizzle/` folder. To apply new
 migrations, run once on the instance:
 
 ```bash
-docker exec wcl-api-1 bunx drizzle-kit migrate
+docker exec wclapi bunx drizzle-kit migrate
 ```

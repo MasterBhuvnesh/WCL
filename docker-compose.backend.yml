@@ -1,24 +1,33 @@
-# Backend EC2 stack: API + watchtower.
+# Backend EC2 stack: API + Watchtower.
 # TLS and the api.rbuexam.in hostname are handled by the shared AWS
-# application load balancer (target group wcl-api, port 4000).
+# Application Load Balancer (target group wcl-api, port 4000).
 #
-# Usage on the instance (see docs/DEPLOY_BACKEND.md):
-#   cp .env.prod.backend.example .env.prod.backend   # then fill in real values
+# Usage:
+#   cp .env.prod.backend.example .env.prod.backend
 #   docker compose -f docker-compose.backend.yml up -d
 
 services:
   api:
     image: ${DOCKERHUB_USER:-bhuvneshverma}/wclapi:latest
+    container_name: wclapi
     restart: unless-stopped
-    env_file: .env.prod.backend
+    env_file:
+      - .env.prod.backend
     ports:
       - "4000:4000"
     labels:
       - com.centurylinklabs.watchtower.enable=true
 
   watchtower:
-    image: containrrr/watchtower
+    image: containrrr/watchtower:latest
+    container_name: watchtower
     restart: unless-stopped
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-    command: --label-enable --cleanup --interval 300
+    environment:
+      DOCKER_API_VERSION: "1.55"
+    command:
+      - --label-enable
+      - --cleanup
+      - --interval
+      - "60" # Check every 1 minute
