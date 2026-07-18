@@ -73,11 +73,32 @@ if (-not $Installer) {
 
 if (-not (Test-Path $Installer)) { throw "Installer not found: $Installer" }
 
-# /S = NSIS silent. /allusers|/currentuser selects the install scope.
-$installArgs = @('/S', "/$Scope")
+# Clear the mark-of-the-web on the freshly downloaded installer so SmartScreen
+# doesn't interfere with the silent run.
+try { Unblock-File -Path $Installer -ErrorAction SilentlyContinue } catch {}
+
+# A running instance makes the NSIS installer fail while replacing its own
+# files - often as an access-violation crash (exit code -1073741819 /
+# 0xC0000005). Close any running WCL before installing.
+Get-Process -Name 'wcl' -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
+Start-Sleep -Milliseconds 800
+
+# /S = NSIS silent. perMachine:false already defaults to a per-user install, so
+# we only pass an explicit scope for the machine-wide (allusers) case.
+$installArgs = @('/S')
+if ($Scope -eq 'allusers') { $installArgs += '/allusers' }
 
 Write-Host "Installing WCL silently ($Scope) ..."
 $proc = Start-Process -FilePath $Installer -ArgumentList $installArgs -Wait -PassThru
-if ($proc.ExitCode -ne 0) { throw "Installer exited with code $($proc.ExitCode)." }
+if ($proc.ExitCode -ne 0) {
+  $code = $proc.ExitCode
+  $hint = ''
+  if ($code -eq -1073741819) {
+    $hint = ' This is a 0xC0000005 access violation - usually WCL was still' +
+      ' running, or antivirus/SmartScreen blocked the unsigned installer.' +
+      " Close WCL and retry, or install by double-clicking: $Installer"
+  }
+  throw "Installer exited with code $code.$hint"
+}
 
 Write-Host "WCL installed successfully. A desktop shortcut has been created."
