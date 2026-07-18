@@ -83,11 +83,11 @@ export function HallTicketPreview({
             {exam.title}, {exam.subtitle}
           </p>
         </div>
-        <img
+        {/* <img
           src="/assets/rbu.png"
           alt="Ramdeobaba University"
           className="h-11 w-auto object-contain"
-        />
+        /> */}
       </div>
 
       {/* Candidate details */}

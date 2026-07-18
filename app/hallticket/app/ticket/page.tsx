@@ -55,11 +55,11 @@ export default function TicketPage() {
             alt="Western Coalfields Limited"
             className="h-10 object-contain"
           />
-          <img
+          {/* <img
             src="/assets/rbu.png"
             alt="Ramdeobaba University"
             className="h-10 object-contain"
-          />
+          /> */}
         </div>
         <div className="flex items-center gap-4">
           <div className="text-right text-sm">

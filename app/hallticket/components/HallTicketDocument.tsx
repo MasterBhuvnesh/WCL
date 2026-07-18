@@ -221,7 +221,7 @@ export function HallTicketDocument({
                 {exam.title}, {exam.subtitle}
               </Text>
             </View>
-            <Image style={styles.logo} src={rbuLogoSrc} />
+            {/* <Image style={styles.logo} src={rbuLogoSrc} /> */}
           </View>
 
           {/* Candidate details */}

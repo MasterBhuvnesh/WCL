@@ -88,11 +88,11 @@ export default function LoginPage() {
             alt="Western Coalfields Limited"
             className="h-12 object-contain"
           />
-          <img
+          {/* <img
             src="/assets/rbu.png"
             alt="Ramdeobaba University"
             className="h-12 object-contain"
-          />
+          /> */}
         </div>
 
         <div className="text-center">
