@@ -13,6 +13,7 @@ import {
   UploadCloud,
   Users,
 } from "lucide-react";
+import pkg from "@/package.json";
 
 import { clearToken } from "@/lib/api";
 import { cn } from "@/lib/utils";
@@ -67,6 +68,7 @@ export function AdminNav() {
       >
         <LogOut className="size-4" /> Sign out
       </button>
+      <p className="text-muted-foreground px-3 pt-2 text-xs">v{pkg.version}</p>
     </aside>
   );
 }

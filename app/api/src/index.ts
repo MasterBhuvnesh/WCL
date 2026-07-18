@@ -22,6 +22,7 @@ import { errorHandler, notFoundHandler } from "./http/middleware.ts";
 import { examRouter, startAutoSubmitSweep } from "./routes/exam.ts";
 import { adminRouter } from "./routes/admin.ts";
 import { attachAdminWs } from "./ws.ts";
+import pkg from "../package.json";
 
 /** Bun runtime global (argon2id hashing); tsconfig only pulls in @types/node. */
 declare const Bun: {
@@ -83,7 +84,12 @@ app.use(express.json({ limit: "1mb" }));
 
 /** Liveness probe. */
 app.get("/health", (_req: Request, res: Response) => {
-  res.status(200).json({ status: "ok", service: "wcl-api", time: new Date().toISOString() });
+  res.status(200).json({
+    status: "ok",
+    service: "wcl-api",
+    version: pkg.version,
+    time: new Date().toISOString(),
+  });
 });
 
 /** Server time for client offset (NTP-style) calculation. */

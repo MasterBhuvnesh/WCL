@@ -9,6 +9,7 @@ import { Tray, TrayInner, TrayLabel, TrayStrip } from "@/components/ui/tray";
 import { cn } from "@/lib/utils";
 import { storeCandidate } from "@/lib/session";
 import type { Candidate } from "@/lib/types";
+import pkg from "@/package.json";
 
 const MONTHS = [
   "January",
@@ -175,7 +176,7 @@ export default function LoginPage() {
             </form>
           </TrayInner>
           <TrayStrip className="py-2 text-xs text-muted-foreground">
-            WCL computer-based examination
+            WCL computer-based examination · v{pkg.version}
           </TrayStrip>
         </Tray>
       </div>
