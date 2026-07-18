@@ -45,6 +45,7 @@ async function main(): Promise<void> {
 
   // Make the blast radius obvious: this hits whatever DATABASE_URL points at.
   console.log(`Database: ${new URL(env.DATABASE_URL).host}`);
+  console.log(`Redis: ${new URL(env.REDIS_URL).host}`);
   const verb = yes ? "Deleted" : "Would delete";
 
   for (const [name, table] of TABLES) {
@@ -57,6 +58,8 @@ async function main(): Promise<void> {
     // Drop cached sessions and question banks so the API cannot serve ghosts.
     const keys = await redis.keys("session:*");
     keys.push(...(await redis.keys("bank:*")));
+    keys.push(...(await redis.keys("leaderboard:*")));
+    keys.push(...(await redis.keys("participant:*")));
     if (keys.length > 0) await redis.del(...keys);
     console.log(`Flushed ${keys.length} Redis key(s). Admins and exams kept.`);
   } else {

@@ -36,6 +36,7 @@ import {
 } from "../http/middleware.ts";
 import { redis } from "../redis.ts";
 import { audit, authenticator, csvField, iso, rebuildLeaderboard } from "../services/admin/helpers.ts";
+import { cacheParticipant } from "../services/exam.ts";
 
 /**
  * Bun runtime global (password hashing). Declared locally rather than pulling in
@@ -955,7 +956,10 @@ adminRouter.post(
         .values({ username, secretHash, displayName: p.displayName ?? null, dob: p.dob ?? null })
         .onConflictDoNothing()
         .returning({ id: participants.id });
-      if (inserted.length) created += 1;
+      if (inserted.length) {
+        created += 1;
+        await cacheParticipant({ id: inserted[0].id, username, secretHash });
+      }
     }
 
     const skipped = list.length - created;

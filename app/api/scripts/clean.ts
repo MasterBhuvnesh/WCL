@@ -75,6 +75,9 @@ async function main(): Promise<void> {
       .where(notInArray(participants.id, sessioned));
     if (yes) {
       await db.delete(participants).where(notInArray(participants.id, sessioned));
+      // Deleted participants must not keep logging in from the cache.
+      const cached = await redis.keys("participant:*");
+      if (cached.length > 0) await redis.del(...cached);
     }
     console.log(`${verb}: ${p.n} participant(s) without exam sessions (their seat rows cascade)`);
   }

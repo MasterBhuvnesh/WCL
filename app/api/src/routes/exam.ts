@@ -18,7 +18,6 @@ import {
   exams,
   feedback,
   integrityEvents,
-  participants,
   questions,
   type SessionStatus,
 } from "../db/schema.ts";
@@ -42,6 +41,7 @@ import {
   cacheSession,
   finalize,
   getBank,
+  getParticipantByUsername,
   getSession,
   serializeSession,
   type AnswerEntry,
@@ -113,11 +113,7 @@ examRouter.post(
   asyncHandler(async (req, res) => {
     const { username, password, examId, deviceId } = req.body as LoginBody;
 
-    const [participant] = await db
-      .select()
-      .from(participants)
-      .where(eq(participants.username, username))
-      .limit(1);
+    const participant = await getParticipantByUsername(username);
     if (!participant) throw new HttpError(401, "Invalid username or password");
 
     const passwordOk = await Bun.password.verify(password, participant.secretHash);

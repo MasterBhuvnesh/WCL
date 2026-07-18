@@ -20,6 +20,8 @@
 import { inArray } from "drizzle-orm";
 import { db, pgClient, schema } from "../src/db/index.ts";
 import { env } from "../src/env.ts";
+import { redis } from "../src/redis.ts";
+import { cacheParticipant } from "../src/services/exam.ts";
 import { bail, normalizeDob, readRows } from "./_lib.ts";
 
 /** Ambient Bun password API (project does not depend on bun-types). */
@@ -39,9 +41,14 @@ interface Parsed {
   secret: string;
 }
 
-/** Close the database connection, then terminate. Import never touches Redis. */
+/** Close database and Redis connections, then terminate. */
 async function shutdown(code: number): Promise<never> {
   await pgClient.end({ timeout: 5 });
+  try {
+    await redis.quit();
+  } catch {
+    redis.disconnect();
+  }
   process.exit(code);
 }
 
@@ -123,11 +130,20 @@ async function main(): Promise<void> {
         dob: r.dob,
       });
     }
-    await db.transaction(async (tx) => {
+    const inserted = await db.transaction(async (tx) => {
       // ponytail: one multi-row insert; if a file exceeds ~16k rows
       // (pg 65535-param limit / 4 cols) split into chunks inside this transaction.
-      await tx.insert(participants).values(rows);
+      return tx.insert(participants).values(rows).returning();
     });
+
+    // Pre-warm the login cache. The rows are safely in Postgres by now, so a
+    // Redis failure only costs the warm-up, not the import.
+    try {
+      await Promise.all(inserted.map((p) => cacheParticipant(p)));
+      console.log(`Cached ${inserted.length} participant(s) in Redis (${new URL(env.REDIS_URL).host}).`);
+    } catch (error) {
+      console.warn("Redis cache warm-up failed (logins will fall back to the database):", error instanceof Error ? error.message : error);
+    }
   }
 
   /* Summary. */

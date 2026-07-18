@@ -131,6 +131,45 @@ export async function getSession(sessionId: string): Promise<CachedSession | nul
   return session;
 }
 
+// --- Participant cache -----------------------------------------------------
+
+/** JSON-safe participant shape shared by the Redis cache and DB fallback. */
+export interface CachedParticipant {
+  id: string;
+  username: string;
+  secretHash: string;
+}
+
+const PARTICIPANT_TTL_SECONDS = 7 * 24 * 3600;
+
+/** Cache a participant for login lookups, keyed by username. */
+export async function cacheParticipant(p: CachedParticipant): Promise<void> {
+  await redis.set(
+    `participant:${p.username}`,
+    JSON.stringify({ id: p.id, username: p.username, secretHash: p.secretHash }),
+    "EX",
+    PARTICIPANT_TTL_SECONDS,
+  );
+}
+
+/** Read a participant from Redis, falling back to the DB and re-caching. */
+export async function getParticipantByUsername(
+  username: string,
+): Promise<CachedParticipant | null> {
+  const cached = await redis.get(`participant:${username}`);
+  if (cached) {
+    return JSON.parse(cached) as CachedParticipant;
+  }
+  const [row] = await db
+    .select()
+    .from(participants)
+    .where(eq(participants.username, username))
+    .limit(1);
+  if (!row) return null;
+  await cacheParticipant(row);
+  return { id: row.id, username: row.username, secretHash: row.secretHash };
+}
+
 // --- Question-bank cache ---------------------------------------------------
 
 /**
