@@ -6,7 +6,10 @@
 
 import type { NextFunction, Request, Response } from "express";
 import jwt from "jsonwebtoken";
+import { eq } from "drizzle-orm";
 import type { ZodType } from "zod";
+import { db } from "../db/index.ts";
+import { admins } from "../db/schema.ts";
 import { env } from "../env.ts";
 import { logger } from "../logger.ts";
 import { redis } from "../redis.ts";
@@ -73,10 +76,23 @@ export function requireParticipant(req: AuthedRequest, _res: Response, next: Nex
   }
 }
 
-export function requireAdmin(req: AuthedRequest, _res: Response, next: NextFunction): void {
+export async function requireAdmin(
+  req: AuthedRequest,
+  _res: Response,
+  next: NextFunction,
+): Promise<void> {
   try {
     const decoded = jwt.verify(bearerToken(req), env.JWT_SECRET) as AdminClaims;
     if (decoded.kind !== "admin") throw new HttpError(401, "Invalid token kind");
+    // The signature alone is not enough: a token minted before an admin was
+    // deleted or reseeded must stop working, and downstream audit inserts
+    // reference this id by foreign key.
+    const [row] = await db
+      .select({ id: admins.id })
+      .from(admins)
+      .where(eq(admins.id, decoded.adminId))
+      .limit(1);
+    if (!row) throw new HttpError(401, "Admin account no longer exists; sign in again");
     req.admin = decoded;
     next();
   } catch (error) {
