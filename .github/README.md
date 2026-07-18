@@ -84,12 +84,13 @@ flowchart LR
     end
 ```
 
-A push to main ships every part of the platform without a single manual
-step:
+Server deploys are cut deliberately with `./release.sh <service>`, which
+tags a version; the exam client ships on every push to main:
 
 ```mermaid
 flowchart LR
-    P["Push to main"] --> GA["GitHub Actions"]
+    T["release.sh tag"] --> GA["GitHub Actions"]
+    P["Push to main"] --> GA
     GA -->|Docker images| DH["Docker Hub"]
     DH -->|pulled by watchtower| SRV["EC2 services"]
     GA -->|Windows installer| GR["GitHub Releases"]

@@ -6,12 +6,12 @@ name: Hallticket Docker image
 # DATABASE_URL is a run-time setting, not a build argument. Type checking
 # runs inside `next build` in the Dockerfile.
 
+# Deploys are deliberate: this runs only when ./release.sh hallticket pushes
+# a hallticket-v* tag (or on manual dispatch), never on pushes to main.
+
 on:
   push:
-    branches: [main]
-    paths:
-      - "app/hallticket/**"
-      - ".github/workflows/hallticket-docker.yml"
+    tags: ["hallticket-v*"]
   workflow_dispatch:
 
 jobs:

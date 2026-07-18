@@ -4,14 +4,12 @@ name: API Docker image
 # <DOCKERHUB_USERNAME>/wclapi tagged both v<package.json version> and latest.
 # Needs two repo secrets: DOCKERHUB_USERNAME and DOCKERHUB_TOKEN (an access
 # token from hub.docker.com -> Account Settings -> Personal access tokens).
-# Bump "version" in app/api/package.json to cut a new v-tag.
+# Deploys are deliberate: this runs only when ./release.sh api pushes an
+# api-v* tag (or on manual dispatch), never on ordinary pushes to main.
 
 on:
   push:
-    branches: [main]
-    paths:
-      - "app/api/**"
-      - ".github/workflows/api-docker.yml"
+    tags: ["api-v*"]
   workflow_dispatch:
 
 jobs:

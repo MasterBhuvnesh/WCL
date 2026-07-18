@@ -61,10 +61,12 @@ Verify with `curl -s localhost:4000/health` on the instance, then
 
 ## How updates ship (CI/CD)
 
-Push to `main` touching `app/api/**`: the `api-docker.yml` workflow
-typechecks, builds, and pushes `bhuvneshverma/wclapi` (`latest` +
-`v<version>`); watchtower on the instance pulls it within 5 minutes and
-restarts the container. Never push API changes during a live exam window.
+Run `./release.sh api` (bumps the version, commits, and pushes an
+`api-v*` tag): the `api-docker.yml` workflow typechecks, builds, and
+pushes `bhuvneshverma/wclapi` (`latest` + `v<version>`); watchtower on
+the instance pulls it within 5 minutes and restarts the container.
+Ordinary pushes to `main` no longer deploy anything, so merging is safe
+at any time; never cut a release during a live exam window.
 
 ## Database migrations
 

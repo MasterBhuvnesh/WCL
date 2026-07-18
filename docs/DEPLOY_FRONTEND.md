@@ -83,7 +83,9 @@ To redeploy from scratch:
 
 ## How updates ship (CI/CD)
 
-1. Push to `main` touching `app/admin/**` or `app/hallticket/**`.
+1. Run `./release.sh admin` or `./release.sh hallticket`, which bumps the
+   version, commits, and pushes an `admin-v*` or `hallticket-v*` tag.
+   Ordinary pushes to `main` no longer deploy anything.
 2. GitHub Actions (`admin-docker.yml`, `hallticket-docker.yml`) builds the
    image and pushes `bhuvneshverma/wcladmin` or `bhuvneshverma/wclhallticket`
    with the `latest` and `v<version>` tags.
