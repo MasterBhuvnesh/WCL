@@ -22,6 +22,10 @@ pnpm-debug.log*
 *.sqlite-journal
 *.db
 
+# Real participant/question data (not sample)
+app/api/data/participants.students.xlsx
+app/api/data/questions.cse.xlsx
+
 # Caches
 .eslintcache
 
