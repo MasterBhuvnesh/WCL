@@ -15,7 +15,8 @@ cd "$(dirname "$0")/app/$SVC"
 npm version "$BUMP" --no-git-tag-version >/dev/null
 V=$(node -p "require('./package.json').version")
 
-git add package.json
+# package*.json also stages package-lock.json where it exists (api has none)
+git add package*.json
 git commit -m "chore($SVC): bump version to v$V"
 git tag -a "$SVC-v$V" -m "$SVC v$V"
 git push origin HEAD "$SVC-v$V"
