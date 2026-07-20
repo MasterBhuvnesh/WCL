@@ -22,6 +22,14 @@ const EnvSchema = z.object({
    */
   CLOCK_MULTIPLIER: z.coerce.number().positive().default(1),
   DB_POOL_MAX: z.coerce.number().default(20),
+  /**
+   * Number of reverse-proxy hops in front of the API (Express "trust proxy").
+   * Production runs behind one AWS ALB, so req.ip must come from
+   * X-Forwarded-For one hop back; otherwise every request appears to
+   * originate from the load balancer and shares one rate-limit bucket.
+   * Set 0 only if the API is exposed directly.
+   */
+  TRUST_PROXY_HOPS: z.coerce.number().int().min(0).default(1),
   LOG_LEVEL: z.string().default("info"),
   /**
    * Production bootstrap: on first boot against an empty database the API

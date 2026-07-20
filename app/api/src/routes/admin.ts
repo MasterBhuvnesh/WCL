@@ -96,7 +96,16 @@ function clampInt(raw: unknown, def: number, min: number, max: number): number {
 
 adminRouter.post(
   "/login",
-  rateLimit({ bucket: "admin-login", limit: 10, windowSeconds: 60 }),
+  // Per-email so lab machines behind one NAT don't exhaust a shared IP bucket.
+  rateLimit({
+    bucket: "admin-login",
+    limit: 10,
+    windowSeconds: 60,
+    key: (req) => {
+      const email = (req.body as { email?: unknown } | null)?.email;
+      return typeof email === "string" && email ? `e:${email.toLowerCase()}` : null;
+    },
+  }),
   validate(
     z.object({
       email: z.string().min(1),
