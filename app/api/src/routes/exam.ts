@@ -24,6 +24,7 @@ import {
 import { env } from "../env.ts";
 import {
   HttpError,
+  participantRateKey,
   rateLimit,
   requireParticipant,
   signParticipantToken,
@@ -103,12 +104,29 @@ const heartbeatSchema = z.object({
 // --- Router ----------------------------------------------------------------
 
 export const examRouter = Router();
-examRouter.use(rateLimit({ bucket: "exam", limit: 300, windowSeconds: 60 }));
+// Bucketed per candidate (token identity), not per IP: a whole lab behind one
+// NAT would otherwise share a single 300/min budget. Unauthenticated requests
+// (login) fall back to the IP bucket, where 300/min is the abuse backstop.
+examRouter.use(
+  rateLimit({ bucket: "exam", limit: 300, windowSeconds: 60, key: participantRateKey }),
+);
 
 /** POST /auth/login: authenticate a participant and start/reuse a session. */
 examRouter.post(
   "/auth/login",
-  rateLimit({ bucket: "login", limit: 10, windowSeconds: 60 }),
+  // Per-username, not per-IP: at exam start an entire lab logs in within the
+  // same minute from one NAT'd IP. 10/min per account still blocks password
+  // brute force; cross-account spraying from one IP is capped by the outer
+  // "exam" bucket's IP fallback.
+  rateLimit({
+    bucket: "login",
+    limit: 10,
+    windowSeconds: 60,
+    key: (req) => {
+      const username = (req.body as { username?: unknown } | null)?.username;
+      return typeof username === "string" && username ? `u:${username.toLowerCase()}` : null;
+    },
+  }),
   validate(loginSchema),
   asyncHandler(async (req, res) => {
     const { username, password, examId, deviceId } = req.body as LoginBody;

@@ -121,11 +121,22 @@ export function validate<T>(schema: ZodType<T>) {
  * Fixed-window rate limiter backed by Redis INCR + EXPIRE.
  * Fails open when Redis is unavailable: availability over strictness here;
  * the load balancer provides the outer safety net.
+ *
+ * Keys per client IP by default. That is wrong for authenticated traffic when
+ * many candidates sit behind one NAT (an entire lab shares one public IP and
+ * one bucket), so callers pass `key` to bucket per identity instead; a null
+ * return falls back to the IP.
  */
-export function rateLimit(options: { bucket: string; limit: number; windowSeconds: number }) {
+export function rateLimit(options: {
+  bucket: string;
+  limit: number;
+  windowSeconds: number;
+  key?: (req: Request) => string | null;
+}) {
   return async (req: Request, _res: Response, next: NextFunction): Promise<void> => {
     try {
-      const key = `rl:${options.bucket}:${req.ip ?? "unknown"}`;
+      const id = options.key?.(req) ?? req.ip ?? "unknown";
+      const key = `rl:${options.bucket}:${id}`;
       const count = await redis.incr(key);
       if (count === 1) await redis.expire(key, options.windowSeconds);
       if (count > options.limit) {
@@ -138,6 +149,26 @@ export function rateLimit(options: { bucket: string; limit: number; windowSecond
       next();
     }
   };
+}
+
+/**
+ * Rate-limit key for candidate traffic: the participant id from a valid
+ * bearer token, so each candidate gets their own bucket regardless of NAT.
+ * The signature is verified (an unverified decode would let anyone mint
+ * fresh buckets and bypass the limit); invalid or absent tokens fall back
+ * to the IP bucket and are rejected by requireParticipant right after.
+ */
+export function participantRateKey(req: Request): string | null {
+  const header = req.header("authorization") ?? "";
+  const token = header.match(/^Bearer\s+(.+)$/i)?.[1]?.trim();
+  if (!token) return null;
+  try {
+    const decoded = jwt.verify(token, env.JWT_SECRET) as ParticipantClaims;
+    if (decoded.kind !== "participant" || !decoded.participantId) return null;
+    return `p:${decoded.participantId}`;
+  } catch {
+    return null;
+  }
 }
 
 // --- Error handling ----------------------------------------------------
