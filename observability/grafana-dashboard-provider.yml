@@ -1,0 +1,12 @@
+# Grafana file provisioning: every JSON in observability/dashboards/ becomes
+# a dashboard, re-read every 60s. Edit the file, not the UI (UI edits are not
+# saved back).
+apiVersion: 1
+
+providers:
+  - name: wcl
+    type: file
+    options:
+      path: /var/lib/grafana/dashboards
+    updateIntervalSeconds: 60
+    allowUiUpdates: false

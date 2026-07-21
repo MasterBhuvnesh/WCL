@@ -1,0 +1,143 @@
+{
+  "uid": "wcl-exam-day",
+  "title": "WCL Exam Day",
+  "timezone": "browser",
+  "refresh": "30s",
+  "time": { "from": "now-30m", "to": "now" },
+  "panels": [
+    {
+      "id": 1,
+      "type": "stat",
+      "title": "API up",
+      "gridPos": { "h": 5, "w": 4, "x": 0, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            { "type": "value", "options": { "1": { "text": "UP", "color": "green" }, "0": { "text": "DOWN", "color": "red" } } }
+          ],
+          "thresholds": { "mode": "absolute", "steps": [ { "color": "red", "value": null }, { "color": "green", "value": 1 } ] }
+        },
+        "overrides": []
+      },
+      "targets": [ { "expr": "up{job=\"wclapi\"}" } ]
+    },
+    {
+      "id": 2,
+      "type": "stat",
+      "title": "5xx errors (5m)",
+      "gridPos": { "h": 5, "w": 4, "x": 4, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "red", "value": 1 } ] }
+        },
+        "overrides": []
+      },
+      "targets": [ { "expr": "sum(increase(http_requests_total{job=\"wclapi\",status=~\"5..\"}[5m])) or vector(0)" } ]
+    },
+    {
+      "id": 3,
+      "type": "stat",
+      "title": "p95 latency (5m)",
+      "gridPos": { "h": 5, "w": 4, "x": 8, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "yellow", "value": 0.5 }, { "color": "red", "value": 1 } ] }
+        },
+        "overrides": []
+      },
+      "targets": [ { "expr": "histogram_quantile(0.95, sum by (le) (rate(http_request_duration_seconds_bucket{job=\"wclapi\"}[5m])))" } ]
+    },
+    {
+      "id": 4,
+      "type": "stat",
+      "title": "Rate-limited 429s (5m)",
+      "gridPos": { "h": 5, "w": 4, "x": 12, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "yellow", "value": 1 } ] }
+        },
+        "overrides": []
+      },
+      "targets": [ { "expr": "sum(increase(http_requests_total{job=\"wclapi\",status=\"429\"}[5m])) or vector(0)" } ]
+    },
+    {
+      "id": 5,
+      "type": "stat",
+      "title": "Host CPU",
+      "gridPos": { "h": 5, "w": 4, "x": 16, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "yellow", "value": 70 }, { "color": "red", "value": 85 } ] }
+        },
+        "overrides": []
+      },
+      "targets": [ { "expr": "100 - avg(rate(node_cpu_seconds_total{mode=\"idle\"}[5m])) * 100" } ]
+    },
+    {
+      "id": 6,
+      "type": "stat",
+      "title": "Host memory",
+      "gridPos": { "h": 5, "w": 4, "x": 20, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "yellow", "value": 75 }, { "color": "red", "value": 90 } ] }
+        },
+        "overrides": []
+      },
+      "targets": [ { "expr": "(1 - node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes) * 100" } ]
+    },
+    {
+      "id": 7,
+      "type": "timeseries",
+      "title": "Logins per minute (successful)",
+      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 5 },
+      "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
+      "targets": [
+        { "expr": "sum(rate(http_requests_total{job=\"wclapi\",route=\"/auth/login\",status=\"200\"}[1m])) * 60", "legendFormat": "logins/min" },
+        { "expr": "sum(rate(http_requests_total{job=\"wclapi\",route=\"/auth/login\",status=~\"4..\"}[1m])) * 60", "legendFormat": "failed/min" }
+      ]
+    },
+    {
+      "id": 8,
+      "type": "timeseries",
+      "title": "In-exam activity (req/s)",
+      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 5 },
+      "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
+      "targets": [
+        { "expr": "sum(rate(http_requests_total{job=\"wclapi\",route=\"/exam/answer\"}[1m]))", "legendFormat": "answer saves" },
+        { "expr": "sum(rate(http_requests_total{job=\"wclapi\",route=\"/exam/heartbeat\"}[1m]))", "legendFormat": "heartbeats" },
+        { "expr": "sum(rate(http_requests_total{job=\"wclapi\",route=\"/exam/integrity\"}[1m]))", "legendFormat": "integrity posts" }
+      ]
+    },
+    {
+      "id": 9,
+      "type": "timeseries",
+      "title": "Submissions per minute",
+      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 5 },
+      "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
+      "targets": [
+        { "expr": "sum(rate(http_requests_total{job=\"wclapi\",route=\"/exam/submit\",status=\"200\"}[1m])) * 60", "legendFormat": "submits/min" }
+      ]
+    },
+    {
+      "id": 10,
+      "type": "logs",
+      "title": "Warnings and errors (pino level >= 40)",
+      "gridPos": { "h": 9, "w": 24, "x": 0, "y": 13 },
+      "datasource": { "type": "loki", "uid": "P8E80F9AEF21F6940" },
+      "options": { "showTime": true, "sortOrder": "Descending", "wrapLogMessage": true },
+      "targets": [
+        { "expr": "{container=\"wclapi\"} | json | level >= 40" }
+      ]
+    }
+  ]
+}

@@ -93,6 +93,8 @@ services:
       GF_SERVER_ROOT_URL: https://grafana.rbuexam.in
     volumes:
       - ./observability/grafana-datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml:ro
+      - ./observability/grafana-dashboard-provider.yml:/etc/grafana/provisioning/dashboards/provider.yml:ro
+      - ./observability/dashboards:/var/lib/grafana/dashboards:ro
       - grafana-data:/var/lib/grafana
     ports:
       # Reached as https://grafana.rbuexam.in via the ALB (target group
