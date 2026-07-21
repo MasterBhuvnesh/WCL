@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
@@ -40,7 +41,10 @@ export function AdminNav() {
 
   return (
     <aside className="flex w-56 shrink-0 flex-col gap-1 border-r border-foreground/10 bg-card px-3 py-6">
-      <p className="px-2 pb-3 text-sm font-semibold tracking-tight">WCL Admin</p>
+      <div className="flex items-center gap-2 px-2 pb-3">
+        <Image src="/assets/icon.png" alt="" width={20} height={20} className="shrink-0" />
+        <p className="text-sm font-semibold tracking-tight">WCL Admin</p>
+      </div>
       <nav className="flex flex-1 flex-col gap-0.5">
         {LINKS.map(({ href, label, icon: Icon }) => {
           const active =
