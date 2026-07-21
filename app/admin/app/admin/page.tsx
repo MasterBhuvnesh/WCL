@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
-import { ListChecks, ShieldAlert, Trophy, UploadCloud, Users } from "lucide-react";
+import { useEffect, useState } from "react";
+import { ListChecks, ShieldAlert, ShieldCheck, Trophy, UploadCloud, Users } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Tray, TrayInner, TrayLabel, TrayStrip } from "@/components/ui/tray";
@@ -18,8 +18,15 @@ const SCREENS = [
 
 export default function OverviewPage() {
   const [mfa, setMfa] = useState<{ secret: string; otpauthUrl: string } | null>(null);
+  const [enabled, setEnabled] = useState<boolean | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    apiFetch<{ enabled: boolean }>("/admin/mfa")
+      .then((r) => setEnabled(r.enabled))
+      .catch(() => setEnabled(false));
+  }, []);
 
   async function setupMfa() {
     setError(null);
@@ -29,6 +36,7 @@ export default function OverviewPage() {
         method: "POST",
       });
       setMfa(res);
+      setEnabled(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : "MFA setup failed");
     } finally {
@@ -58,17 +66,23 @@ export default function OverviewPage() {
       </section>
 
       <Tray>
-        <TrayStrip className="px-3 py-2">
+        <TrayStrip className="flex items-center justify-between px-3 py-2">
           <TrayLabel>Multi-factor authentication</TrayLabel>
+          {enabled && (
+            <span className="flex items-center gap-1 text-xs text-muted-foreground">
+              <ShieldCheck className="size-3.5" /> Enabled
+            </span>
+          )}
         </TrayStrip>
         <TrayInner className="flex flex-col gap-3">
           <p className="text-muted-foreground text-sm">
-            Generate a TOTP secret for this admin account. Add it to an authenticator app, then a
-            code is required at every future sign-in.
+            {enabled
+              ? "A TOTP secret is already set up for this account, so a code is required at every sign-in. Regenerating replaces it and invalidates the old one."
+              : "Generate a TOTP secret for this admin account. Add it to an authenticator app, then a code is required at every future sign-in."}
           </p>
           <div>
-            <Button onClick={setupMfa} disabled={busy} variant="cta" size="sm">
-              {busy ? "Generating…" : mfa ? "Regenerate secret" : "Set up MFA"}
+            <Button onClick={setupMfa} disabled={busy || enabled === null} variant="cta" size="sm">
+              {busy ? "Generating…" : enabled ? "Regenerate secret" : "Set up MFA"}
             </Button>
           </div>
           {error && <p className="text-destructive text-sm">{error}</p>}

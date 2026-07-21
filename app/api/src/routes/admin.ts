@@ -162,6 +162,18 @@ adminRouter.post(
 
 // --- 2. MFA setup --------------------------------------------------------
 
+adminRouter.get(
+  "/mfa",
+  h(async (req, res) => {
+    const [admin] = await db
+      .select({ totpSecret: admins.totpSecret })
+      .from(admins)
+      .where(eq(admins.id, req.admin!.adminId))
+      .limit(1);
+    res.json({ enabled: !!admin?.totpSecret });
+  }),
+);
+
 adminRouter.post(
   "/mfa/setup",
   h(async (req, res) => {
