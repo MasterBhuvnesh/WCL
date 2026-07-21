@@ -1,0 +1,13 @@
+# Copy to terraform.tfvars and fill in. terraform.tfvars is gitignored.
+
+# Postgres master password (matches .env.prod.backend DATABASE_URL).
+rds_master_password = "CHANGE_ME"
+
+# SSH public keys for the two key pairs. Derive from the existing private keys:
+#   ssh-keygen -y -f ../secret/wcl-backend.pem
+#   ssh-keygen -y -f ../secret/wcl.pem
+backend_public_key  = "ssh-ed25519 AAAA... wcl-backend"
+frontend_public_key = "ssh-ed25519 AAAA... wcl"
+
+# Overridable defaults (region ap-south-1, domain rbuexam.in) live in
+# variables.tf; set them here only to change them.
