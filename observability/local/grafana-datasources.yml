@@ -1,6 +1,7 @@
-# Grafana provisioned datasources. The read-only RDS Postgres datasource
-# (audit_logs/results dashboards) is a follow-up: it first needs a read-only
-# user created on RDS.
+# Local-dev Grafana datasources. The uids match the production provisioning
+# so the dashboards in observability/dashboards/ work unchanged. Loki runs
+# only as a stub locally (no Alloy; dev logs are pretty-printed, not JSON),
+# so log panels show "no data".
 apiVersion: 1
 
 datasources:

@@ -37,6 +37,42 @@ services:
     volumes:
       - wcl-floci-data:/app/data
 
+  # --- Local observability (optional) -------------------------------------
+  # Start with: docker compose --profile obs up -d
+  # Grafana: http://localhost:3001 (admin/admin). Prometheus scrapes the API
+  # running on the host via `bun run dev`; set METRICS_TOKEN=local-dev-token
+  # in app/api/.env. Loki is a stub (no log shipping in dev; the log panels
+  # show "no data").
+  prometheus:
+    image: prom/prometheus:v3.3.0
+    container_name: wcl-prometheus
+    profiles: [obs]
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+    volumes:
+      - ./observability/local/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    extra_hosts:
+      - host.docker.internal:host-gateway
+
+  loki:
+    image: grafana/loki:3.4.2
+    container_name: wcl-loki
+    profiles: [obs]
+    command: -config.file=/etc/loki/loki.yml
+    volumes:
+      - ./observability/loki.yml:/etc/loki/loki.yml:ro
+
+  grafana:
+    image: grafana/grafana:11.6.1
+    container_name: wcl-grafana
+    profiles: [obs]
+    volumes:
+      - ./observability/local/grafana-datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml:ro
+      - ./observability/grafana-dashboard-provider.yml:/etc/grafana/provisioning/dashboards/provider.yml:ro
+      - ./observability/dashboards:/var/lib/grafana/dashboards:ro
+    ports:
+      - "3001:3000" # 3000 clashes with Next dev servers
+
 volumes:
   wcl-pgdata:
   wcl-floci-data:

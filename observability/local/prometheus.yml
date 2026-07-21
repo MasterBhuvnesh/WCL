@@ -1,0 +1,12 @@
+# Local-dev Prometheus: scrapes the API running on the host with
+# `bun run dev` (METRICS_TOKEN=local-dev-token in app/api/.env).
+global:
+  scrape_interval: 15s
+
+scrape_configs:
+  - job_name: wclapi
+    static_configs:
+      - targets: ["host.docker.internal:4000"]
+    authorization:
+      type: Bearer
+      credentials: local-dev-token
