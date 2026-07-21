@@ -50,6 +50,7 @@ export default function SessionsPage() {
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [q, setQ] = useState("");
+  const [status, setStatus] = useState("");
   const [offset, setOffset] = useState(0);
 
   const load = useCallback(async () => {
@@ -160,7 +161,8 @@ export default function SessionsPage() {
   const statOrder: Status[] = ["not_started", "in_progress", "submitted", "auto_submitted"];
   const needle = q.trim().toLowerCase();
   const filteredSessions = (data?.sessions ?? []).filter(
-    (s) => !needle || s.username.toLowerCase().includes(needle),
+    (s) =>
+      (!needle || s.username.toLowerCase().includes(needle)) && (!status || s.status === status),
   );
   const shownSessions = filteredSessions.slice(offset, offset + PAGE);
 
@@ -201,12 +203,26 @@ export default function SessionsPage() {
       <Tray>
         <TrayStrip className="flex items-center justify-between gap-3 px-3 py-2">
           <TrayLabel>Recent sessions</TrayLabel>
-          <Input
-            value={q}
-            onChange={(e) => { setOffset(0); setQ(e.target.value); }}
-            placeholder="Search username…"
-            className="h-7 w-56"
-          />
+          <div className="flex items-center gap-2">
+            <select
+              value={status}
+              onChange={(e) => { setOffset(0); setStatus(e.target.value); }}
+              className="h-7 rounded-lg border border-border bg-background px-2.5 text-sm"
+            >
+              <option value="">All statuses</option>
+              {statOrder.map((s) => (
+                <option key={s} value={s}>
+                  {STATUS_LABEL[s]}
+                </option>
+              ))}
+            </select>
+            <Input
+              value={q}
+              onChange={(e) => { setOffset(0); setQ(e.target.value); }}
+              placeholder="Search username…"
+              className="h-7 w-56"
+            />
+          </div>
         </TrayStrip>
         <TrayInner className="overflow-hidden p-0">
         {shownSessions.length > 0 ? (
@@ -265,7 +281,7 @@ export default function SessionsPage() {
           </Table>
         ) : (
           <p className="text-muted-foreground px-6 py-16 text-center text-sm">
-            {data && data.sessions.length > 0 ? "No sessions match the search." : "No sessions for this exam yet."}
+            {data && data.sessions.length > 0 ? "No sessions match the filter." : "No sessions for this exam yet."}
           </p>
         )}
         </TrayInner>

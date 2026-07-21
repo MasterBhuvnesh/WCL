@@ -50,6 +50,7 @@ export default function ResultsPage() {
   const [rows, setRows] = useState<ResultRow[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [q, setQ] = useState("");
+  const [status, setStatus] = useState("");
   const [offset, setOffset] = useState(0);
 
   const load = useCallback(async () => {
@@ -99,7 +100,10 @@ export default function ResultsPage() {
   ];
 
   const needle = q.trim().toLowerCase();
-  const filtered = needle ? rows.filter((r) => r.username.toLowerCase().includes(needle)) : rows;
+  const filtered = rows.filter(
+    (r) =>
+      (!needle || r.username.toLowerCase().includes(needle)) && (!status || r.status === status),
+  );
   const shown = filtered.slice(offset, offset + PAGE);
 
   return (
@@ -140,19 +144,30 @@ export default function ResultsPage() {
       <Tray>
         <TrayStrip className="flex items-center justify-between gap-3 px-3 py-2">
           <TrayLabel>Results</TrayLabel>
-          <Input
-            value={q}
-            onChange={(e) => { setOffset(0); setQ(e.target.value); }}
-            placeholder="Search username…"
-            className="h-7 w-56"
-          />
+          <div className="flex items-center gap-2">
+            <select
+              value={status}
+              onChange={(e) => { setOffset(0); setStatus(e.target.value); }}
+              className="h-7 rounded-lg border border-border bg-background px-2.5 text-sm"
+            >
+              <option value="">All statuses</option>
+              <option value="submitted">Submitted</option>
+              <option value="auto_submitted">Auto submitted</option>
+            </select>
+            <Input
+              value={q}
+              onChange={(e) => { setOffset(0); setQ(e.target.value); }}
+              placeholder="Search username…"
+              className="h-7 w-56"
+            />
+          </div>
         </TrayStrip>
         <TrayInner className="overflow-hidden p-0">
           {shown.length === 0 ? (
             <p className="text-muted-foreground px-6 py-16 text-center text-sm">
               {rows.length === 0
                 ? "No completed examinations yet. Results appear here as candidates submit."
-                : "No results match the search."}
+                : "No results match the filter."}
             </p>
           ) : (
             <div className="overflow-x-auto">
