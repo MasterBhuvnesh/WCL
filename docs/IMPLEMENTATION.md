@@ -41,6 +41,8 @@ types when the API contract starts changing in more than one app at a time.
 ```bash
 # 1. Infrastructure
 docker compose up -d                # Postgres :5432, Redis :6379
+# Optional dashboards (Grafana http://localhost:3001, admin/admin):
+# docker compose --profile obs up -d
 
 # 2. Backend (http://localhost:4000)
 cd app/api

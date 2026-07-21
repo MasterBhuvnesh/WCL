@@ -246,6 +246,22 @@ password in `/srv/wcl/.env` as `GRAFANA_ADMIN_PASSWORD`) protects the UI.
    localhost:4000/metrics` on the instance; a Loki query for
    `{container="wclapi"}` returns request lines; dashboards render.
 
+## Local testing
+
+`docker compose up -d` starts only the dev dependencies (Postgres, Redis,
+Floci); the observability services sit behind the `obs` compose profile:
+
+```bash
+docker compose --profile obs up -d   # dev deps + Prometheus, Grafana, Loki, node-exporter
+```
+
+Grafana is at http://localhost:3001 (admin/admin; 3001 because the Next dev
+servers use 3000) with the same dashboards as production, provisioned from
+`observability/dashboards/`. Prometheus scrapes the host API started with
+`bun run dev` (`METRICS_TOKEN=local-dev-token` in `app/api/.env`). Local
+gaps: log panels stay empty (no Alloy; dev logs are pretty-printed) and the
+host panels report the Docker VM, not the Windows machine.
+
 ## Out of scope for now
 
 - Alerting rules: add once dashboards prove out which signals matter.
