@@ -687,6 +687,24 @@ async function setExamOpen(req: AuthedRequest, res: Response, isOpen: boolean): 
 adminRouter.post("/exams/:examId/open", h((req, res) => setExamOpen(req, res, true)));
 adminRouter.post("/exams/:examId/close", h((req, res) => setExamOpen(req, res, false)));
 
+// Toggle whether participant login verifies the password for this exam.
+adminRouter.post(
+  "/exams/:examId/password-check",
+  validate(z.object({ required: z.boolean() })),
+  h(async (req, res) => {
+    const examId = req.params.examId;
+    const { required } = req.body as { required: boolean };
+    const [row] = await db
+      .update(exams)
+      .set({ passwordRequired: required })
+      .where(eq(exams.id, examId))
+      .returning({ passwordRequired: exams.passwordRequired });
+    if (!row) throw new HttpError(404, "Exam not found");
+    await audit(req.admin!.adminId, "exam-password-check", examId, { required });
+    res.json({ ok: true, passwordRequired: row.passwordRequired });
+  }),
+);
+
 // --- 12. Publish / unpublish results ------------------------------------
 
 adminRouter.post(

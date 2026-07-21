@@ -167,6 +167,12 @@ export default function QuestionsPage() {
           <Button variant="outline" size="sm" onClick={() => control(`/admin/exams/${encodeURIComponent(examId)}/publish`, { published: false }, "Results hidden")}>
             Unpublish results
           </Button>
+          <Button variant="outline" size="sm" onClick={() => control(`/admin/exams/${encodeURIComponent(examId)}/password-check`, { required: true }, "Password check enabled")}>
+            Check password
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => control(`/admin/exams/${encodeURIComponent(examId)}/password-check`, { required: false }, "Password check disabled (username only)")}>
+            Ignore password
+          </Button>
         </TrayInner>
       </Tray>
 

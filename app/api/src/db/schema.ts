@@ -48,6 +48,8 @@ export const exams = pgTable("exams", {
   availableUntil: timestamp("available_until", { withTimezone: true }),
   /** Admin toggle: when false, logins for this exam are refused. */
   isOpen: boolean("is_open").notNull().default(true),
+  /** Admin toggle: when false, login accepts any password (username only). */
+  passwordRequired: boolean("password_required").notNull().default(true),
   resultsPublished: boolean("results_published").notNull().default(false),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });

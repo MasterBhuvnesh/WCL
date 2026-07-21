@@ -134,15 +134,19 @@ examRouter.post(
     const participant = await getParticipantByUsername(username);
     if (!participant) throw new HttpError(401, "Invalid username or password");
 
-    const passwordOk = await Bun.password.verify(password, participant.secretHash);
-    if (!passwordOk) throw new HttpError(401, "Invalid username or password");
-
     const [exam] = await db
       .select()
       .from(exams)
       .where(eq(exams.id, examId ?? DEFAULT_EXAM_ID))
       .limit(1);
     if (!exam) throw new HttpError(401, "Invalid username or password");
+
+    // With password checking toggled off (admin control), the username alone
+    // authenticates; the client still sends a password, it is just ignored.
+    if (exam.passwordRequired) {
+      const passwordOk = await Bun.password.verify(password, participant.secretHash);
+      if (!passwordOk) throw new HttpError(401, "Invalid username or password");
+    }
 
     const now = new Date();
     if (

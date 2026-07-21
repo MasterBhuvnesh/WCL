@@ -1,0 +1,1 @@
+ALTER TABLE "exams" ADD COLUMN "password_required" boolean DEFAULT true NOT NULL;
