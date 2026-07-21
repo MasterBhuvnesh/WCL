@@ -1,0 +1,14 @@
+# Prometheus scrape config. Host/container metrics arrive from Alloy via
+# remote write (--web.enable-remote-write-receiver); only the API is scraped
+# directly. The bearer token file is created on the instance at deploy time:
+#   grep '^METRICS_TOKEN=' .env.prod.backend | cut -d= -f2- > observability/metrics-token
+global:
+  scrape_interval: 15s
+
+scrape_configs:
+  - job_name: wclapi
+    static_configs:
+      - targets: ["wclapi:4000"]
+    authorization:
+      type: Bearer
+      credentials_file: /etc/prometheus/metrics-token

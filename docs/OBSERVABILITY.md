@@ -6,7 +6,10 @@ to the API container. Nothing here changes the exam client or any existing
 API route: every addition is a new endpoint, a pass-through middleware, or a
 new container. Each rollout step is independently shippable and reversible.
 
-Status: design only, not yet implemented.
+Status: implemented (api v0.1.3). Configs live in `observability/`; the
+compose file is `docker-compose.backend.yml`. The trust-proxy fix predated
+this work (`TRUST_PROXY_HOPS`). The read-only RDS Grafana datasource and the
+dashboards remain follow-ups.
 
 ## Goals
 

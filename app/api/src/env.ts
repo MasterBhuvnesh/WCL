@@ -32,6 +32,12 @@ const EnvSchema = z.object({
   TRUST_PROXY_HOPS: z.coerce.number().int().min(0).default(1),
   LOG_LEVEL: z.string().default("info"),
   /**
+   * Static bearer token for GET /metrics (Prometheus scrape). The ALB
+   * forwards all paths to the API, so the endpoint must not be open.
+   * Unset disables /metrics entirely.
+   */
+  METRICS_TOKEN: z.string().optional(),
+  /**
    * Production bootstrap: on first boot against an empty database the API
    * creates this admin account and exam itself (see bootstrap() in index.ts),
    * so a clean deployment never needs manual SQL. Rows are only created when

@@ -36,7 +36,8 @@ Thumbs.db
 
 # Credentials
 Credentials.json
-RECORD.md
 secret/
 docs/ACCESS.md
-!.env.prod.backend.example
+docs/AWSCLI.md
+docs/RECORD.md
+observability/metrics-token

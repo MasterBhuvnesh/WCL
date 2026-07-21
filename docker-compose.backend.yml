@@ -1,9 +1,12 @@
-# Backend EC2 stack: API + Watchtower.
+# Backend EC2 stack: API + Watchtower + observability (Loki, Alloy,
+# Prometheus, Grafana). See docs/OBSERVABILITY.md.
 # TLS and the api.rbuexam.in hostname are handled by the shared AWS
 # Application Load Balancer (target group wcl-api, port 4000).
 #
 # Usage:
 #   cp .env.prod.backend.example .env.prod.backend
+#   grep '^METRICS_TOKEN=' .env.prod.backend | cut -d= -f2- > observability/metrics-token
+#   echo "GRAFANA_ADMIN_PASSWORD=..." >> .env   # compose interpolation file
 #   docker compose -f docker-compose.backend.yml up -d
 
 services:
@@ -31,3 +34,71 @@ services:
       - --cleanup
       - --interval
       - "60" # Check every 1 minute
+
+  loki:
+    image: grafana/loki:3.4.2
+    container_name: loki
+    restart: unless-stopped
+    command: -config.file=/etc/loki/loki.yml
+    volumes:
+      - ./observability/loki.yml:/etc/loki/loki.yml:ro
+      - loki-data:/loki
+    # Single-binary mode with filesystem storage; 7-day retention set in the
+    # config. No ports published: only Alloy and Grafana reach it over the
+    # compose network.
+    mem_limit: 512m
+
+  alloy:
+    image: grafana/alloy:v1.8.1
+    container_name: alloy
+    restart: unless-stopped
+    command:
+      - run
+      - /etc/alloy/config.alloy
+    volumes:
+      - ./observability/alloy.config:/etc/alloy/config.alloy:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      # Host visibility for the embedded node_exporter and cAdvisor
+      # components (host CPU, memory, disk, network, per-container usage).
+      - /:/host/root:ro,rslave
+      - /sys:/host/sys:ro
+      - /proc:/host/proc:ro
+    pid: host
+    mem_limit: 256m
+
+  prometheus:
+    image: prom/prometheus:v3.3.0
+    container_name: prometheus
+    restart: unless-stopped
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.retention.time=15d
+      # Alloy pushes host/container metrics here via remote write.
+      - --web.enable-remote-write-receiver
+    volumes:
+      - ./observability/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./observability/metrics-token:/etc/prometheus/metrics-token:ro
+      - prometheus-data:/prometheus
+    # Scrapes http://wclapi:4000/metrics (bearer METRICS_TOKEN) every 15s.
+    # No ports published.
+    mem_limit: 512m
+
+  grafana:
+    image: grafana/grafana:11.6.1
+    container_name: grafana
+    restart: unless-stopped
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:?set in /srv/wcl/.env}
+      GF_SERVER_ROOT_URL: http://localhost:3000
+    volumes:
+      - ./observability/grafana-datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml:ro
+      - grafana-data:/var/lib/grafana
+    ports:
+      - "127.0.0.1:3000:3000" # loopback only; reached via the SSH tunnel
+    mem_limit: 256m
+
+volumes:
+  loki-data:
+  prometheus-data:
+  grafana-data:

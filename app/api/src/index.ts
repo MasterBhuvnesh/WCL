@@ -19,6 +19,7 @@ import { admins, exams } from "./db/schema.ts";
 import { env, isProduction } from "./env.ts";
 import { logger } from "./logger.ts";
 import { errorHandler, notFoundHandler } from "./http/middleware.ts";
+import { metricsHandler, requestObserver } from "./http/metrics.ts";
 import { examRouter, startAutoSubmitSweep } from "./routes/exam.ts";
 import { adminRouter } from "./routes/admin.ts";
 import { attachAdminWs } from "./ws.ts";
@@ -82,6 +83,10 @@ app.set("trust proxy", env.TRUST_PROXY_HOPS);
 app.disable("x-powered-by");
 app.use(cors());
 app.use(express.json({ limit: "1mb" }));
+app.use(requestObserver);
+
+/** Prometheus scrape target (bearer METRICS_TOKEN; 404 when unset). */
+app.get("/metrics", metricsHandler);
 
 /** Liveness probe. */
 app.get("/health", (_req: Request, res: Response) => {
