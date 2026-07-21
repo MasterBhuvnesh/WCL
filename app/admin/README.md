@@ -2,7 +2,9 @@
 
 <img src="./public/assets/admin%20banner.png" alt="WCL Admin Panel" width="100%">
 
-# WCL Admin Panel
+<br />
+
+# 𝔚ℭ𝔏 𝔄𝔡𝔪𝔦𝔫 𝔓𝔞𝔫𝔢𝔩
 
 <img src="https://img.shields.io/badge/-Next.js-000000?style=for-the-badge&logo=nextdotjs&logoColor=white" alt="Next.js" />
 <img src="https://img.shields.io/badge/-React-000000?style=for-the-badge&logo=react&logoColor=61DAFB" alt="React" />

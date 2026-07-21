@@ -2,7 +2,9 @@
 
 <img src="./assets/platform%20banner.png" alt="WCL Exam Client" width="100%">
 
-# WCL Exam Client
+<br />
+
+# 𝔚ℭ𝔏 𝔈𝔵𝔞𝔪 ℭ𝔩𝔦𝔢𝔫𝔱
 
 <img src="https://img.shields.io/badge/-Electron-000000?style=for-the-badge&logo=electron&logoColor=9FEAF9" alt="Electron" />
 <img src="https://img.shields.io/badge/-React-000000?style=for-the-badge&logo=react&logoColor=61DAFB" alt="React" />
