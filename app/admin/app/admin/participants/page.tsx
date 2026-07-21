@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { type ReactNode, useCallback, useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Input, Textarea } from "@/components/ui/input";
@@ -20,6 +20,15 @@ interface Participant {
 function fmt(iso: string | null): string {
   if (!iso) return "-";
   return new Date(iso).toLocaleString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
+}
+
+function Field({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <div className="flex flex-col">
+      <span className="text-muted-foreground text-xs">{label}</span>
+      <span>{children}</span>
+    </div>
+  );
 }
 
 const SAMPLE = `[
@@ -123,13 +132,14 @@ export default function ParticipantsPage() {
   const shown = filtered.slice(offset, offset + PAGE);
 
   return (
-    <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-6 py-10">
+    <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-4 py-8 sm:px-6 sm:py-10">
       <header>
         <h1 className="text-2xl font-semibold tracking-tight">Participant import</h1>
         <p className="text-muted-foreground text-sm">
-          Paste a JSON array. Each row needs <code>username</code>; <code>secret</code>,{" "}
-          <code>displayName</code>, and <code>dob</code> are optional. Rows without a{" "}
-          <code>secret</code> get the common exam password. Existing usernames are skipped.
+          Add candidates one at a time, or paste a JSON array to import in bulk. Each row needs a{" "}
+          <code>username</code>; <code>secret</code>, <code>displayName</code>, and <code>dob</code>{" "}
+          are optional, and rows without a <code>secret</code> use the common exam password.
+          Existing usernames are skipped.
         </p>
       </header>
 
@@ -217,13 +227,13 @@ export default function ParticipantsPage() {
       </Tray>
 
       <Tray>
-        <TrayStrip className="flex items-center justify-between gap-3 px-3 py-2">
+        <TrayStrip className="flex flex-wrap items-center justify-between gap-3 px-3 py-2">
           <TrayLabel>All participants ({list.length})</TrayLabel>
           <Input
             value={q}
             onChange={(e) => { setOffset(0); setQ(e.target.value); }}
             placeholder="Search username or name…"
-            className="h-7 w-56"
+            className="h-7 w-full sm:w-56"
           />
         </TrayStrip>
         <TrayInner className="overflow-hidden p-0">
@@ -232,6 +242,8 @@ export default function ParticipantsPage() {
               {list.length === 0 ? "No participants imported yet." : "No participants match the search."}
             </p>
           ) : (
+            <>
+            <div className="hidden lg:block">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -252,6 +264,22 @@ export default function ParticipantsPage() {
                 ))}
               </TableBody>
             </Table>
+            </div>
+            <div className="flex flex-col gap-2 p-3 lg:hidden">
+              {shown.map((p) => (
+                <div key={p.id} className="flex flex-col gap-2 rounded-xl border border-border p-3">
+                  <div className="border-b border-border pb-2">
+                    <p className="font-medium">{p.username}</p>
+                    <p className="text-muted-foreground text-sm">{p.displayName ?? "-"}</p>
+                  </div>
+                  <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-sm">
+                    <Field label="DOB"><span className="tabular-nums">{p.dob ?? "-"}</span></Field>
+                    <Field label="Created">{fmt(p.createdAt)}</Field>
+                  </div>
+                </div>
+              ))}
+            </div>
+            </>
           )}
         </TrayInner>
         <TrayStrip className="flex items-center justify-between">

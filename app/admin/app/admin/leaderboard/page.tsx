@@ -101,11 +101,11 @@ export default function LeaderboardPage() {
   );
 
   return (
-    <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-6 py-10">
+    <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-4 py-8 sm:px-6 sm:py-10">
       <header className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">Leaderboard</h1>
-          <p className="text-muted-foreground text-sm">Live standings · {board?.total ?? 0} ranked</p>
+          <p className="text-muted-foreground text-sm">Live rankings as scores land · {board?.total ?? 0} ranked</p>
         </div>
         <div className="flex items-end gap-3">
           {(board?.total ?? 0) > 0 && (
@@ -123,14 +123,14 @@ export default function LeaderboardPage() {
       {error && <p className="text-destructive text-sm">{error}</p>}
 
       <Tray>
-        <TrayStrip className="flex items-center justify-between gap-3 px-3 py-2">
+        <TrayStrip className="flex flex-wrap items-center justify-between gap-3 px-3 py-2">
           <TrayLabel>Standings</TrayLabel>
-          <div className="flex items-center gap-2">
+          <div className="flex w-full items-center gap-2 sm:w-auto">
             <Input
               value={q}
               onChange={(e) => setQ(e.target.value)}
               placeholder="Search this page…"
-              className="h-7 w-48"
+              className="h-7 w-full min-w-0 flex-1 sm:w-48 sm:flex-none"
             />
             <Badge variant={live ? "secondary" : "outline"}>
               <span className={`size-1.5 rounded-full ${live ? "bg-emerald-500" : "bg-muted-foreground"}`} />
@@ -140,6 +140,8 @@ export default function LeaderboardPage() {
         </TrayStrip>
         <TrayInner className="overflow-hidden p-0">
         {shownEntries.length > 0 ? (
+          <>
+          <div className="hidden lg:block">
           <Table>
             <TableHeader>
               <TableRow>
@@ -160,6 +162,22 @@ export default function LeaderboardPage() {
               ))}
             </TableBody>
           </Table>
+          </div>
+          <div className="flex flex-col gap-2 p-3 lg:hidden">
+            {shownEntries.map((e) => (
+              <div key={e.participantId} className="flex items-center justify-between gap-3 rounded-xl border border-border p-3">
+                <div className="flex min-w-0 items-center gap-3">
+                  <span className="font-medium tabular-nums">{e.rank}</span>
+                  <div className="min-w-0">
+                    <p className="truncate font-medium">{e.username}</p>
+                    <p className="text-muted-foreground truncate text-sm">{e.displayName ?? "-"}</p>
+                  </div>
+                </div>
+                <span className="font-medium tabular-nums">{e.score}</span>
+              </div>
+            ))}
+          </div>
+          </>
         ) : (
           <p className="text-muted-foreground px-6 py-16 text-center text-sm">
             {board && board.entries.length > 0 ? "No entries match the search on this page." : "No ranked results yet."}

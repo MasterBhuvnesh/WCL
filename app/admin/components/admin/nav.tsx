@@ -3,16 +3,19 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { useState } from "react";
 import {
   ClipboardList,
   FileCheck2,
   ListChecks,
   LogOut,
+  Menu,
   ShieldAlert,
   Ticket,
   Trophy,
   UploadCloud,
   Users,
+  X,
 } from "lucide-react";
 import pkg from "@/package.json";
 
@@ -30,21 +33,18 @@ const LINKS = [
   { href: "/admin/integrity", label: "Integrity", icon: ShieldAlert },
 ];
 
-export function AdminNav() {
-  const pathname = usePathname();
-  const router = useRouter();
-
-  function logout() {
-    clearToken();
-    router.replace("/admin/login");
-  }
-
+/** Shared nav body: links, logout, version. Used by the desktop sidebar and the mobile drawer. */
+function NavBody({
+  pathname,
+  logout,
+  onNavigate,
+}: {
+  pathname: string;
+  logout: () => void;
+  onNavigate?: () => void;
+}) {
   return (
-    <aside className="flex w-56 shrink-0 flex-col gap-1 border-r border-foreground/10 bg-card px-3 py-6">
-      <div className="flex items-center gap-2 px-2 pb-3">
-        <Image src="/assets/icon.png" alt="" width={20} height={20} className="shrink-0" />
-        <p className="text-sm font-semibold tracking-tight">WCL Admin</p>
-      </div>
+    <>
       <nav className="flex flex-1 flex-col gap-0.5">
         {LINKS.map(({ href, label, icon: Icon }) => {
           const active =
@@ -53,6 +53,7 @@ export function AdminNav() {
             <Link
               key={href}
               href={href}
+              onClick={onNavigate}
               className={cn(
                 "flex items-center gap-2 rounded-full px-3 py-1.5 text-sm transition-colors",
                 active
@@ -73,6 +74,68 @@ export function AdminNav() {
         <LogOut className="size-4" /> Sign out
       </button>
       <p className="text-muted-foreground px-3 pt-2 text-xs">v{pkg.version}</p>
-    </aside>
+    </>
+  );
+}
+
+export function AdminNav() {
+  const pathname = usePathname();
+  const router = useRouter();
+  const [open, setOpen] = useState(false);
+
+  function logout() {
+    clearToken();
+    router.replace("/admin/login");
+  }
+
+  return (
+    <>
+      {/* Mobile top bar */}
+      <header className="flex items-center justify-between border-b border-foreground/10 bg-card px-4 py-3 lg:hidden">
+        <div className="flex items-center gap-2">
+          <Image src="/assets/icon.png" alt="" width={20} height={20} className="shrink-0" />
+          <p className="text-sm font-semibold tracking-tight">WCL Admin</p>
+        </div>
+        <button
+          onClick={() => setOpen(true)}
+          aria-label="Open navigation"
+          className="inline-flex size-10 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground"
+        >
+          <Menu className="size-5" />
+        </button>
+      </header>
+
+      {/* Mobile drawer */}
+      {open && (
+        <div className="fixed inset-0 z-50 lg:hidden">
+          <div className="absolute inset-0 bg-black/40" onClick={() => setOpen(false)} />
+          <aside className="absolute top-0 left-0 flex h-full w-64 flex-col gap-1 border-r border-foreground/10 bg-card px-3 py-6">
+            <div className="flex items-center justify-between px-2 pb-3">
+              <div className="flex items-center gap-2">
+                <Image src="/assets/icon.png" alt="" width={20} height={20} className="shrink-0" />
+                <p className="text-sm font-semibold tracking-tight">WCL Admin</p>
+              </div>
+              <button
+                onClick={() => setOpen(false)}
+                aria-label="Close navigation"
+                className="inline-flex size-8 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground"
+              >
+                <X className="size-4" />
+              </button>
+            </div>
+            <NavBody pathname={pathname} logout={logout} onNavigate={() => setOpen(false)} />
+          </aside>
+        </div>
+      )}
+
+      {/* Desktop sidebar */}
+      <aside className="hidden w-56 shrink-0 flex-col gap-1 border-r border-foreground/10 bg-card px-3 py-6 lg:flex">
+        <div className="flex items-center gap-2 px-2 pb-3">
+          <Image src="/assets/icon.png" alt="" width={20} height={20} className="shrink-0" />
+          <p className="text-sm font-semibold tracking-tight">WCL Admin</p>
+        </div>
+        <NavBody pathname={pathname} logout={logout} />
+      </aside>
+    </>
   );
 }

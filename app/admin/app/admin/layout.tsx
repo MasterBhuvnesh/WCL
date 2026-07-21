@@ -45,7 +45,7 @@ export default function AdminLayout({
   }
 
   return (
-    <div className="flex min-h-full flex-1">
+    <div className="flex min-h-full flex-1 flex-col lg:flex-row">
       <AdminNav />
       <div className="flex-1 overflow-x-auto">{children}</div>
     </div>

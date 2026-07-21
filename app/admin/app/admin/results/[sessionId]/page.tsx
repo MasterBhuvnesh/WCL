@@ -128,7 +128,7 @@ export default function ResultReviewPage() {
   };
 
   return (
-    <main className="mx-auto flex w-full max-w-4xl flex-1 flex-col gap-6 px-6 py-10">
+    <main className="mx-auto flex w-full max-w-4xl flex-1 flex-col gap-6 px-4 py-8 sm:px-6 sm:py-10">
       <div>
         <Link
           href="/admin/results"
@@ -188,7 +188,7 @@ export default function ResultReviewPage() {
                       <p className="text-sm font-medium">{answer.text}</p>
                       {answer.imageUrl && (
                         // plain img: external emulator host, next/image would need remote-pattern config
-                        <img src={answer.imageUrl} alt="Question image" className="max-h-72 rounded-lg border object-contain" />
+                        <img src={answer.imageUrl} alt="Question image" className="max-h-72 max-w-full rounded-lg border object-contain" />
                       )}
                       <ul className="flex flex-col gap-1.5">
                         {answer.options.map((option) => {

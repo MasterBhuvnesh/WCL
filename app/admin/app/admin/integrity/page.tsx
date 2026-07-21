@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { type ReactNode, useCallback, useEffect, useState } from "react";
 
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -25,6 +25,15 @@ function fmt(iso: string): string {
     minute: "2-digit",
     second: "2-digit",
   });
+}
+
+function Field({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <div className="flex flex-col">
+      <span className="text-muted-foreground text-xs">{label}</span>
+      <span>{children}</span>
+    </div>
+  );
 }
 
 export default function IntegrityPage() {
@@ -61,11 +70,11 @@ export default function IntegrityPage() {
   const types = Array.from(new Set(events.map((e) => e.type))).sort();
 
   return (
-    <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-6 py-10">
+    <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-4 py-8 sm:px-6 sm:py-10">
       <header className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">Integrity events</h1>
-          <p className="text-muted-foreground text-sm">Focus-loss, double-login, device-change and more</p>
+          <p className="text-muted-foreground text-sm">Focus loss, double logins, device changes, and other proctoring flags.</p>
         </div>
         <div className="flex items-end gap-3">
           <label className="flex flex-col gap-1 text-sm">
@@ -93,17 +102,19 @@ export default function IntegrityPage() {
       {error && <p className="text-destructive text-sm">{error}</p>}
 
       <Tray>
-        <TrayStrip className="flex items-center justify-between gap-3 px-3 py-2">
+        <TrayStrip className="flex flex-wrap items-center justify-between gap-3 px-3 py-2">
           <TrayLabel>Events</TrayLabel>
           <Input
             value={q}
             onChange={(e) => setQ(e.target.value)}
             placeholder="Search username…"
-            className="h-7 w-56"
+            className="h-7 w-full sm:w-56"
           />
         </TrayStrip>
         <TrayInner className="overflow-hidden p-0">
         {shown.length > 0 ? (
+          <>
+          <div className="hidden lg:block">
           <Table>
             <TableHeader>
               <TableRow>
@@ -128,6 +139,24 @@ export default function IntegrityPage() {
               ))}
             </TableBody>
           </Table>
+          </div>
+          <div className="flex flex-col gap-2 p-3 lg:hidden">
+            {shown.map((e) => (
+              <div key={e.id} className="flex flex-col gap-2 rounded-xl border border-border p-3">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="font-medium">{e.username}</span>
+                  <Badge variant="outline">{e.type}</Badge>
+                </div>
+                <Field label="Time">{fmt(e.createdAt)}</Field>
+                <Field label="Details">
+                  <span className="font-mono text-xs break-all">
+                    {e.meta ? JSON.stringify(e.meta) : "-"}
+                  </span>
+                </Field>
+              </div>
+            ))}
+          </div>
+          </>
         ) : (
           <p className="text-muted-foreground px-6 py-16 text-center text-sm">No integrity events recorded.</p>
         )}

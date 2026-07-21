@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { type ReactNode, useCallback, useEffect, useState } from "react";
 
 import { Input } from "@/components/ui/input";
 import { Pager } from "@/components/ui/pager";
@@ -17,6 +17,15 @@ interface HallTicketRow {
   floorNo: string;
   labNo: string;
   seatNo: string;
+}
+
+function Field({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <div className="flex flex-col">
+      <span className="text-muted-foreground text-xs">{label}</span>
+      <span>{children}</span>
+    </div>
+  );
 }
 
 export default function HallTicketPage() {
@@ -53,27 +62,27 @@ export default function HallTicketPage() {
   const shown = filtered.slice(offset, offset + PAGE);
 
   return (
-    <main className="mx-auto flex w-full max-w-4xl flex-1 flex-col gap-6 px-6 py-10">
+    <main className="mx-auto flex w-full max-w-4xl flex-1 flex-col gap-6 px-4 py-8 sm:px-6 sm:py-10">
       <header>
         <h1 className="text-2xl font-semibold tracking-tight">Hall tickets</h1>
         <p className="text-muted-foreground text-sm">
-          Seat allocations served by the hall-ticket portal (candidates sign in there with
-          username + date of birth). Load allocations with{" "}
-          <code>bun run import:seats</code>; exam-wide details (date, timings, venue) live in
-          the portal&apos;s <code>exam.json</code>.
+          Seat allocations for the hall-ticket portal, where candidates sign in with their
+          username and date of birth. Import allocations with{" "}
+          <code>bun run import:seats</code>; exam-wide details such as date, timings, and venue
+          live in the portal&apos;s <code>exam.json</code>.
         </p>
       </header>
 
       {error && <p className="text-destructive text-sm">{error}</p>}
 
       <Tray>
-        <TrayStrip className="flex items-center justify-between gap-3 px-3 py-2">
+        <TrayStrip className="flex flex-wrap items-center justify-between gap-3 px-3 py-2">
           <TrayLabel>Allocated seats ({list.length})</TrayLabel>
           <Input
             value={q}
             onChange={(e) => { setOffset(0); setQ(e.target.value); }}
             placeholder="Search username, name, lab, seat…"
-            className="h-7 w-64"
+            className="h-7 w-full sm:w-64"
           />
         </TrayStrip>
         <TrayInner className="overflow-hidden p-0">
@@ -84,6 +93,8 @@ export default function HallTicketPage() {
                 : "No allocations match the search."}
             </p>
           ) : (
+            <>
+            <div className="hidden lg:block">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -110,6 +121,30 @@ export default function HallTicketPage() {
                 ))}
               </TableBody>
             </Table>
+            </div>
+            <div className="flex flex-col gap-2 p-3 lg:hidden">
+              {shown.map((r) => (
+                <div key={r.id} className="flex flex-col gap-2 rounded-xl border border-border p-3">
+                  <div className="flex items-start justify-between gap-2 border-b border-border pb-2">
+                    <div className="min-w-0">
+                      <p className="font-medium">{r.username}</p>
+                      <p className="text-muted-foreground text-sm">{r.displayName ?? "-"}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-muted-foreground text-xs">Seat</p>
+                      <p className="font-medium tabular-nums">{r.seatNo}</p>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-sm">
+                    <Field label="DOB"><span className="tabular-nums">{r.dob ?? "-"}</span></Field>
+                    <Field label="Building">{r.blockNo}</Field>
+                    <Field label="Floor">{r.floorNo}</Field>
+                    <Field label="Lab">{r.labNo}</Field>
+                  </div>
+                </div>
+              ))}
+            </div>
+            </>
           )}
         </TrayInner>
         <TrayStrip className="flex items-center justify-between">

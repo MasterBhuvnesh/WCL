@@ -132,11 +132,11 @@ export default function QuestionsPage() {
     : questions;
 
   return (
-    <main className="mx-auto flex w-full max-w-4xl flex-1 flex-col gap-6 px-6 py-10">
+    <main className="mx-auto flex w-full max-w-4xl flex-1 flex-col gap-6 px-4 py-8 sm:px-6 sm:py-10">
       <header className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">Exam &amp; questions</h1>
-          <p className="text-muted-foreground text-sm">Question bank and exam controls</p>
+          <p className="text-muted-foreground text-sm">Manage the question bank and open, close, or publish the exam.</p>
         </div>
         <label className="flex flex-col gap-1 text-sm">
           <span className="text-muted-foreground">Exam ID</span>
@@ -180,12 +180,12 @@ export default function QuestionsPage() {
         <h2 className="text-sm font-medium">
           Question bank {loading ? "" : `(${questions.length})`}
         </h2>
-        <div className="flex items-center gap-2">
+        <div className="flex w-full items-center gap-2 sm:w-auto">
           <Input
             value={q}
             onChange={(e) => setQ(e.target.value)}
             placeholder="Search question text or id…"
-            className="h-7 w-64"
+            className="h-7 w-full min-w-0 flex-1 sm:w-64 sm:flex-none"
           />
           {!draft && (
             <Button variant="cta" size="sm" onClick={() => setDraft(blankDraft())}>
@@ -349,7 +349,7 @@ function QuestionEditor({
           {draft.imageUrl && (
             <div className="mt-1 flex items-center gap-3">
               {/* plain img: external emulator host, next/image would need remote-pattern config */}
-              <img src={draft.imageUrl} alt="Question image" className="max-h-24 rounded-md border object-contain" />
+              <img src={draft.imageUrl} alt="Question image" className="max-h-24 max-w-full rounded-md border object-contain" />
               <Button type="button" size="xs" variant="outline" onClick={() => onChange({ ...draft, imageUrl: null })}>
                 Remove
               </Button>

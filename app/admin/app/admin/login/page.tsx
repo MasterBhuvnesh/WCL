@@ -39,7 +39,7 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="flex flex-1 items-center justify-center px-6 py-10">
+    <main className="flex flex-1 items-center justify-center px-4 py-8 sm:px-6 sm:py-10">
       <div className="flex w-full max-w-sm flex-col gap-6">
         <div className="flex items-center justify-center gap-5">
           <img src="/assets/wcl.logo.png" alt="Western Coalfields Limited" className="h-12 object-contain" />

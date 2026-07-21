@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { type ReactNode, useCallback, useEffect, useState } from "react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -43,6 +43,15 @@ const STATUS_LABEL: Record<Status, string> = {
   submitted: "Submitted",
   auto_submitted: "Auto submitted",
 };
+
+function Field({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <div className="flex justify-between gap-2 text-sm">
+      <span className="text-muted-foreground text-xs">{label}</span>
+      <span className="text-muted-foreground">{children}</span>
+    </div>
+  );
+}
 
 export default function SessionsPage() {
   const [examId, setExamId] = useState(DEFAULT_EXAM_ID);
@@ -167,11 +176,11 @@ export default function SessionsPage() {
   const shownSessions = filteredSessions.slice(offset, offset + PAGE);
 
   return (
-    <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-6 py-10">
+    <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-4 py-8 sm:px-6 sm:py-10">
       <header className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">Sessions</h1>
-          <p className="text-muted-foreground text-sm">Monitor and control participant sessions</p>
+          <p className="text-muted-foreground text-sm">Watch live sessions and add time, release devices, or reset attempts.</p>
         </div>
         <div className="flex items-end gap-3">
           <Button variant="cta" size="sm" onClick={addTimeAll}>
@@ -201,9 +210,9 @@ export default function SessionsPage() {
       </section>
 
       <Tray>
-        <TrayStrip className="flex items-center justify-between gap-3 px-3 py-2">
+        <TrayStrip className="flex flex-wrap items-center justify-between gap-3 px-3 py-2">
           <TrayLabel>Recent sessions</TrayLabel>
-          <div className="flex items-center gap-2">
+          <div className="flex w-full items-center gap-2 sm:w-auto">
             <select
               value={status}
               onChange={(e) => { setOffset(0); setStatus(e.target.value); }}
@@ -220,12 +229,14 @@ export default function SessionsPage() {
               value={q}
               onChange={(e) => { setOffset(0); setQ(e.target.value); }}
               placeholder="Search username…"
-              className="h-7 w-56"
+              className="h-7 w-full min-w-0 flex-1 sm:w-56 sm:flex-none"
             />
           </div>
         </TrayStrip>
         <TrayInner className="overflow-hidden p-0">
         {shownSessions.length > 0 ? (
+          <>
+          <div className="hidden lg:block">
           <Table>
             <TableHeader>
               <TableRow>
@@ -279,6 +290,40 @@ export default function SessionsPage() {
               })}
             </TableBody>
           </Table>
+          </div>
+          <div className="flex flex-col gap-2 p-3 lg:hidden">
+            {shownSessions.map((s) => (
+              <div key={s.sessionId} className="flex flex-col gap-2 rounded-xl border border-border p-3">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="font-medium">{s.username}</span>
+                  <Badge variant={s.status === "in_progress" ? "default" : "outline"}>
+                    {STATUS_LABEL[s.status]}
+                  </Badge>
+                </div>
+                <div className="flex flex-col gap-1">
+                  <Field label="Started">{fmt(s.startedAt)}</Field>
+                  <Field label="Deadline">{fmt(s.deadlineAt)}</Field>
+                  <Field label="Submitted">{fmt(s.submittedAt)}</Field>
+                </div>
+                <div className="flex flex-wrap gap-1.5">
+                  {s.status === "in_progress" && (
+                    <Button size="xs" variant="outline" onClick={() => addTime(s)}>
+                      Add time
+                    </Button>
+                  )}
+                  {s.deviceId && (s.status === "not_started" || s.status === "in_progress") && (
+                    <Button size="xs" variant="outline" onClick={() => releaseDevice(s)}>
+                      Release device
+                    </Button>
+                  )}
+                  <Button size="xs" variant="destructive" onClick={() => reset(s)}>
+                    Reset
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+          </>
         ) : (
           <p className="text-muted-foreground px-6 py-16 text-center text-sm">
             {data && data.sessions.length > 0 ? "No sessions match the filter." : "No sessions for this exam yet."}
