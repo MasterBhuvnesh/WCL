@@ -90,12 +90,14 @@ services:
     restart: unless-stopped
     environment:
       GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:?set in /srv/wcl/.env}
-      GF_SERVER_ROOT_URL: http://localhost:3000
+      GF_SERVER_ROOT_URL: https://grafana.rbuexam.in
     volumes:
       - ./observability/grafana-datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml:ro
       - grafana-data:/var/lib/grafana
     ports:
-      - "127.0.0.1:3000:3000" # loopback only; reached via the SSH tunnel
+      # Reached as https://grafana.rbuexam.in via the ALB (target group
+      # wcl-grafana); the backend SG only admits port 3000 from the ALB SG.
+      - "3000:3000"
     mem_limit: 256m
 
 volumes:

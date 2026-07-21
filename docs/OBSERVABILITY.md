@@ -226,11 +226,11 @@ pressure appears, drop Prometheus retention first.
 
 ## Access
 
-Grafana binds to loopback only, so it is reached through the existing
-Instance Connect SSH tunnel (same pattern as `secret/README.md`) with a
-local forward of port 3000, then http://localhost:3000. Exposing it publicly
-as grafana.rbuexam.in through the ALB (new target group, Route53 record) is
-a possible follow-up, not part of this design.
+Grafana is public at https://grafana.rbuexam.in behind the shared ALB
+(target group `wcl-grafana`, HTTP 3000, health check `/api/health`; listener
+rule priority 30; Route53 A-alias). The backend security group admits port
+3000 only from the ALB security group, and Grafana's own login (admin
+password in `/srv/wcl/.env` as `GRAFANA_ADMIN_PASSWORD`) protects the UI.
 
 ## Rollout order
 
