@@ -60,11 +60,16 @@ flowchart LR
         direction LR
         LB["Application Load Balancer<br/>one TLS certificate,<br/>routing by host name"]
 
-        subgraph EC2["EC2, Docker, watchtower"]
+        subgraph FE["Frontend EC2<br/>Docker, watchtower"]
             direction TB
             HT["Hall ticket portal<br/>rbuexam.in"]
             AD["Admin panel<br/>admin.rbuexam.in"]
+        end
+
+        subgraph BE["Backend EC2<br/>Docker, watchtower"]
+            direction TB
             API["API<br/>api.rbuexam.in"]
+            OBS["Observability<br/>Grafana, Prometheus, Loki<br/>grafana.rbuexam.in"]
         end
 
         subgraph DATA["Managed data"]
@@ -77,12 +82,17 @@ flowchart LR
         LB --> HT
         LB --> AD
         LB --> API
+        LB --> OBS
         API --> PG
         API --> RD
         API --> S3
         HT --> PG
     end
 ```
+
+The infrastructure is codified as Terraform in [`terraform/`](../terraform),
+and the full network design (VPC, security groups, data flows) is explained
+in [docs/ARCHITECTURE.md](../docs/ARCHITECTURE.md).
 
 Server deploys are cut deliberately with `./release.sh <service>`, which
 tags a version; the exam client ships on every push to main:
@@ -101,6 +111,7 @@ flowchart LR
 
 Bun, TypeScript, Express, Drizzle ORM, PostgreSQL, Redis, Next.js, React,
 Tailwind CSS, shadcn/ui, Electron, electron-vite, Docker, GitHub Actions,
+Terraform, Grafana, Prometheus, Loki,
 and AWS (EC2, ALB, RDS, ElastiCache, S3, Route 53, ACM).
 
 ## Running it locally
@@ -125,6 +136,7 @@ with the details. Everything defaults to the local API at port 4000.
 | https://rbuexam.in | Hall ticket portal |
 | https://admin.rbuexam.in | Admin panel |
 | https://api.rbuexam.in | API |
+| https://grafana.rbuexam.in | Grafana dashboards (login required) |
 
 ## Documentation
 
@@ -135,8 +147,10 @@ with the details. Everything defaults to the local API at port 4000.
 | [docs/NEW_EXAM.md](../docs/NEW_EXAM.md) | Setting up a new exam from scratch |
 | [docs/FEEDBACK.md](../docs/FEEDBACK.md) | Post-submission candidate feedback |
 | [docs/KIOSK_LOCKDOWN.md](../docs/KIOSK_LOCKDOWN.md) | How the client lockdown works |
+| [docs/ARCHITECTURE.md](../docs/ARCHITECTURE.md) | Network design, security groups, and data flows |
 | [docs/DEPLOY_FRONTEND.md](../docs/DEPLOY_FRONTEND.md) | Frontend infrastructure and deployment |
 | [docs/DEPLOY_BACKEND.md](../docs/DEPLOY_BACKEND.md) | Backend infrastructure and deployment |
+| [docs/OBSERVABILITY.md](../docs/OBSERVABILITY.md) | Logs, metrics, and dashboards |
 | [docs/RULES.md](../docs/RULES.md) | Writing rules for prose in this repository |
 
 ## Team
