@@ -39,7 +39,7 @@ export function TicketPdf({
 
   return (
     <div className="flex w-full flex-col gap-4">
-      <div className="flex items-center justify-end gap-3">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end">
         {instance.error && (
           <span className="text-sm text-destructive">
             Could not prepare the PDF for download.
@@ -51,6 +51,7 @@ export function TicketPdf({
           aria-disabled={!ready}
           className={cn(
             buttonVariants({ variant: "cta", size: "lg" }),
+            "w-full sm:w-auto",
             !ready && "pointer-events-none opacity-50",
           )}
         >

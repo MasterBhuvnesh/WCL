@@ -47,26 +47,19 @@ export default function TicketPage() {
   if (!ready || !candidate) return null;
 
   return (
-    <main className="mx-auto flex w-full max-w-4xl flex-1 flex-col gap-6 px-6 py-8">
-      <header className="flex items-center justify-between gap-4 border-b pb-4">
-        <div className="flex items-center gap-4">
-          <img
-            src="/assets/wcl.logo.png"
-            alt="Western Coalfields Limited"
-            className="h-10 object-contain"
-          />
-          {/* <img
-            src="/assets/rbu.png"
-            alt="Ramdeobaba University"
-            className="h-10 object-contain"
-          /> */}
-        </div>
-        <div className="flex items-center gap-4">
-          <div className="text-right text-sm">
+    <main className="mx-auto flex w-full max-w-4xl flex-1 flex-col gap-6 px-4 py-6 sm:px-6 sm:py-8">
+      <header className="flex items-center justify-between gap-3 border-b pb-4">
+        <img
+          src="/assets/wcl.logo.png"
+          alt="Western Coalfields Limited"
+          className="h-10 object-contain"
+        />
+        <div className="flex items-center gap-3">
+          <div className="hidden text-right text-sm sm:block">
             <p className="font-medium">{candidate.name}</p>
             <p className="text-muted-foreground">{candidate.employeeId}</p>
           </div>
-          <Button variant="outline" size="lg" onClick={signOut}>
+          <Button variant="outline" onClick={signOut}>
             Sign out
           </Button>
         </div>

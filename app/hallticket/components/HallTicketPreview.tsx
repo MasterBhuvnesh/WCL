@@ -15,42 +15,40 @@ import type { Candidate, ExamMeta } from "@/lib/types";
  */
 type RowSpec = [string, string] | [string, string, string, string];
 
-const LABEL_TD =
-  "w-[22%] border border-slate-300 bg-slate-50 px-2 py-1.5 align-middle text-[10px] font-medium uppercase tracking-wide text-slate-500";
-const VALUE_TD =
-  "border border-slate-300 px-2 py-1.5 align-middle text-sm font-semibold text-slate-900";
+function Pair({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex min-w-0 flex-1">
+      <div className="w-28 shrink-0 border-r border-slate-300 px-2 py-1.5 text-[11px] font-medium text-slate-500">
+        {label}
+      </div>
+      <div className="min-w-0 flex-1 break-words px-2 py-1.5 text-sm font-semibold text-slate-900">
+        {value}
+      </div>
+    </div>
+  );
+}
 
+// Two-value rows sit side by side on desktop and stack to full-width rows on
+// mobile, so long values (e.g. a long employee id) are never crammed.
 function DetailTable({ rows }: { rows: RowSpec[] }) {
   return (
-    <table className="w-full border-collapse">
-      <tbody>
-        {rows.map((cells, i) => (
-          <tr key={i}>
-            {cells.length === 2 ? (
-              <>
-                <td className={LABEL_TD}>{cells[0]}</td>
-                <td className={VALUE_TD} colSpan={3}>
-                  {cells[1]}
-                </td>
-              </>
-            ) : (
-              <>
-                <td className={LABEL_TD}>{cells[0]}</td>
-                <td className={`${VALUE_TD} w-[28%]`}>{cells[1]}</td>
-                <td className={LABEL_TD}>{cells[2]}</td>
-                <td className={`${VALUE_TD} w-[28%]`}>{cells[3]}</td>
-              </>
-            )}
-          </tr>
-        ))}
-      </tbody>
-    </table>
+    <div className="divide-y divide-slate-300 border border-slate-300">
+      {rows.map((cells, i) => (
+        <div
+          key={i}
+          className="flex flex-col divide-y divide-slate-300 sm:flex-row sm:divide-x sm:divide-y-0"
+        >
+          <Pair label={cells[0]} value={cells[1]} />
+          {cells.length === 4 && <Pair label={cells[2]} value={cells[3]} />}
+        </div>
+      ))}
+    </div>
   );
 }
 
 function SectionBar({ children }: { children: React.ReactNode }) {
   return (
-    <div className="bg-slate-900 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wide text-white">
+    <div className="border-b border-slate-300 bg-slate-100 px-3 py-1.5 text-[12px] font-semibold text-slate-900">
       {children}
     </div>
   );
@@ -65,7 +63,7 @@ export function HallTicketPreview({
 }) {
   return (
     <div className="overflow-hidden rounded-lg border border-slate-300 bg-white text-slate-900 shadow-sm">
-      {/* Header */}
+      {/* Header: logo, organisation, document badge */}
       <div className="flex items-center justify-between gap-3 border-b border-slate-300 bg-slate-100 px-4 py-3">
         <img
           src="/assets/wcl.logo.png"
@@ -73,21 +71,19 @@ export function HallTicketPreview({
           className="h-11 w-auto object-contain"
         />
         <div className="min-w-0 flex-1 text-center">
-          <p className="text-sm font-bold sm:text-base">
+          <p className="text-lg font-bold sm:text-xl">
             Western Coalfields Limited
           </p>
-          <p className="text-sm font-bold tracking-wide text-blue-600 sm:text-base">
-            EXAMINATION HALL TICKET
-          </p>
-          <p className="text-[11px] text-slate-500">
+          <p className="text-[15px] text-slate-500">
             {exam.title}, {exam.subtitle}
           </p>
         </div>
-        {/* <img
-          src="/assets/rbu.png"
-          alt="Ramdeobaba University"
-          className="h-11 w-auto object-contain"
-        /> */}
+        <div className="flex flex-col items-end">
+          <span className="text-[10px] text-slate-500">Examination</span>
+          <span className="text-sm font-bold text-slate-900 sm:text-base">
+            Hall Ticket
+          </span>
+        </div>
       </div>
 
       {/* Candidate details */}
@@ -137,13 +133,13 @@ export function HallTicketPreview({
         <ol className="flex flex-col gap-2">
           {exam.instructions.map((line, i) => (
             <li key={i} className="flex gap-2 text-[13px] leading-snug">
-              <span className="font-semibold text-blue-600">{i + 1}.</span>
+              <span className="font-semibold text-slate-500">{i + 1}.</span>
               <span className="text-slate-800">{line}</span>
             </li>
           ))}
         </ol>
 
-        <div className="mt-10 flex justify-between gap-6 px-1">
+        <div className="mt-16 flex justify-between gap-6 px-1">
           <div className="w-2/5 border-t border-slate-500 pt-1 text-center text-[11px] text-slate-500">
             Candidate&apos;s Signature
           </div>

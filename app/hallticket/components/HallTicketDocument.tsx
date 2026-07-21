@@ -2,6 +2,7 @@
 
 import {
   Document,
+  Font,
   Image,
   Page,
   StyleSheet,
@@ -12,19 +13,27 @@ import {
 import { formatDateLong, isoToDdmmyyyy } from "@/lib/format";
 import type { Candidate, ExamMeta } from "@/lib/types";
 
+// Inter, bundled as WOFF in public/fonts so the PDF renders the same typeface
+// as the on-screen portal without depending on an external CDN.
+Font.register({
+  family: "Inter",
+  fonts: [
+    { src: "/fonts/inter-400.woff", fontWeight: 400 },
+    { src: "/fonts/inter-700.woff", fontWeight: 700 },
+  ],
+});
+
 const INK = "#0f172a";
 const MUTED = "#475569";
 const BORDER = "#cbd5e1";
-const ACCENT = "#1d6ff2";
 const HEADBG = "#f1f5f9";
-const LABELBG = "#f8fafc";
 
 const styles = StyleSheet.create({
   page: {
     paddingVertical: 22,
     paddingHorizontal: 30,
     fontSize: 10,
-    fontFamily: "Helvetica",
+    fontFamily: "Inter",
     color: INK,
   },
   frame: {
@@ -33,6 +42,8 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     flexGrow: 1,
   },
+
+  /* Header */
   header: {
     flexDirection: "row",
     alignItems: "center",
@@ -46,30 +57,32 @@ const styles = StyleSheet.create({
   logo: { height: 46, width: 78, objectFit: "contain" },
   headerCenter: { flex: 1, alignItems: "center", paddingHorizontal: 8 },
   org: {
-    fontSize: 12,
-    fontFamily: "Helvetica-Bold",
+    fontSize: 15,
+    fontFamily: "Inter", fontWeight: "bold",
     color: INK,
     textAlign: "center",
   },
-  docType: {
-    marginTop: 3,
+  examTitle: { marginTop: 3, fontSize: 12, color: MUTED, textAlign: "center" },
+  headerRight: { alignItems: "flex-end", width: 78 },
+  docTypeSmall: { fontSize: 7, color: MUTED },
+  docTypeBig: {
     fontSize: 12,
-    fontFamily: "Helvetica-Bold",
-    color: ACCENT,
-    letterSpacing: 0.5,
+    fontFamily: "Inter", fontWeight: "bold",
+    color: INK,
+    textAlign: "right",
   },
-  examTitle: { marginTop: 2, fontSize: 9, color: MUTED, textAlign: "center" },
 
   sectionBar: {
-    backgroundColor: INK,
-    color: "#ffffff",
-    fontSize: 9,
-    fontFamily: "Helvetica-Bold",
-    letterSpacing: 0.6,
-    paddingVertical: 4.5,
-    paddingHorizontal: 10,
+    backgroundColor: HEADBG,
+    color: INK,
+    fontSize: 9.5,
+    fontFamily: "Inter", fontWeight: "bold",
+    paddingVertical: 5,
+    paddingHorizontal: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: BORDER,
   },
-  body: { paddingHorizontal: 12, paddingTop: 12, paddingBottom: 12 },
+  body: { paddingHorizontal: 12, paddingTop: 9, paddingBottom: 9 },
   /** The instructions body grows to fill the page so the footer sits at the bottom. */
   bodyGrow: { flexGrow: 1 },
 
@@ -85,15 +98,14 @@ const styles = StyleSheet.create({
   },
   trLast: { flexDirection: "row" },
   tdLabel: {
-    backgroundColor: LABELBG,
     borderRightWidth: 1,
     borderRightColor: BORDER,
-    paddingVertical: 5.5,
+    paddingVertical: 4.5,
     paddingHorizontal: 8,
     justifyContent: "center",
   },
   tdValue: {
-    paddingVertical: 5.5,
+    paddingVertical: 4.5,
     paddingHorizontal: 8,
     justifyContent: "center",
   },
@@ -102,16 +114,14 @@ const styles = StyleSheet.create({
     borderRightColor: BORDER,
   },
   labelText: {
-    fontSize: 7.5,
+    fontSize: 8.5,
     color: MUTED,
-    letterSpacing: 0.5,
-    textTransform: "uppercase",
   },
-  valueText: { fontSize: 9.5, fontFamily: "Helvetica-Bold", color: INK },
+  valueText: { fontSize: 9.5, fontFamily: "Inter", fontWeight: "bold", color: INK },
 
-  instrItem: { flexDirection: "row", marginBottom: 5, paddingRight: 6 },
-  instrNum: { width: 15, fontSize: 9, color: ACCENT, fontFamily: "Helvetica-Bold" },
-  instrText: { flex: 1, fontSize: 9, lineHeight: 1.45, color: INK },
+  instrItem: { flexDirection: "row", marginBottom: 4, paddingRight: 6 },
+  instrNum: { width: 15, fontSize: 8.5, color: MUTED, fontFamily: "Inter", fontWeight: "bold" },
+  instrText: { flex: 1, fontSize: 8.5, lineHeight: 1.4, color: INK },
 
   signRow: {
     flexDirection: "row",
@@ -196,36 +206,36 @@ export function HallTicketDocument({
   candidate,
   exam,
   wclLogoSrc = "/assets/wcl.logo.png",
-  rbuLogoSrc = "/assets/rbu.png",
 }: {
   candidate: Candidate;
   exam: ExamMeta;
   /** Overridable so the PDF can be rendered outside the browser (tests). */
   wclLogoSrc?: string;
-  rbuLogoSrc?: string;
 }) {
   return (
     <Document
       title={`WCL Hall Ticket ${candidate.employeeId}`}
       author="Western Coalfields Limited"
     >
-      <Page size="A4" style={styles.page}>
+      <Page size="A4" wrap={false} style={styles.page}>
         <View style={styles.frame}>
-          {/* Header with both logos */}
+          {/* Header: logo, organisation, document badge */}
           <View style={styles.header}>
             <Image style={styles.logo} src={wclLogoSrc} />
             <View style={styles.headerCenter}>
               <Text style={styles.org}>Western Coalfields Limited</Text>
-              <Text style={styles.docType}>EXAMINATION HALL TICKET</Text>
               <Text style={styles.examTitle}>
                 {exam.title}, {exam.subtitle}
               </Text>
             </View>
-            {/* <Image style={styles.logo} src={rbuLogoSrc} /> */}
+            <View style={styles.headerRight}>
+              <Text style={styles.docTypeSmall}>Examination</Text>
+              <Text style={styles.docTypeBig}>Hall Ticket</Text>
+            </View>
           </View>
 
           {/* Candidate details */}
-          <Text style={styles.sectionBar}>CANDIDATE DETAILS</Text>
+          <Text style={styles.sectionBar}>Candidate Details</Text>
           <View style={styles.body}>
             <DetailTable
               rows={[
@@ -235,8 +245,8 @@ export function HallTicketDocument({
             />
           </View>
 
-          {/* Venue & schedule */}
-          <Text style={styles.sectionBar}>VENUE, SEATING AND SCHEDULE</Text>
+          {/* Venue, seating and schedule */}
+          <Text style={styles.sectionBar}>Venue, Seating and Schedule</Text>
           <View style={styles.body}>
             <DetailTable
               rows={[
@@ -266,7 +276,7 @@ export function HallTicketDocument({
           </View>
 
           {/* Instructions */}
-          <Text style={styles.sectionBar}>INSTRUCTIONS TO CANDIDATES</Text>
+          <Text style={styles.sectionBar}>Instructions to Candidates</Text>
           <View style={[styles.body, styles.bodyGrow]}>
             {exam.instructions.map((line, i) => (
               <View style={styles.instrItem} key={i}>
