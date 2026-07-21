@@ -1,5 +1,7 @@
 <div align="center">
 
+<img src="./assets/platform%20banner.png" alt="WCL Exam Client" width="100%">
+
 # WCL Exam Client
 
 <img src="https://img.shields.io/badge/-Electron-000000?style=for-the-badge&logo=electron&logoColor=9FEAF9" alt="Electron" />

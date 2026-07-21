@@ -1,5 +1,7 @@
 <div align="center">
 
+<img src="./public/assets/admin%20banner.png" alt="WCL Admin Panel" width="100%">
+
 # WCL Admin Panel
 
 <img src="https://img.shields.io/badge/-Next.js-000000?style=for-the-badge&logo=nextdotjs&logoColor=white" alt="Next.js" />
