@@ -54,6 +54,18 @@ services:
     extra_hosts:
       - host.docker.internal:host-gateway
 
+  # Feeds the host CPU/memory panels. On Docker Desktop this reports the
+  # Docker VM (WSL2), not the Windows host itself.
+  node-exporter:
+    image: prom/node-exporter:v1.9.1
+    container_name: wcl-node-exporter
+    profiles: [obs]
+    command:
+      - --path.rootfs=/host
+    volumes:
+      - /:/host:ro,rslave
+    pid: host
+
   loki:
     image: grafana/loki:3.4.2
     container_name: wcl-loki

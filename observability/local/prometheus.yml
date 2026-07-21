@@ -10,3 +10,7 @@ scrape_configs:
     authorization:
       type: Bearer
       credentials: local-dev-token
+
+  - job_name: node
+    static_configs:
+      - targets: ["node-exporter:9100"]
