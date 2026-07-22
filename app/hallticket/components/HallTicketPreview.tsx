@@ -139,7 +139,7 @@ export function HallTicketPreview({
           ))}
         </ol>
 
-        <div className="mt-16 flex justify-between gap-6 px-1">
+        <div className="mt-24 flex justify-between gap-6 px-1">
           <div className="w-2/5 border-t border-slate-500 pt-1 text-center text-[11px] text-slate-500">
             Candidate&apos;s Signature
           </div>

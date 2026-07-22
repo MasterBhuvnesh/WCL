@@ -127,7 +127,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     marginTop: "auto",
-    paddingTop: 24,
+    paddingTop: 34,
     paddingHorizontal: 4,
   },
   signBox: { width: "40%", alignItems: "center" },
