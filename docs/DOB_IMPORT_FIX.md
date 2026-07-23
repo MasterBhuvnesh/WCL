@@ -41,22 +41,36 @@ Two facts made the scope clear:
 
 ### 1. The parser
 
-`app/api/scripts/_lib.ts` gained `dateCellToIso()`. An `.xlsx` date cell
-represents a whole day and carries no meaningful time, so the time component can
-be discarded by rounding rather than truncating. The instant is shifted so local
-midnight lands on UTC midnight, then rounded to the nearest day:
+The shipped fix stops using SheetJS's `Date` conversion altogether. `cellDates`
+is deliberately not passed; `cellNF` is, so a date cell can be recognised by its
+number format while its value stays the raw serial. The serial is then converted
+with pure UTC epoch math:
 
 ```ts
-export function dateCellToIso(d: Date): string {
-  const DAY = 86_400_000;
-  const local = d.getTime() - d.getTimezoneOffset() * 60_000;
-  return new Date(Math.round(local / DAY) * DAY).toISOString().slice(0, 10);
+const EXCEL_EPOCH_MS = Date.UTC(1899, 11, 30);
+
+function serialToIso(serial: number): string {
+  const ms = Math.round(serial * 1440) * 60_000;
+  return new Date(EXCEL_EPOCH_MS + ms).toISOString().slice(0, 10);
 }
 ```
 
-Rounding absorbs the float error in either direction, so a cell arriving ten
-seconds before midnight and one arriving ten seconds after both resolve to the
-day the spreadsheet displays.
+No local timezone is ever consulted, so the result cannot depend on where the
+import runs. Rounding to the nearest minute absorbs serials written a few
+seconds shy of midnight by other tools, while leaving a genuine time of day
+intact for cells that carry one.
+
+`normalizeDob()` also gained a bare-serial branch. `final.wcl.list.xlsx` has a
+DOB column whose number formatting was stripped, so its dates arrive as plain
+text like `32659`. The branch is restricted to exactly five digits, which spans
+1927 to 2173, so a stray four-digit year such as `2001` is still rejected rather
+than silently converting.
+
+An earlier attempt in this repository rounded the corrupted local `Date` back to
+the nearest day instead. It produced the same result on the participant file but
+was strictly worse: it repaired a value after the timezone had already damaged
+it, rather than avoiding the damage, and it had no answer for the bare serials
+in `final.wcl.list.xlsx`. It was superseded before release.
 
 ### 2. The repair
 
@@ -73,10 +87,11 @@ no cache invalidation was needed.
 
 ### 3. The check
 
-`app/api/scripts/check-dob.ts` is an assert-based self-check covering the
-observed failure, exact midnight, just past midnight, and the month, year and
-leap-day boundaries. It uses `node:assert` rather than `bun:test` because the
-project does not depend on `bun-types` and a `bun:test` import fails `tsc`.
+`app/api/scripts/check-dob.ts` is an assert-based self-check covering serial
+conversion, the five-digit guard, the documented text formats, and rejection of
+impossible dates such as `31/02/1989` and `29/02/1989`. It uses `node:assert`
+rather than `bun:test` because the project does not depend on `bun-types` and a
+`bun:test` import fails `tsc`.
 
 ```
 cd app/api
@@ -102,12 +117,24 @@ Matched in database:  574
 Need updating:        0
 ```
 
+The two independent fixes described above were written in parallel and then
+compared: re-running the same dry run under the serial-based parser also
+reported `Need updating: 0`. Two implementations that share no code agreeing on
+all 574 rows is the strongest evidence available here that the stored dates are
+now correct.
+
 ## Follow-up
 
 The parser fix is verified against the spreadsheet, but that only establishes
 that the database now agrees with the file. Confirm a sample of dates against
 what candidates actually submitted, since the repair is only as correct as the
 source file.
+
+Note also that `final.wcl.list.xlsx` names its identifier column `user name`
+with a space, not `username`. `readRows()` lowercases and trims headers but does
+not collapse inner spaces, so the importers do not recognise that column. The
+failure is loud rather than silent, since `username is required` aborts the run
+with nothing written, but the file cannot be imported as it stands.
 
 ## Commands
 

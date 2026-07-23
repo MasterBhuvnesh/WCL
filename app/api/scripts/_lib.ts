@@ -5,32 +5,38 @@
  */
 import * as XLSX from "xlsx";
 
+/** Excel's day zero (serial 0 = 1899-12-30) in UTC milliseconds. */
+const EXCEL_EPOCH_MS = Date.UTC(1899, 11, 30);
+
 /**
- * ISO date for an .xlsx date cell, which is a whole day and carries no time.
- *
- * SheetJS converts Excel serials to a Date with visible float error: a cell
- * showing 31/05/1989 comes back as 30/05/1989 23:59:50 local, so reading the
- * local day components alone loses a day on every row. Shift the instant so
- * local midnight lands on UTC midnight, then round to the nearest day to
- * absorb that error.
+ * Convert an Excel date serial to ISO YYYY-MM-DD with pure UTC math. Rounds
+ * to the nearest minute first: serials written by other tools can sit a few
+ * seconds shy of midnight, which would otherwise land on the previous day.
  */
-export function dateCellToIso(d: Date): string {
-  const DAY = 86_400_000;
-  const local = d.getTime() - d.getTimezoneOffset() * 60_000;
-  return new Date(Math.round(local / DAY) * DAY).toISOString().slice(0, 10);
+function serialToIso(serial: number): string {
+  const ms = Math.round(serial * 1440) * 60_000;
+  return new Date(EXCEL_EPOCH_MS + ms).toISOString().slice(0, 10);
 }
 
 export function readRows(path: string): Record<string, string>[] {
-  // Parse raw:true stops the CSV/text parser from converting date-looking
-  // strings ("2001-03-14") into Excel date serials; cellDates surfaces real
-  // .xlsx date cells as Date objects instead of raw serial numbers.
-  const workbook = XLSX.readFile(path, { raw: true, cellDates: true });
+  // raw:true stops the CSV/text parser from converting date-looking strings
+  // ("2001-03-14") into Excel date serials; cellNF keeps each cell's number
+  // format so date cells can be recognised. Deliberately NOT cellDates:
+  // SheetJS's serial->Date conversion goes through the local timezone and can
+  // come out seconds before midnight, shifting the date back one day.
+  const workbook = XLSX.readFile(path, { raw: true, cellNF: true });
   const sheet = workbook.Sheets[workbook.SheetNames[0]];
-  // Rewrite date cells to ISO text up front, so sheet_to_json below can't fall
-  // back to rendering their serial number ("36964.22...") as the display text.
+  // Rewrite date-formatted cells to ISO text up front, so sheet_to_json below
+  // can't fall back to rendering their serial number ("36964.22...") as the
+  // display text.
   for (const [addr, cell] of Object.entries(sheet)) {
-    if (!addr.startsWith("!") && cell?.t === "d" && cell.v instanceof Date) {
-      sheet[addr] = { t: "s", v: dateCellToIso(cell.v) };
+    if (
+      !addr.startsWith("!") &&
+      cell?.t === "n" &&
+      cell.z &&
+      XLSX.SSF.is_date(cell.z)
+    ) {
+      sheet[addr] = { t: "s", v: serialToIso(cell.v) };
     }
   }
   const rows = XLSX.utils.sheet_to_json<Record<string, unknown>>(sheet, {
@@ -49,10 +55,14 @@ export function readRows(path: string): Record<string, string>[] {
 }
 
 /**
- * Accepts YYYY-MM-DD, DD/MM/YYYY or DD-MM-YYYY and returns ISO YYYY-MM-DD,
- * or null when malformed or not a real calendar date.
+ * Accepts YYYY-MM-DD, DD/MM/YYYY, DD-MM-YYYY or a bare 5-digit Excel date
+ * serial (a date column whose formatting was stripped shows up as "32659")
+ * and returns ISO YYYY-MM-DD, or null when malformed or not a real calendar
+ * date. Serials are 5-digit only (1927-2173) so a stray year like "2001"
+ * never converts silently.
  */
 export function normalizeDob(input: string): string | null {
+  if (/^\d{5}$/.test(input)) return serialToIso(Number(input));
   let y: number, m: number, d: number;
   let match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(input);
   if (match) {

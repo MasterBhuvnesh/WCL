@@ -3,31 +3,39 @@
  *   bun scripts/check-dob.ts
  * and it exits non-zero on the first failure.
  *
- * Worth keeping because the .xlsx date rounding is invisible until it silently
- * shifts every date of birth by a day. Run under a few timezones:
+ * Worth keeping because the .xlsx date handling is invisible until it silently
+ * shifts every date of birth by a day. The conversion is pure UTC math, so the
+ * result must not depend on the machine timezone; run it under a couple of
+ * zones to prove that:
  *   TZ=Asia/Calcutta / TZ=UTC / TZ=America/New_York
  */
 import assert from "node:assert/strict";
 
-import { dateCellToIso, normalizeDob } from "./_lib.ts";
+import { normalizeDob } from "./_lib.ts";
 
-/** Dates arrive from SheetJS as local-time components, so build them that way. */
-const local = (y: number, m: number, d: number, h = 0, min = 0, s = 0) =>
-  new Date(y, m - 1, d, h, min, s);
+/* Excel date serials, which reach normalizeDob when a date column's number
+   formatting has been stripped. 32659 is the row that exposed the original
+   off-by-one; 33592 is the serial named in the fix that replaced it. */
+assert.equal(normalizeDob("32659"), "1989-05-31");
+assert.equal(normalizeDob("33592"), "1991-12-20");
+assert.equal(normalizeDob("25569"), "1970-01-01");
 
-// The observed SheetJS output for a cell displaying 31/05/1989.
-assert.equal(dateCellToIso(local(1989, 5, 30, 23, 59, 50)), "1989-05-31");
-// Exactly midnight, and just past it, must keep their own day.
-assert.equal(dateCellToIso(local(1989, 5, 31)), "1989-05-31");
-assert.equal(dateCellToIso(local(1989, 5, 31, 0, 0, 10)), "1989-05-31");
-// Rounding has to cross month, year and leap-day boundaries.
-assert.equal(dateCellToIso(local(1999, 12, 31, 23, 59, 50)), "2000-01-01");
-assert.equal(dateCellToIso(local(1992, 2, 28, 23, 59, 50)), "1992-02-29");
+/* The serial branch is deliberately 5-digit only, so a bare year is still
+   rejected rather than silently becoming a date in 1975. */
+assert.equal(normalizeDob("2001"), null);
+assert.equal(normalizeDob("123456"), null);
 
+/* The documented text formats. */
 assert.equal(normalizeDob("1989-05-31"), "1989-05-31");
 assert.equal(normalizeDob("31/05/1989"), "1989-05-31");
 assert.equal(normalizeDob("31-05-1989"), "1989-05-31");
+
+/* Impossible and malformed dates stay rejected: an import must abort rather
+   than store a rolled-over date. */
 assert.equal(normalizeDob("31/02/1989"), null);
+assert.equal(normalizeDob("29/02/1989"), null); // 1989 is not a leap year
+assert.equal(normalizeDob("29/02/1992"), "1992-02-29");
 assert.equal(normalizeDob("garbage"), null);
+assert.equal(normalizeDob(""), null);
 
 console.log(`All date checks passed (TZ=${Intl.DateTimeFormat().resolvedOptions().timeZone}).`);
