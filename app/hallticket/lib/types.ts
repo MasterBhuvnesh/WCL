@@ -21,6 +21,8 @@ export interface Candidate {
   examTime: string;
   venueName: string;
   venueAddress: string;
+  /** Entry gate at the venue; exam-wide, stamped in from exam.json. */
+  gateNo: string;
   blockNo: string;
   floorNo: string;
   labNo: string;
@@ -41,5 +43,7 @@ export interface ExamMeta {
   examTime: string;
   venueName: string;
   venueAddress: string;
+  /** Entry gate at the venue (e.g. "Gate 1"); same for every candidate. */
+  gateNo: string;
   instructions: string[];
 }

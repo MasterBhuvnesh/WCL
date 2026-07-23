@@ -8,6 +8,7 @@
   "examTime": "12:30 PM",
   "venueName": "Ramdeobaba University",
   "venueAddress": "Ramdeo Tekdi, Gittikhadan, Katol Road, Nagpur, Maharashtra 440013",
+  "gateNo": "Gate 1",
   "totalQuestions": 100,
   "markingScheme": "+1 for correct, -0.5 for wrong, no partial marking",
   "instructions": [
@@ -19,7 +20,7 @@
     "Your responses are saved automatically and synchronised with the server at regular intervals. The server clock is authoritative, and the on-screen timer is provided only for guidance.",
     "Use the on-screen question palette to navigate between questions and to review your progress at any time.",
     "Do not switch browser tabs, minimise the window, or leave full screen during the test, as such actions are recorded and may be treated as malpractice.",
-    "Mobile phones, smart watches, calculators, books, and any other electronic or reference material are strictly prohibited inside the examination hall.",
+    "Mobile phones, smart watches, calculators, books, and any other electronic or reference material are strictly prohibited inside the examination hall. Candidates must affix an identification label on such items, deposit them with the security guard posted outside the examination hall, and collect them after the examination is over.",
     "Follow all instructions given by the invigilators. Your score is displayed immediately after you submit."
   ]
 }

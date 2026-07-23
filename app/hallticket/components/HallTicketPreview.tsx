@@ -18,10 +18,10 @@ type RowSpec = [string, string] | [string, string, string, string];
 function Pair({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex min-w-0 flex-1">
-      <div className="w-28 shrink-0 border-r border-slate-300 px-2 py-1.5 text-[11px] font-medium text-slate-500">
+      <div className="flex w-28 shrink-0 items-center border-r border-slate-300 px-2 py-1.5 text-[11px] font-medium text-slate-500">
         {label}
       </div>
-      <div className="min-w-0 flex-1 break-words px-2 py-1.5 text-sm font-semibold text-slate-900">
+      <div className="flex min-w-0 flex-1 items-center wrap-break-word px-2 py-1.5 text-sm font-semibold text-slate-900">
         {value}
       </div>
     </div>
@@ -30,13 +30,21 @@ function Pair({ label, value }: { label: string; value: string }) {
 
 // Two-value rows sit side by side on desktop and stack to full-width rows on
 // mobile, so long values (e.g. a long employee id) are never crammed.
-function DetailTable({ rows }: { rows: RowSpec[] }) {
+// `fill` stretches the rows evenly to the parent's height (used to match the
+// candidate table to the photo box beside it).
+function DetailTable({ rows, fill }: { rows: RowSpec[]; fill?: boolean }) {
   return (
-    <div className="divide-y divide-slate-300 border border-slate-300">
+    <div
+      className={`divide-y divide-slate-300 border border-slate-300 ${
+        fill ? "flex h-full flex-col" : ""
+      }`}
+    >
       {rows.map((cells, i) => (
         <div
           key={i}
-          className="flex flex-col divide-y divide-slate-300 sm:flex-row sm:divide-x sm:divide-y-0"
+          className={`flex flex-col divide-y divide-slate-300 sm:flex-row sm:divide-x sm:divide-y-0 ${
+            fill ? "sm:flex-1" : ""
+          }`}
         >
           <Pair label={cells[0]} value={cells[1]} />
           {cells.length === 4 && <Pair label={cells[2]} value={cells[3]} />}
@@ -48,7 +56,7 @@ function DetailTable({ rows }: { rows: RowSpec[] }) {
 
 function SectionBar({ children }: { children: React.ReactNode }) {
   return (
-    <div className="border-b border-slate-300 bg-slate-100 px-3 py-1.5 text-[12px] font-semibold text-slate-900">
+    <div className="bg-slate-900 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wide text-white">
       {children}
     </div>
   );
@@ -68,7 +76,7 @@ export function HallTicketPreview({
         <img
           src="/assets/wcl.logo.png"
           alt="Western Coalfields Limited"
-          className="h-11 w-auto object-contain"
+          className="h-14 w-auto object-contain"
         />
         <div className="min-w-0 flex-1 text-center">
           <p className="text-lg font-bold sm:text-xl">
@@ -86,15 +94,25 @@ export function HallTicketPreview({
         </div>
       </div>
 
-      {/* Candidate details */}
+      {/* Candidate details, with the passport-photo box on the right */}
       <SectionBar>Candidate Details</SectionBar>
-      <div className="px-4 py-3">
-        <DetailTable
-          rows={[
-            ["Candidate Name", candidate.name, "Employee ID", candidate.employeeId],
-            ["Date of Birth", isoToDdmmyyyy(candidate.dob)],
-          ]}
-        />
+      <div className="flex flex-col items-center gap-3 px-4 py-3 sm:flex-row sm:items-stretch">
+        <div className="w-full min-w-0 flex-1">
+          <DetailTable
+            fill
+            rows={[
+              ["Candidate Name", candidate.name],
+              ["Employee ID", candidate.employeeId],
+              ["Date of Birth", isoToDdmmyyyy(candidate.dob)],
+            ]}
+          />
+        </div>
+        {/* 35mm x 45mm — actual passport-photo size — so the pasted photo fits the box */}
+        <div className="flex h-42.5 w-33 shrink-0 items-center justify-center border border-dashed border-slate-500 px-3">
+          <p className="text-center text-[10px] leading-relaxed text-slate-500">
+            Affix a recent passport-size photograph here
+          </p>
+        </div>
       </div>
 
       {/* Venue, seating and schedule */}
@@ -105,7 +123,7 @@ export function HallTicketPreview({
             ["Examination Centre", candidate.venueName],
             ["Address", candidate.venueAddress],
             ["Building", candidate.blockNo, "Floor", candidate.floorNo],
-            ["Lab", candidate.labNo, "Seat Number", candidate.seatNo],
+            ["Lab", candidate.labNo, "Entry Gate", candidate.gateNo],
             [
               "Examination Date",
               formatDateLong(candidate.examDate),

@@ -78,6 +78,7 @@ export async function findCandidate(
     examTime: exam.examTime,
     venueName: exam.venueName,
     venueAddress: exam.venueAddress,
+    gateNo: exam.gateNo,
     blockNo: row.block_no,
     floorNo: row.floor_no,
     labNo: row.lab_no,

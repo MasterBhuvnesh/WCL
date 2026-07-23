@@ -54,7 +54,7 @@ const styles = StyleSheet.create({
     borderBottomColor: BORDER,
     backgroundColor: HEADBG,
   },
-  logo: { height: 46, width: 78, objectFit: "contain" },
+  logo: { height: 58, width: 98, objectFit: "contain" },
   headerCenter: { flex: 1, alignItems: "center", paddingHorizontal: 8 },
   org: {
     fontSize: 15,
@@ -73,14 +73,14 @@ const styles = StyleSheet.create({
   },
 
   sectionBar: {
-    backgroundColor: HEADBG,
-    color: INK,
-    fontSize: 9.5,
+    backgroundColor: INK,
+    color: "#ffffff",
+    fontSize: 9,
     fontFamily: "Inter", fontWeight: "bold",
+    textTransform: "uppercase",
+    letterSpacing: 0.6,
     paddingVertical: 5,
     paddingHorizontal: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: BORDER,
   },
   body: { paddingHorizontal: 12, paddingTop: 9, paddingBottom: 9 },
   /** The instructions body grows to fill the page so the footer sits at the bottom. */
@@ -118,6 +118,27 @@ const styles = StyleSheet.create({
     color: MUTED,
   },
   valueText: { fontSize: 9.5, fontFamily: "Inter", fontWeight: "bold", color: INK },
+
+  /* Candidate details sit left of the passport-photo box */
+  candidateRow: { flexDirection: "row", alignItems: "stretch", gap: 9 },
+  candidateTable: { flex: 1, flexDirection: "column" },
+  /* 35mm x 45mm — actual passport-photo size — so the pasted photo fits the box */
+  photoBox: {
+    width: 99,
+    height: 128,
+    borderWidth: 1,
+    borderColor: MUTED,
+    borderStyle: "dashed",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 8,
+  },
+  photoBoxText: {
+    fontSize: 7,
+    color: MUTED,
+    textAlign: "center",
+    lineHeight: 1.4,
+  },
 
   instrItem: { flexDirection: "row", marginBottom: 4, paddingRight: 6 },
   instrNum: { width: 15, fontSize: 8.5, color: MUTED, fontFamily: "Inter", fontWeight: "bold" },
@@ -158,13 +179,16 @@ const styles = StyleSheet.create({
  */
 type RowSpec = [string, string] | [string, string, string, string];
 
-function DetailTable({ rows }: { rows: RowSpec[] }) {
+// `fill` stretches the rows evenly to the parent's height (used to match the
+// candidate table to the photo box beside it).
+function DetailTable({ rows, fill }: { rows: RowSpec[]; fill?: boolean }) {
   return (
-    <View style={styles.table}>
+    <View style={fill ? [styles.table, { flexGrow: 1 }] : styles.table}>
       {rows.map((cells, i) => {
         const last = i === rows.length - 1;
+        const tr = last ? styles.trLast : styles.tr;
         return (
-          <View style={last ? styles.trLast : styles.tr} key={i}>
+          <View style={fill ? [tr, { flexGrow: 1 }] : tr} key={i}>
             {cells.length === 2 ? (
               <>
                 <View style={[styles.tdLabel, { width: "22%" }]}>
@@ -237,12 +261,23 @@ export function HallTicketDocument({
           {/* Candidate details */}
           <Text style={styles.sectionBar}>Candidate Details</Text>
           <View style={styles.body}>
-            <DetailTable
-              rows={[
-                ["Candidate Name", candidate.name, "Employee ID", candidate.employeeId],
-                ["Date of Birth", isoToDdmmyyyy(candidate.dob)],
-              ]}
-            />
+            <View style={styles.candidateRow}>
+              <View style={styles.candidateTable}>
+                <DetailTable
+                  fill
+                  rows={[
+                    ["Candidate Name", candidate.name],
+                    ["Employee ID", candidate.employeeId],
+                    ["Date of Birth", isoToDdmmyyyy(candidate.dob)],
+                  ]}
+                />
+              </View>
+              <View style={styles.photoBox}>
+                <Text style={styles.photoBoxText}>
+                  Affix a recent passport-size photograph here
+                </Text>
+              </View>
+            </View>
           </View>
 
           {/* Venue, seating and schedule */}
@@ -253,7 +288,7 @@ export function HallTicketDocument({
                 ["Examination Centre", candidate.venueName],
                 ["Address", candidate.venueAddress],
                 ["Building", candidate.blockNo, "Floor", candidate.floorNo],
-                ["Lab", candidate.labNo, "Seat Number", candidate.seatNo],
+                ["Lab", candidate.labNo, "Entry Gate", candidate.gateNo],
                 [
                   "Examination Date",
                   formatDateLong(candidate.examDate),

@@ -52,7 +52,7 @@ export default function TicketPage() {
         <img
           src="/assets/wcl.logo.png"
           alt="Western Coalfields Limited"
-          className="h-10 object-contain"
+          className="h-14 object-contain"
         />
         <div className="flex items-center gap-3">
           <div className="hidden text-right text-sm sm:block">
