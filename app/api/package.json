@@ -1,6 +1,6 @@
 {
   "name": "@wcl/api",
-  "version": "0.1.5",
+  "version": "0.1.7",
   "private": true,
   "type": "module",
   "description": "Production backend for the WCL on-center examination system (Bun, Express, PostgreSQL, Redis).",
