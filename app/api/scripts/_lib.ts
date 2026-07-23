@@ -13,9 +13,14 @@ export function readRows(path: string): Record<string, string>[] {
   const sheet = workbook.Sheets[workbook.SheetNames[0]];
   // Rewrite date cells to ISO text up front, so sheet_to_json below can't fall
   // back to rendering their serial number ("36964.22...") as the display text.
+  // Format from local components, not toISOString(): SheetJS returns date cells
+  // as midnight local time, which toISOString() shifts to the previous day in
+  // any timezone east of UTC.
   for (const [addr, cell] of Object.entries(sheet)) {
     if (!addr.startsWith("!") && cell?.t === "d" && cell.v instanceof Date) {
-      sheet[addr] = { t: "s", v: cell.v.toISOString().slice(0, 10) };
+      const d = cell.v;
+      const iso = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+      sheet[addr] = { t: "s", v: iso };
     }
   }
   const rows = XLSX.utils.sheet_to_json<Record<string, unknown>>(sheet, {
