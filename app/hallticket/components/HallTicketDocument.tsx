@@ -30,7 +30,7 @@ const HEADBG = "#f1f5f9";
 
 const styles = StyleSheet.create({
   page: {
-    paddingVertical: 22,
+    paddingVertical: 16,
     paddingHorizontal: 30,
     fontSize: 10,
     fontFamily: "Inter",
@@ -82,7 +82,7 @@ const styles = StyleSheet.create({
     paddingVertical: 5,
     paddingHorizontal: 12,
   },
-  body: { paddingHorizontal: 12, paddingTop: 9, paddingBottom: 9 },
+  body: { paddingHorizontal: 12, paddingTop: 7, paddingBottom: 7 },
   /** The instructions body grows to fill the page so the footer sits at the bottom. */
   bodyGrow: { flexGrow: 1 },
 
@@ -140,9 +140,9 @@ const styles = StyleSheet.create({
     lineHeight: 1.4,
   },
 
-  instrItem: { flexDirection: "row", marginBottom: 4, paddingRight: 6 },
+  instrItem: { flexDirection: "row", marginBottom: 2.5, paddingRight: 6 },
   instrNum: { width: 15, fontSize: 8.5, color: MUTED, fontFamily: "Inter", fontWeight: "bold" },
-  instrText: { flex: 1, fontSize: 8.5, lineHeight: 1.4, color: INK },
+  instrText: { flex: 1, fontSize: 8.5, lineHeight: 1.3, color: INK },
 
   signRow: {
     flexDirection: "row",

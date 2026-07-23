@@ -48,6 +48,16 @@ export function parseDob(input: string): string | null {
 }
 
 /**
+ * Entry gate, derived from the floor: floors 1-3 enter by Gate 1, floors 4-5 by
+ * Gate 2. floor_no arrives as "Floor 3", so the digit is pulled out; anything
+ * unparseable falls back to Gate 1 rather than printing a blank gate.
+ */
+export function gateForFloor(floorNo: string): string {
+  const floor = Number(/\d+/.exec(floorNo)?.[0]);
+  return floor >= 4 ? "Gate 2" : "Gate 1";
+}
+
+/**
  * Look up a candidate by employee ID (case-insensitive) and ISO date of birth.
  * Both must match; returns null otherwise. DOB acts as the shared secret, so it
  * is compared exactly.
@@ -78,7 +88,7 @@ export async function findCandidate(
     examTime: exam.examTime,
     venueName: exam.venueName,
     venueAddress: exam.venueAddress,
-    gateNo: exam.gateNo,
+    gateNo: gateForFloor(row.floor_no),
     blockNo: row.block_no,
     floorNo: row.floor_no,
     labNo: row.lab_no,

@@ -3,24 +3,25 @@
   "subtitle": "Computer-Based Test",
   "durationMinutes": 60,
   "examDate": "2026-07-26",
-  "reportingTime": "11:30 AM",
-  "gateClosesTime": "12:15 PM",
+  "reportingTime": "11:00 AM",
+  "gateClosesTime": "12:00 PM",
   "examTime": "12:30 PM",
   "venueName": "Ramdeobaba University",
   "venueAddress": "Ramdeo Tekdi, Gittikhadan, Katol Road, Nagpur, Maharashtra 440013",
-  "gateNo": "Gate 1",
   "totalQuestions": 100,
   "markingScheme": "+1 for correct, -0.5 for wrong, no partial marking",
   "instructions": [
-    "Carry a printed copy of this hall ticket, Employee ID and a valid photo identity card (Aadhaar) to the examination centre. Entry is not permitted without these documents.",
+    "Carry a printed copy of this hall ticket and your Employee ID card to the examination centre. Entry is not permitted without these documents.",
+    "At the entry gate, the security guard may ask to see your hall ticket and Employee ID card.",
     "Report to the venue by the reporting time printed on this hall ticket. Candidates arriving after the gate closing time will not be allowed to enter.",
-    "The examination is conducted on a computer. The duration is 60 minutes, measured from the moment you begin.",
+    "The examination is conducted on a computer. The duration is 60 minutes, beginning at 12:30 PM sharp.",
     "You will be served 100 questions. Every question has a single correct answer, and there is no partial marking.",
     "Each correct answer is awarded 1 mark, and each wrong answer is penalised 0.5 marks. Unanswered questions score zero.",
     "Your responses are saved automatically and synchronised with the server at regular intervals. The server clock is authoritative, and the on-screen timer is provided only for guidance.",
     "Use the on-screen question palette to navigate between questions and to review your progress at any time.",
     "Do not switch browser tabs, minimise the window, or leave full screen during the test, as such actions are recorded and may be treated as malpractice.",
-    "Mobile phones, smart watches, calculators, books, and any other electronic or reference material are strictly prohibited inside the examination hall. Candidates must affix an identification label on such items, deposit them with the security guard posted outside the examination hall, and collect them after the examination is over.",
-    "Follow all instructions given by the invigilators. Your score is displayed immediately after you submit."
+    "Mobile phones, smart watches, calculators, books, and any other electronic or reference material are strictly prohibited inside the examination hall. Candidates must affix an identification label on such items, deposit them at the reception counter on their respective floor, and collect them from the same counter after the examination is over.",
+    "Mobile phones must be switched to flight mode before being deposited at the reception counter.",
+    "Candidates must follow all instructions given by the invigilators."
   ]
 }
