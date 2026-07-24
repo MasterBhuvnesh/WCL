@@ -11,17 +11,16 @@
   "totalQuestions": 100,
   "markingScheme": "+1 for correct, -0.5 for wrong, no partial marking",
   "instructions": [
-    "Carry a printed copy of this hall ticket and your Employee ID card to the examination centre. Entry is not permitted without these documents.",
-    "At the entry gate, the security guard may ask to see your hall ticket and Employee ID card.",
-    "Report to the venue by the reporting time printed on this hall ticket. Candidates arriving after the gate closing time will not be allowed to enter.",
-    "The examination is conducted on a computer. The duration is 60 minutes, beginning at 12:30 PM sharp.",
-    "You will be served 100 questions. Every question has a single correct answer, and there is no partial marking.",
-    "Each correct answer is awarded 1 mark, and each wrong answer is penalised 0.5 marks. Unanswered questions score zero.",
-    "Your responses are saved automatically and synchronised with the server at regular intervals. The server clock is authoritative, and the on-screen timer is provided only for guidance.",
-    "Use the on-screen question palette to navigate between questions and to review your progress at any time.",
-    "Do not switch browser tabs, minimise the window, or leave full screen during the test, as such actions are recorded and may be treated as malpractice.",
-    "Mobile phones, smart watches, calculators, books, and any other electronic or reference material are strictly prohibited inside the examination hall. Candidates must affix an identification label on such items, deposit them at the reception counter on their respective floor, and collect them from the same counter after the examination is over.",
-    "Mobile phones must be switched to flight mode before being deposited at the reception counter.",
-    "Candidates must follow all instructions given by the invigilators."
+    "Carry your Printed Hall Ticket, WCL Employee ID Card and Aadhaar Card.",
+    "Report to the examination venue as per the prescribed schedule. Late entry after gate closure will not be permitted.",
+    "Your responses are auto-saved. The server time shall be treated as final.",
+    "Do not switch tabs, minimize the window, or exit full-screen mode. Three (3) such violations will result in automatic logout from the examination.",
+    "Mobile phones (in Flight Mode), smart watches, calculators, books, notes, and all electronic/reference materials are strictly prohibited.",
+    "Mobile phones, if carried, shall be switched to Flight Mode, placed in the designated security pouch kept on the candidate's desk, and the candidate will write their name on the label/sticker provided. The pouches will be collected before the commencement of the examination and the same pouches will be returned to the respective candidates in the examination hall after the examination by WCL officials.",
+    "Strictly follow the instructions of the Invigilators and Examination Officials.",
+    "Maintain the highest standards of integrity, discipline, and professional conduct throughout the examination.",
+    "All candidates shall remain governed by the applicable Conduct, Discipline & Appeal (CDA) Rules of Coal India Limited and other rules/instructions of WCL throughout the examination process.",
+    "Use of unfair means, impersonation, or any misconduct will invite disciplinary action, including disqualification from the examination.",
+    "Earlier submissions will get higher weightage in case of a tie."
   ]
 }
