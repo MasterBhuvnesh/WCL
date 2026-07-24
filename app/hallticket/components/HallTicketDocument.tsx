@@ -142,7 +142,15 @@ const styles = StyleSheet.create({
 
   instrItem: { flexDirection: "row", marginBottom: 2.5, paddingRight: 6 },
   instrNum: { width: 15, fontSize: 8.5, color: MUTED, fontFamily: "Inter", fontWeight: "bold" },
-  instrText: { flex: 1, fontSize: 8.5, lineHeight: 1.3, color: INK },
+  instrText: {
+    flex: 1,
+    fontSize: 8.5,
+    lineHeight: 1.3,
+    color: INK,
+    fontFamily: "Inter",
+    fontWeight: "bold",
+    textAlign: "justify",
+  },
 
   signRow: {
     flexDirection: "row",

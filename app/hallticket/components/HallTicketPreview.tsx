@@ -151,8 +151,10 @@ export function HallTicketPreview({
         <ol className="flex flex-col gap-2">
           {exam.instructions.map((line, i) => (
             <li key={i} className="flex gap-2 text-[13px] leading-snug">
-              <span className="font-semibold text-slate-500">{i + 1}.</span>
-              <span className="text-slate-800">{line}</span>
+              <span className="font-bold text-slate-500">{i + 1}.</span>
+              <span className="flex-1 text-justify font-bold text-slate-800">
+                {line}
+              </span>
             </li>
           ))}
         </ol>
