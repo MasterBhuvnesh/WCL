@@ -1,0 +1,167 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model admins {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email         String       @unique(map: "admins_email_uq")
+  password_hash String
+  totp_secret   String?
+  created_at    DateTime     @default(now()) @db.Timestamptz(6)
+  audit_logs    audit_logs[]
+}
+
+model answers {
+  id                  BigInt        @id @default(autoincrement())
+  session_id          String        @db.Uuid
+  question_id         String
+  selected_option_ids Json          @default("[]")
+  status              String
+  client_seq          Int
+  answered_at         DateTime      @db.Timestamptz(6)
+  exam_sessions       exam_sessions @relation(fields: [session_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "answers_session_id_exam_sessions_id_fk")
+
+  @@unique([session_id, question_id], map: "answers_session_question_uq")
+  @@index([session_id], map: "answers_session_idx")
+}
+
+model audit_logs {
+  id         BigInt   @id @default(autoincrement())
+  admin_id   String?  @db.Uuid
+  action     String
+  target     String?
+  meta       Json?
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+  admins     admins?  @relation(fields: [admin_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "audit_logs_admin_id_admins_id_fk")
+}
+
+model exam_sessions {
+  id                  String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  participant_id      String             @db.Uuid
+  exam_id             String
+  status              String             @default("not_started")
+  started_at          DateTime?          @db.Timestamptz(6)
+  deadline_at         DateTime?          @db.Timestamptz(6)
+  shuffle_seed        String?
+  served_question_ids Json               @default("[]")
+  submitted_at        DateTime?          @db.Timestamptz(6)
+  device_id           String?
+  created_at          DateTime           @default(now()) @db.Timestamptz(6)
+  answers             answers[]
+  exams               exams              @relation(fields: [exam_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "exam_sessions_exam_id_exams_id_fk")
+  participants        participants       @relation(fields: [participant_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "exam_sessions_participant_id_participants_id_fk")
+  feedback            feedback?
+  integrity_events    integrity_events[]
+  results             results?
+
+  @@index([status, deadline_at], map: "sessions_deadline_idx")
+  @@index([exam_id, status], map: "sessions_exam_status_idx")
+  @@index([participant_id, exam_id], map: "sessions_participant_exam_idx")
+}
+
+model exams {
+  id                 String          @id
+  title              String
+  duration_seconds   Int
+  questions_to_serve Int
+  instructions       Json            @default("[]")
+  available_from     DateTime?       @db.Timestamptz(6)
+  available_until    DateTime?       @db.Timestamptz(6)
+  is_open            Boolean         @default(true)
+  results_published  Boolean         @default(false)
+  created_at         DateTime        @default(now()) @db.Timestamptz(6)
+  password_required  Boolean         @default(true)
+  exam_sessions      exam_sessions[]
+  feedback           feedback[]
+  questions          questions[]
+  results            results[]
+}
+
+model feedback {
+  session_id            String        @id @db.Uuid
+  participant_id        String        @db.Uuid
+  exam_id               String
+  platform_rating       Int
+  infrastructure_rating Int
+  comment               String?
+  created_at            DateTime      @default(now()) @db.Timestamptz(6)
+  exams                 exams         @relation(fields: [exam_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "feedback_exam_id_exams_id_fk")
+  participants          participants  @relation(fields: [participant_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "feedback_participant_id_participants_id_fk")
+  exam_sessions         exam_sessions @relation(fields: [session_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "feedback_session_id_exam_sessions_id_fk")
+
+  @@index([exam_id], map: "feedback_exam_idx")
+}
+
+model hallticket_seats {
+  participant_id String       @id @db.Uuid
+  block_no       String
+  floor_no       String
+  lab_no         String
+  seat_no        String
+  participants   participants @relation(fields: [participant_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "hallticket_seats_participant_id_participants_id_fk")
+}
+
+model integrity_events {
+  id            BigInt        @id @default(autoincrement())
+  session_id    String        @db.Uuid
+  type          String
+  meta          Json?
+  created_at    DateTime      @default(now()) @db.Timestamptz(6)
+  exam_sessions exam_sessions @relation(fields: [session_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "integrity_events_session_id_exam_sessions_id_fk")
+
+  @@index([session_id], map: "integrity_session_idx")
+}
+
+model options {
+  id          String    @id
+  question_id String
+  text        String
+  is_correct  Boolean
+  questions   questions @relation(fields: [question_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "options_question_id_questions_id_fk")
+
+  @@index([question_id], map: "options_question_idx")
+}
+
+model participants {
+  id               String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  username         String            @unique(map: "participants_username_uq")
+  secret_hash      String
+  display_name     String?
+  created_at       DateTime          @default(now()) @db.Timestamptz(6)
+  dob              DateTime?         @db.Date
+  exam_sessions    exam_sessions[]
+  feedback         feedback[]
+  hallticket_seats hallticket_seats?
+  results          results[]
+}
+
+model questions {
+  id        String    @id
+  exam_id   String
+  type      String
+  text      String
+  marks     Int       @default(1)
+  image_url String?
+  options   options[]
+  exams     exams     @relation(fields: [exam_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "questions_exam_id_exams_id_fk")
+
+  @@index([exam_id], map: "questions_exam_idx")
+}
+
+model results {
+  session_id     String        @id @db.Uuid
+  participant_id String        @db.Uuid
+  exam_id        String
+  score          Float         @db.Real
+  max_score      Int
+  correct        Int
+  wrong          Int
+  unanswered     Int
+  graded_at      DateTime      @default(now()) @db.Timestamptz(6)
+  exams          exams         @relation(fields: [exam_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "results_exam_id_exams_id_fk")
+  participants   participants  @relation(fields: [participant_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "results_participant_id_participants_id_fk")
+  exam_sessions  exam_sessions @relation(fields: [session_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "results_session_id_exam_sessions_id_fk")
+
+  @@index([exam_id, score], map: "results_exam_score_idx")
+}

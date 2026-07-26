@@ -41,3 +41,6 @@ docs/ACCESS.md
 docs/AWSCLI.md
 docs/RECORD.md
 observability/metrics-token
+
+# local DB snapshots (prod PII, never commit)
+*.dump

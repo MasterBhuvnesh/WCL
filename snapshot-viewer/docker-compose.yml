@@ -1,0 +1,43 @@
+# Local viewer for the production snapshot (wcl-snapshot.dump).
+# `docker compose up` -> Postgres restores the dump, Prisma Studio serves it.
+# Everything here is a throwaway copy; production is never touched.
+services:
+  db:
+    image: postgres:18
+    environment:
+      POSTGRES_PASSWORD: local
+      POSTGRES_DB: postgres
+    ports:
+      - "5433:5432"
+    volumes:
+      - ./wcl-snapshot.dump:/snapshot/wcl-snapshot.dump:ro
+      - ./restore.sh:/docker-entrypoint-initdb.d/01-restore.sh:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 3s
+      timeout: 3s
+      retries: 30
+
+  studio:
+    image: node:22
+    working_dir: /app
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://postgres:local@db:5432/postgres
+    ports:
+      - "5555:5555"
+    volumes:
+      - ./prisma:/app/prisma
+      - studio_node:/app/node_modules
+    # ponytail: introspect the live DB into a schema, then serve Studio.
+    # First run installs prisma into the named volume; later runs reuse it.
+    command: >
+      sh -c "npm init -y >/dev/null 2>&1;
+             npm i prisma@6 >/dev/null 2>&1;
+             npx prisma db pull &&
+             npx prisma studio --hostname 0.0.0.0 --port 5555 --browser none"
+
+volumes:
+  studio_node:
