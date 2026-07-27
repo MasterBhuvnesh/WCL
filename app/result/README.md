@@ -42,6 +42,16 @@ Flip it from the admin panel: **Exam & questions → Publish results**
 > the browser exclusively through this gate. Do not add a client-side query path
 > that bypasses it.
 
+## Where the data comes from
+
+Nothing is imported for this portal. The `results` row and the per-question
+record are produced by the API when a candidate submits: the session is graded,
+a `results` row is written, and the served questions and answers are already on
+file. The portal only reads them. To populate a fresh database for local
+testing, run through the normal exam flow (or seed) from `app/api`; loading
+`participants` and `hallticket_seats` is covered in the
+[hall-ticket portal](../hallticket#loading-data).
+
 ## Quick start
 
 ```bash
@@ -52,32 +62,6 @@ npm run dev        # http://localhost:5002
 
 Set `DATABASE_URL` to point at the exam database (it defaults to the local
 development Postgres from `docker compose up -d`). See [`.env.example`](./.env.example).
-
-## Testing against the production database
-
-RDS is reachable only from inside the VPC, so a local run has to tunnel in.
-[`secret/result-prod.sh`](../../secret/result-prod.sh) does the whole chain —
-EC2 Instance Connect tunnel → SSH port-forward → portal — and is safe to re-run
-from a cold boot:
-
-```bash
-cd <repo root>
-aws sso login            # or however this machine authenticates
-./secret/result-prod.sh creds    # sample candidate logins (employee ID + DOB)
-./secret/result-prod.sh serve    # portal on http://localhost:5002, prod data
-./secret/result-prod.sh psql     # interactive psql, if you need to dig
-```
-
-`serve` builds the Docker image on first use, so the thing you test is the same
-artifact that ships. Ctrl-C stops the portal and tears both tunnels down. It
-runs SELECTs only; nothing writes to production.
-
-Requirements: the AWS CLI logged in, Docker running, and `secret/wcl-backend.pem`
-present. If a run dies with a port already in use, the script reuses a live
-tunnel rather than opening a second one.
-
-> Docker's published-port path (`-p`) is broken on the current dev kernel
-> (iptables DNAT unavailable), so the script uses `--network host`.
 
 ## Sign-in outcomes
 
@@ -95,27 +79,3 @@ tunnel rather than opening a second one.
 | `npm run dev` | Development server on port 5002. |
 | `npm run build` / `npm run start` | Production build and serve. |
 | `npm run lint` | ESLint. |
-
-## Container
-
-```bash
-docker build -t wclresult:local .
-docker run --rm -p 5002:5002 -e DATABASE_URL=... wclresult:local
-```
-
-Built and pushed by [`result-docker.yml`](../../.github/workflows/result-docker.yml)
-as `<user>/wclresult`, triggered only by a `result-v*` tag from
-`./release.sh result`. `DATABASE_URL` is read at run time, not baked in.
-
-The service exists in
-[`docker-compose.frontend.yml`](../../docker-compose.frontend.yml) behind the
-`result` profile, so it is **not** started by a plain `up -d` — no image has
-been pushed yet. To deploy once one has:
-
-```bash
-docker compose -f docker-compose.frontend.yml --profile result up -d
-```
-
-Then drop the `profiles:` line to fold it into the default set, and add an ALB
-host rule for port 5002. It reuses the `DATABASE_URL` already in
-`.env.prod.frontend` (same RDS as the hall-ticket portal).
