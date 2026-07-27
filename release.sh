@@ -3,11 +3,11 @@
 # package.json version and tag the pushed image v<version>, so the git tag
 # <service>-v<version> always matches an image on Docker Hub.
 #
-# Usage: ./release.sh api|admin|hallticket [patch|minor|major]   (default: patch)
+# Usage: ./release.sh api|admin|hallticket|result [patch|minor|major]  (default: patch)
 set -euo pipefail
 
-SVC=${1:?usage: release.sh api|admin|hallticket [patch|minor|major]}
-[[ "$SVC" =~ ^(api|admin|hallticket)$ ]] || { echo "unknown service: $SVC" >&2; exit 1; }
+SVC=${1:?usage: release.sh api|admin|hallticket|result [patch|minor|major]}
+[[ "$SVC" =~ ^(api|admin|hallticket|result)$ ]] || { echo "unknown service: $SVC" >&2; exit 1; }
 BUMP=${2:-patch}
 [[ "$BUMP" =~ ^(patch|minor|major)$ ]] || { echo "unknown bump type: $BUMP" >&2; exit 1; }
 

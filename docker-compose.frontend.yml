@@ -28,6 +28,24 @@ services:
     labels:
       - com.centurylinklabs.watchtower.enable=true
 
+  # Result portal. Behind the "result" profile so a plain `up -d` ignores it —
+  # the image is not on Docker Hub yet and pulling it would fail. Once
+  # ./release.sh result has pushed one, start it with:
+  #   docker compose -f docker-compose.frontend.yml --profile result up -d
+  # and drop the profile line to fold it into the default set.
+  result:
+    profiles: [result]
+    image: ${DOCKERHUB_USER:-bhuvneshverma}/wclresult:latest
+    container_name: wclresult
+    restart: unless-stopped
+    # Reuses DATABASE_URL from the shared frontend env (same RDS as hallticket).
+    env_file:
+      - .env.prod.frontend
+    ports:
+      - "5002:5002"
+    labels:
+      - com.centurylinklabs.watchtower.enable=true
+
   watchtower:
     image: containrrr/watchtower:latest
     container_name: watchtower
