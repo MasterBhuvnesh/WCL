@@ -2,7 +2,7 @@
 #
 # Traffic model:
 #   internet -> ALB (80/443)          : wcl-frontend-alb
-#   ALB      -> frontend EC2 (5000/1) : wcl-frontend-ec2
+#   ALB      -> frontend EC2 (5000/1/2): wcl-frontend-ec2
 #   ALB      -> backend  EC2 (4000/3000): wcl-backend-ec2
 #   ICE      -> EC2 (22)              : reuses the ALB SG as its source group
 #   EC2      -> RDS (5432) / Redis (6379): wcl-sg
@@ -39,10 +39,10 @@ resource "aws_security_group" "alb" {
   }
 }
 
-# --- Frontend EC2 (admin 5000, hall-ticket 5001) ---
+# --- Frontend EC2 (admin 5000, hall-ticket 5001, result 5002) ---
 resource "aws_security_group" "frontend_ec2" {
   name        = "wcl-frontend-ec2"
-  description = "App ports 5000/5001 and SSH, only from the ALB / Instance Connect SG"
+  description = "App ports 5000/5001/5002 and SSH, only from the ALB / Instance Connect SG"
   vpc_id      = data.aws_vpc.default.id
   tags        = merge(local.tags, { Name = "wcl-frontend-ec2" })
 
@@ -58,6 +58,14 @@ resource "aws_security_group" "frontend_ec2" {
     description     = "Hall-ticket portal"
     from_port       = 5001
     to_port         = 5001
+    protocol        = "tcp"
+    security_groups = [aws_security_group.alb.id]
+  }
+
+  ingress {
+    description     = "Result portal"
+    from_port       = 5002
+    to_port         = 5002
     protocol        = "tcp"
     security_groups = [aws_security_group.alb.id]
   }

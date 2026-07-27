@@ -7,6 +7,9 @@
 
 services:
   admin:
+    # Uncomment to hold this service back from a plain `up -d`; start it with
+    #   docker compose -f docker-compose.frontend.yml --profile admin up -d
+    # profiles: [admin]
     image: ${DOCKERHUB_USER:-bhuvneshverma}/wcladmin:latest
     container_name: wcladmin
     restart: unless-stopped
@@ -18,6 +21,9 @@ services:
       - com.centurylinklabs.watchtower.enable=true
 
   hallticket:
+    # Uncomment to hold this service back from a plain `up -d`; start it with
+    #   docker compose -f docker-compose.frontend.yml --profile hallticket up -d
+    # profiles: [hallticket]
     image: ${DOCKERHUB_USER:-bhuvneshverma}/wclhallticket:latest
     container_name: wclhallticket
     restart: unless-stopped
@@ -28,13 +34,12 @@ services:
     labels:
       - com.centurylinklabs.watchtower.enable=true
 
-  # Result portal. Behind the "result" profile so a plain `up -d` ignores it —
-  # the image is not on Docker Hub yet and pulling it would fail. Once
-  # ./release.sh result has pushed one, start it with:
-  #   docker compose -f docker-compose.frontend.yml --profile result up -d
-  # and drop the profile line to fold it into the default set.
+  # Result portal, served at result.rbuexam.in. In the default set since
+  # ./release.sh result pushed the first image (v0.1.1, 2026-07-27).
   result:
-    profiles: [result]
+    # Uncomment to hold this service back from a plain `up -d`; start it with
+    #   docker compose -f docker-compose.frontend.yml --profile result up -d
+    # profiles: [result]
     image: ${DOCKERHUB_USER:-bhuvneshverma}/wclresult:latest
     container_name: wclresult
     restart: unless-stopped

@@ -3,10 +3,11 @@
 
 locals {
   hostnames = [
-    var.root_domain,             # hall-ticket portal
-    "admin.${var.root_domain}",  # admin panel
-    "api.${var.root_domain}",    # API
-    "grafana.${var.root_domain}" # Grafana
+    var.root_domain,              # hall-ticket portal
+    "admin.${var.root_domain}",   # admin panel
+    "api.${var.root_domain}",     # API
+    "grafana.${var.root_domain}", # Grafana
+    "result.${var.root_domain}"   # result portal
   ]
 }
 

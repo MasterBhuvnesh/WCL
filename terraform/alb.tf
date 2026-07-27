@@ -1,10 +1,11 @@
-# One internet-facing ALB terminates TLS and routes by hostname to four target
+# One internet-facing ALB terminates TLS and routes by hostname to five target
 # groups across the two instances:
 #
 #   rbuexam.in          -> wcl-hallticket (frontend :5001)  [listener default]
 #   admin.rbuexam.in    -> wcl-admin      (frontend :5000)  [rule 10]
 #   api.rbuexam.in      -> wcl-api        (backend  :4000)  [rule 20]
 #   grafana.rbuexam.in  -> wcl-grafana    (backend  :3000)  [rule 30]
+#   result.rbuexam.in   -> wcl-result     (frontend :5002)  [rule 40]
 
 resource "aws_lb" "main" {
   name               = "wcl-frontend"
@@ -28,6 +29,15 @@ resource "aws_lb_target_group" "hallticket" {
 resource "aws_lb_target_group" "admin" {
   name        = "wcl-admin"
   port        = 5000
+  protocol    = "HTTP"
+  vpc_id      = data.aws_vpc.default.id
+  target_type = "instance"
+  tags        = local.tags
+}
+
+resource "aws_lb_target_group" "result" {
+  name        = "wcl-result"
+  port        = 5002
   protocol    = "HTTP"
   vpc_id      = data.aws_vpc.default.id
   target_type = "instance"
@@ -71,6 +81,12 @@ resource "aws_lb_target_group_attachment" "admin" {
   target_group_arn = aws_lb_target_group.admin.arn
   target_id        = aws_instance.frontend.id
   port             = 5000
+}
+
+resource "aws_lb_target_group_attachment" "result" {
+  target_group_arn = aws_lb_target_group.result.arn
+  target_id        = aws_instance.frontend.id
+  port             = 5002
 }
 
 resource "aws_lb_target_group_attachment" "api" {
@@ -161,6 +177,22 @@ resource "aws_lb_listener_rule" "grafana" {
   condition {
     host_header {
       values = ["grafana.${var.root_domain}"]
+    }
+  }
+}
+
+resource "aws_lb_listener_rule" "result" {
+  listener_arn = aws_lb_listener.https.arn
+  priority     = 40
+
+  action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.result.arn
+  }
+
+  condition {
+    host_header {
+      values = ["result.${var.root_domain}"]
     }
   }
 }
