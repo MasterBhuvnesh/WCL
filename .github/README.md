@@ -6,8 +6,8 @@
 
 Everything that powers the WCL examination at Ramdeobaba University:
 a sealed desktop client candidates take the exam in, a live control room
-for administrators, a hall ticket portal for the public, and one API
-behind them all.
+for administrators, public portals for hall tickets and results, and one
+API behind them all.
 
 <img src="https://img.shields.io/badge/-Bun-000000?style=for-the-badge&logo=bun&logoColor=white">
 <img src="https://img.shields.io/badge/-Next.js-000000?style=for-the-badge&logo=nextdotjs&logoColor=white">
@@ -17,7 +17,7 @@ behind them all.
 <img src="https://img.shields.io/badge/-AWS-000000?style=for-the-badge&logo=amazonwebservices&logoColor=FF9900">
 <img src="https://img.shields.io/badge/-Docker-000000?style=for-the-badge&logo=docker&logoColor=2496ED">
 
-**[rbuexam.in](https://rbuexam.in)** &nbsp;|&nbsp; **[admin.rbuexam.in](https://admin.rbuexam.in)** &nbsp;|&nbsp; **[api.rbuexam.in](https://api.rbuexam.in/health)**
+**[rbuexam.in](https://rbuexam.in)** &nbsp;|&nbsp; **[result.rbuexam.in](https://result.rbuexam.in)** &nbsp;|&nbsp; **[admin.rbuexam.in](https://admin.rbuexam.in)** &nbsp;|&nbsp; **[api.rbuexam.in](https://api.rbuexam.in/health)**
 
 </div>
 
@@ -28,16 +28,39 @@ Western Coalfields Limited (WCL) examination hosted at Ramdeobaba
 University (RBU), Nagpur. Hundreds of candidates sit the exam at the
 same time on lab computers, and the platform covers their entire
 journey: downloading a hall ticket at home, taking a proctored exam in
-a locked-down fullscreen application, and receiving their score the
-moment the paper is submitted.
+a locked-down fullscreen application, receiving their score the moment
+the paper is submitted, and looking the result up again afterwards.
 
-## The four applications
+This is not a demonstration. The platform has conducted a live
+examination for real candidates on this infrastructure.
+
+## In production
+
+The WCL examination was conducted on **26 July 2026** on the deployment
+described below.
+
+| | |
+|---|---|
+| Candidates registered | 574 |
+| Candidates who sat the exam | 526 |
+| Paper | 100 questions, 60 minutes, negative marking of 0.5 |
+| Submitted by the candidate | 340 |
+| Auto-submitted by the server at the deadline | 186 |
+| Sessions left ungraded or unfinished | 0 |
+| Feedback responses collected | 526 |
+
+Every candidate who began the exam was graded and every result was
+written. Results were published to
+[result.rbuexam.in](https://result.rbuexam.in) after the paper closed.
+
+## The five applications
 
 | App | Role |
 |---|---|
 | [`app/client`](../app/client) | Electron desktop app the candidates take the exam in. Fullscreen kiosk with no title bar and no way out, question images with zoom, offline-tolerant answer saving, and integrity monitoring. Updates itself between releases. |
 | [`app/admin`](../app/admin) | Next.js control room: manage questions and their images, import participants, watch live sessions, add time, release device bindings, and export results. |
 | [`app/hallticket`](../app/hallticket) | Next.js public portal where candidates fetch and print their hall ticket PDF before exam day. |
+| [`app/result`](../app/result) | Next.js public portal where candidates look up their score and per-question breakdown once results are published. |
 | [`app/api`](../app/api) | Bun + Express + Drizzle API that owns authentication, exam sessions, answer sync, grading, and feedback. PostgreSQL stores the truth, Redis holds the hot exam state. |
 
 ## How exam day works
@@ -47,7 +70,8 @@ moment the paper is submitted.
 3. **During the exam.** The timer runs on the server, so refreshes, crashes, and reboots cannot add time. Every answer is buffered locally and synced continuously, so nothing is lost if a machine dies mid-click. Leaving fullscreen, switching windows, or losing focus is recorded as an integrity event that proctors see live.
 4. **If a PC fails.** A proctor presses Release device in the admin panel, the candidate logs in on any other machine, and every answer, every mark for review, and the running clock resume exactly where they left off.
 5. **Submitting.** Grading happens instantly on the server, with negative marking of 0.5 per wrong answer. The candidate sees their final score, rates the platform and the venue, and the application closes itself, leaving the seat ready for the next candidate.
-6. **The deadline.** Anyone still writing at the deadline is auto-submitted by the server, even if their machine is powered off.
+6. **The deadline.** Anyone still writing at the deadline is auto-submitted by the server, even if their machine is powered off. On exam day this accounted for 186 of the 526 papers.
+7. **Afterwards.** Once an administrator publishes results, candidates sign in at [result.rbuexam.in](https://result.rbuexam.in) with the same employee id and date of birth to see their score again, along with every question they were served and the correct answer. Nothing is disclosed before that switch is flipped.
 
 ## Architecture
 
@@ -63,6 +87,7 @@ flowchart LR
         subgraph FE["Frontend EC2<br/>Docker, watchtower"]
             direction TB
             HT["Hall ticket portal<br/>rbuexam.in"]
+            RS["Result portal<br/>result.rbuexam.in"]
             AD["Admin panel<br/>admin.rbuexam.in"]
         end
 
@@ -80,6 +105,7 @@ flowchart LR
         end
 
         LB --> HT
+        LB --> RS
         LB --> AD
         LB --> API
         LB --> OBS
@@ -87,6 +113,7 @@ flowchart LR
         API --> RD
         API --> S3
         HT --> PG
+        RS --> PG
     end
 ```
 
@@ -124,6 +151,7 @@ works well for both).
 | API | `cd app/api && bun install && bun run db:migrate && bun run seed && bun run dev` | http://localhost:4000 |
 | Admin | `cd app/admin && bun install && bun run dev` | http://localhost:5000 |
 | Hall ticket | `cd app/hallticket && bun install && bun run dev` | http://localhost:5001 |
+| Result | `cd app/result && bun install && bun run dev` | http://localhost:5002 |
 | Client | `cd app/client && bun install && bun run dev` | desktop window |
 
 Each app ships a `.env.example` describing its configuration and a README
@@ -134,6 +162,7 @@ with the details. Everything defaults to the local API at port 4000.
 | URL | Service |
 |---|---|
 | https://rbuexam.in | Hall ticket portal |
+| https://result.rbuexam.in | Result portal |
 | https://admin.rbuexam.in | Admin panel |
 | https://api.rbuexam.in | API |
 | https://grafana.rbuexam.in | Grafana dashboards (login required) |
