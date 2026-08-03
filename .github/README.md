@@ -21,6 +21,19 @@ API behind them all.
 
 </div>
 
+## Contents
+
+- [What this is](#what-this-is)
+- [In production](#in-production)
+- [The five applications](#the-five-applications)
+- [How exam day works](#how-exam-day-works)
+- [Architecture](#architecture)
+- [Tech stack](#tech-stack)
+- [Running it locally](#running-it-locally)
+- [Production](#production)
+- [Documentation](#documentation)
+- [Team](#team)
+
 ## What this is
 
 This repository is the complete software stack used to conduct the
@@ -184,10 +197,8 @@ with the details. Everything defaults to the local API at port 4000.
 
 ## Team
 
-| | Role |
-|---|---|
-| [Bhuvnesh Verma](https://github.com/MasterBhuvnesh) | Owner and maintainer. Platform architecture, API, admin panel, hall ticket portal, exam client, and the AWS infrastructure and deployment pipeline. |
-| [Vivian Demello](https://github.com/vynride) | Exam client. Auto-update pipeline, release tooling, and the one-line installer. |
+Built and maintained by [Bhuvnesh Verma](https://github.com/MasterBhuvnesh)
+and [Vivian Demello](https://github.com/vynride).
 
 Code ownership per path is declared in
 [.github/CODEOWNERS](CODEOWNERS), which GitHub uses to request the right
