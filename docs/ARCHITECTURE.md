@@ -67,7 +67,7 @@ reachable even if one zone has trouble.
 
 A VPC (Virtual Private Cloud) is a private, isolated slice of the AWS network
 with its own IP range. Every resource here runs inside the account's **default
-VPC** (`vpc-078309ac3e7f9271a`). Using the default VPC, rather than a
+VPC** (`vpc-xxxxxxxxxxxxxxxxx`). Using the default VPC, rather than a
 hand-built one, is a deliberate simplification: it already has an internet
 gateway attached and a route table that sends `0.0.0.0/0` out through it, so
 any instance in it can reach the internet and, given a public IP, be reached
@@ -78,9 +78,9 @@ default VPC has three, one per zone:
 
 | Subnet | AZ | Role |
 |---|---|---|
-| `subnet-0dc831fafa6ea08bf` | ap-south-1a | Both EC2 instances, the Instance Connect Endpoint, an ALB node |
-| `subnet-09d6cf38dfcaf75f9` | ap-south-1b | An ALB node |
-| `subnet-02aa09d2a2254d88f` | ap-south-1c | An ALB node, part of the Redis subnet group |
+| `subnet-xxxxxxxxxxxxxxxxx` (1a) | ap-south-1a | Both EC2 instances, the Instance Connect Endpoint, an ALB node |
+| `subnet-xxxxxxxxxxxxxxxxx` (1b) | ap-south-1b | An ALB node |
+| `subnet-xxxxxxxxxxxxxxxxx` (1c) | ap-south-1c | An ALB node, part of the Redis subnet group |
 
 All three are **public subnets**: their route table has a path to the internet
 gateway. There are no private subnets in this design. That is the key trade-off
