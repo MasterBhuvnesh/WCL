@@ -2,6 +2,16 @@
   "name": "hallticket",
   "version": "0.1.10",
   "private": true,
+  "description": "Public portal where candidates view and download their examination admit card.",
+  "author": "Vivian Demello (https://github.com/vynride)",
+  "contributors": [
+    "Bhuvnesh Verma (https://github.com/MasterBhuvnesh)"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MasterBhuvnesh/WCL.git",
+    "directory": "app/hallticket"
+  },
   "scripts": {
     "dev": "next dev -p 5001",
     "build": "next build",

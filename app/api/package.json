@@ -4,6 +4,15 @@
   "private": true,
   "type": "module",
   "description": "Production backend for the WCL on-center examination system (Bun, Express, PostgreSQL, Redis).",
+  "author": "Bhuvnesh Verma (https://github.com/MasterBhuvnesh)",
+  "contributors": [
+    "Vivian Demello (https://github.com/vynride)"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MasterBhuvnesh/WCL.git",
+    "directory": "app/api"
+  },
   "scripts": {
     "dev": "bun --watch src/index.ts",
     "start": "bun src/index.ts",

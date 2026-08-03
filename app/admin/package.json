@@ -2,6 +2,16 @@
   "name": "admin",
   "version": "0.1.7",
   "private": true,
+  "description": "Operations console for the WCL examination system, covering preparation, live invigilation, and post-exam review.",
+  "author": "Bhuvnesh Verma (https://github.com/MasterBhuvnesh)",
+  "contributors": [
+    "Vivian Demello (https://github.com/vynride)"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MasterBhuvnesh/WCL.git",
+    "directory": "app/admin"
+  },
   "scripts": {
     "dev": "next dev -p 5000",
     "build": "next build",

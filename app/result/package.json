@@ -2,6 +2,16 @@
   "name": "result",
   "version": "0.1.1",
   "private": true,
+  "description": "Public portal where candidates view their examination score and per-question answer breakdown.",
+  "author": "Bhuvnesh Verma (https://github.com/MasterBhuvnesh)",
+  "contributors": [
+    "Vivian Demello (https://github.com/vynride)"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MasterBhuvnesh/WCL.git",
+    "directory": "app/result"
+  },
   "scripts": {
     "dev": "next dev -p 5002",
     "build": "next build",

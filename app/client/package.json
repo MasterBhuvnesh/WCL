@@ -4,8 +4,16 @@
   "version": "1.0.0",
   "description": "WCL on-center examination client (Electron).",
   "main": "./out/main/index.js",
-  "author": "MasterBhuvnesh",
-  "homepage": "https://electron-vite.org",
+  "author": "Bhuvnesh Verma (https://github.com/MasterBhuvnesh)",
+  "contributors": [
+    "Vivian Demello (https://github.com/vynride)"
+  ],
+  "homepage": "https://github.com/MasterBhuvnesh/WCL",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MasterBhuvnesh/WCL.git",
+    "directory": "app/client"
+  },
   "scripts": {
     "format": "prettier --write .",
     "lint": "eslint --cache .",
