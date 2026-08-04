@@ -17,7 +17,9 @@ API behind them all.
 <img src="https://img.shields.io/badge/-AWS-000000?style=for-the-badge&logo=amazonwebservices&logoColor=FF9900">
 <img src="https://img.shields.io/badge/-Docker-000000?style=for-the-badge&logo=docker&logoColor=2496ED">
 
-**[rbuexam.in](https://rbuexam.in)** &nbsp;|&nbsp; **[result.rbuexam.in](https://result.rbuexam.in)** &nbsp;|&nbsp; **[admin.rbuexam.in](https://admin.rbuexam.in)** &nbsp;|&nbsp; **[api.rbuexam.in](https://api.rbuexam.in/health)**
+**rbuexam.in** &nbsp;|&nbsp; **result.rbuexam.in** &nbsp;|&nbsp; **admin.rbuexam.in** &nbsp;|&nbsp; **api.rbuexam.in**
+
+<sub>The deployment that served these hostnames has been decommissioned.</sub>
 
 </div>
 
@@ -33,6 +35,7 @@ API behind them all.
 - [Production](#production)
 - [Documentation](#documentation)
 - [Team](#team)
+- [License](#license)
 
 ## What this is
 
@@ -63,8 +66,8 @@ described below.
 | Feedback responses collected | 526 |
 
 Every candidate who began the exam was graded and every result was
-written. Results were published to
-[result.rbuexam.in](https://result.rbuexam.in) after the paper closed.
+written. Results were published to `result.rbuexam.in` after the paper
+closed.
 
 ## The five applications
 
@@ -78,13 +81,13 @@ written. Results were published to
 
 ## How exam day works
 
-1. **Before the exam.** The candidate opens [rbuexam.in](https://rbuexam.in), enters their employee id and date of birth, and downloads a hall ticket PDF with their seat allocation.
+1. **Before the exam.** The candidate opens `rbuexam.in`, enters their employee id and date of birth, and downloads a hall ticket PDF with their seat allocation.
 2. **Sitting down.** The lab PC launches the exam client straight into fullscreen kiosk mode. The candidate signs in with their assigned credentials and the session binds to that machine, so nobody else can continue it elsewhere.
 3. **During the exam.** The timer runs on the server, so refreshes, crashes, and reboots cannot add time. Every answer is buffered locally and synced continuously, so nothing is lost if a machine dies mid-click. Leaving fullscreen, switching windows, or losing focus is recorded as an integrity event that proctors see live.
 4. **If a PC fails.** A proctor presses Release device in the admin panel, the candidate logs in on any other machine, and every answer, every mark for review, and the running clock resume exactly where they left off.
 5. **Submitting.** Grading happens instantly on the server, with negative marking of 0.5 per wrong answer. The candidate sees their final score, rates the platform and the venue, and the application closes itself, leaving the seat ready for the next candidate.
 6. **The deadline.** Anyone still writing at the deadline is auto-submitted by the server, even if their machine is powered off. On exam day this accounted for 186 of the 526 papers.
-7. **Afterwards.** Once an administrator publishes results, candidates sign in at [result.rbuexam.in](https://result.rbuexam.in) with the same employee id and date of birth to see their score again, along with every question they were served and the correct answer. Nothing is disclosed before that switch is flipped.
+7. **Afterwards.** Once an administrator publishes results, candidates sign in at `result.rbuexam.in` with the same employee id and date of birth to see their score again, along with every question they were served and the correct answer. Nothing is disclosed before that switch is flipped.
 
 ## Architecture
 
@@ -172,13 +175,21 @@ with the details. Everything defaults to the local API at port 4000.
 
 ## Production
 
-| URL | Service |
+The examination is over and the production environment has been
+decommissioned. The hostnames below served the platform on exam day and
+are listed as a record of the deployment; none of them resolve to
+infrastructure we operate any more.
+
+| Hostname | Service |
 |---|---|
-| https://rbuexam.in | Hall ticket portal |
-| https://result.rbuexam.in | Result portal |
-| https://admin.rbuexam.in | Admin panel |
-| https://api.rbuexam.in | API |
-| https://grafana.rbuexam.in | Grafana dashboards (login required) |
+| rbuexam.in | Hall ticket portal |
+| result.rbuexam.in | Result portal |
+| admin.rbuexam.in | Admin panel |
+| api.rbuexam.in | API |
+| grafana.rbuexam.in | Grafana dashboards |
+
+The stack runs locally from this repository exactly as it did in
+production; see [Running it locally](#running-it-locally).
 
 ## Documentation
 
@@ -203,3 +214,12 @@ and [Vivian Demello](https://github.com/vynride).
 Code ownership per path is declared in
 [.github/CODEOWNERS](CODEOWNERS), which GitHub uses to request the right
 reviewer automatically on every pull request.
+
+## License
+
+Copyright (c) 2026 Bhuvnesh Verma and Vivian Demello. All rights reserved.
+
+The source is published so it can be read and studied. It is not open
+source: using, copying, modifying, or redistributing it requires written
+permission from both copyright holders. See [LICENSE](../LICENSE) for the
+full terms.

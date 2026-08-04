@@ -47,10 +47,10 @@ Examples of what we want to hear about:
 
 ## Out of scope
 
-- Testing against the live production deployment (`rbuexam.in` and its
-  subdomains) while an exam is in progress. Use a local instance
-  instead; see [README.md](README.md) for setup.
-- Denial-of-service testing against any production endpoint.
+- Any hosted deployment. The production environment that served the
+  2026 examination has been decommissioned, and `rbuexam.in` and its
+  subdomains no longer point to infrastructure we operate. Test against
+  a local instance only; see [README.md](README.md) for setup.
 - Social engineering, physical access to exam center hardware, or
   attacks on a candidate's personal device.
 - Reports that require an already-compromised administrator account.
@@ -58,10 +58,17 @@ Examples of what we want to hear about:
 
 ## Test environment
 
-Run the stack locally rather than against production; see the
-"Running it locally" section of [README.md](README.md). A local
-instance uses development-only defaults for every secret, so nothing
-there is sensitive.
+Run the stack locally; see the "Running it locally" section of
+[README.md](README.md). A local instance uses development-only defaults
+for every secret, so nothing there is sensitive.
+
+## Safe harbor
+
+Running a private local instance for good-faith research under this
+policy is permitted, despite the general restrictions in
+[LICENSE](../LICENSE). We will not pursue action against research that
+follows this policy, stays within the scope above, and does not attempt
+to access real candidate data.
 
 ## Disclosure
 
