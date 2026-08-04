@@ -1,0 +1,45 @@
+Copyright (c) 2026 Bhuvnesh Verma and Vivian Demello
+
+All rights reserved.
+
+This software, together with its accompanying documentation and
+configuration (the "Software"), is the exclusive property of the copyright
+holders named above.
+
+Permission is granted to any person obtaining a copy of the Software to
+view, read, and study its source code for personal, educational, and
+reference purposes.
+
+Permission is also granted to run a private local instance of the Software
+for the sole purpose of good-faith security research conducted under the
+security policy published in this repository. This permission does not
+extend to any other use.
+
+Except as stated above, no person may do any of the following without the
+prior written permission of both copyright holders:
+
+1. Use the Software, in whole or in part, to operate, host, or deliver any
+   examination or any other service, whether commercial or non-commercial.
+2. Copy, reproduce, publish, or redistribute the Software or any part of
+   it.
+3. Modify the Software or create derivative works based on it.
+4. Sublicense, sell, rent, lease, or otherwise transfer any right in the
+   Software to another party.
+
+Requests for permission should be directed to the copyright holders, who
+are listed in the repository as code owners.
+
+This repository contains no examination content and no candidate data.
+Nothing in this license grants any right to material of that kind.
+
+Third-party dependencies retain the licenses granted by their respective
+authors. This license applies only to the original work of the copyright
+holders named above.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE, AND NONINFRINGEMENT. IN NO EVENT SHALL
+THE COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT, OR OTHERWISE, ARISING
+FROM, OUT OF, OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+DEALINGS IN THE SOFTWARE.
