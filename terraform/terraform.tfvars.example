@@ -9,5 +9,14 @@ rds_master_password = "CHANGE_ME"
 backend_public_key  = "ssh-ed25519 AAAA... wcl-backend"
 frontend_public_key = "ssh-ed25519 AAAA... wcl"
 
-# Overridable defaults (region ap-south-1, domain rbuexam.in) live in
-# variables.tf; set them here only to change them.
+# Overridable defaults (region ap-south-1, domain rbuexam.in, bucket
+# wcl-images) live in variables.tf; set them here only to change them.
+#
+# root_domain must have a Route53 hosted zone in this account already, and the
+# registrar must delegate to that zone's nameservers, otherwise the ACM
+# certificate cannot be validated and the apply stalls on it.
+# root_domain = "example.com"
+#
+# S3 bucket names are globally unique across all of AWS. Override when
+# rebuilding in a different account or alongside an existing bucket.
+# images_bucket = "wcl-images-example"

@@ -5,3 +5,9 @@
 terraform.tfvars
 *.pem
 crash.log
+
+# Saved plans embed the variable values they were created with, including the
+# RDS master password, so they are as sensitive as state.
+tfplan
+*.tfplan
+plan.json

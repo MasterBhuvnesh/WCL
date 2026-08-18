@@ -10,6 +10,15 @@ variable "root_domain" {
   default     = "rbuexam.in"
 }
 
+variable "images_bucket" {
+  description = <<-EOT
+    S3 bucket for question images. Bucket names are globally unique across all
+    of AWS, so a rebuild in a different account may need a different name here.
+  EOT
+  type        = string
+  default     = "wcl-images"
+}
+
 variable "rds_master_username" {
   description = "Postgres master user for the wcl-db instance."
   type        = string
@@ -45,7 +54,7 @@ variable "backend_public_key" {
 variable "frontend_public_key" {
   description = <<-EOT
     SSH public key for the wcl (frontend) key pair. Derive from the existing
-    private key with: ssh-keygen -y -f secret/wcl.pem
+    private key with: ssh-keygen -y -f secret/wcl-frontend.pem
   EOT
   type        = string
 }
