@@ -33,6 +33,12 @@ resource "aws_lb_target_group" "admin" {
   vpc_id      = data.aws_vpc.default.id
   target_type = "instance"
   tags        = local.tags
+
+  # The panel redirects / to /admin, so the default check sees a 307 and the
+  # target never passes. Accept any non-error response instead.
+  health_check {
+    matcher = "200-399"
+  }
 }
 
 resource "aws_lb_target_group" "result" {

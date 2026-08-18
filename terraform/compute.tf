@@ -18,7 +18,7 @@ resource "aws_instance" "backend" {
   ami                    = data.aws_ssm_parameter.ubuntu_2404.value
   instance_type          = var.backend_instance_type
   key_name               = aws_key_pair.backend.key_name
-  subnet_id              = data.aws_subnets.default.ids[0]
+  subnet_id              = data.aws_subnet.primary.id
   vpc_security_group_ids = [aws_security_group.backend_ec2.id]
   user_data              = file("${path.module}/user-data.sh")
   tags                   = merge(local.tags, { Name = "wcl-backend" })
@@ -39,7 +39,7 @@ resource "aws_instance" "frontend" {
   ami                    = data.aws_ssm_parameter.ubuntu_2404.value
   instance_type          = var.frontend_instance_type
   key_name               = aws_key_pair.frontend.key_name
-  subnet_id              = data.aws_subnets.default.ids[0]
+  subnet_id              = data.aws_subnet.primary.id
   vpc_security_group_ids = [aws_security_group.frontend_ec2.id]
   user_data              = file("${path.module}/user-data.sh")
   tags                   = merge(local.tags, { Name = "wcl-frontend" })

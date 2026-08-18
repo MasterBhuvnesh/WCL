@@ -2,8 +2,12 @@
 # are reachable only from the app instances or through an SSH tunnel.
 
 resource "aws_db_instance" "postgres" {
-  identifier     = "wcl-db"
-  engine         = "postgres"
+  identifier = "wcl-db"
+  engine     = "postgres"
+  # Pinned to the major version the live instance ran (parameter group
+  # default.postgres18). Unpinned, a rebuild picks whatever AWS defaults to at
+  # the time, which can move the database out from under the Drizzle migrations.
+  engine_version = "18"
   instance_class = "db.t4g.micro"
 
   allocated_storage = 20
@@ -32,8 +36,11 @@ resource "aws_elasticache_subnet_group" "redis" {
 }
 
 resource "aws_elasticache_cluster" "redis" {
-  cluster_id         = "wcl-redis"
-  engine             = "redis"
+  cluster_id = "wcl-redis"
+  engine     = "redis"
+  # The live cluster ran 7.1.0; pin the major.minor line for the same reason
+  # the database version is pinned.
+  engine_version     = "7.1"
   node_type          = "cache.t4g.micro"
   num_cache_nodes    = 1
   subnet_group_name  = aws_elasticache_subnet_group.redis.name

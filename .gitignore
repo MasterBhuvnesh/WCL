@@ -37,7 +37,13 @@ Thumbs.db
 
 # Credentials
 Credentials.json
-secret/
+# Everything under secret/ is private except the access helper and its README.
+secret/*
+!secret/README.md
+!secret/ssh.sh
+# Key material is never committed, whatever the exceptions above allow.
+secret/*.pem
+secret/*.key
 docs/ACCESS.md
 docs/AWSCLI.md
 docs/RECORD.md

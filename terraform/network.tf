@@ -159,7 +159,7 @@ resource "aws_security_group" "data" {
 # SSH over 443 for networks that block port 22. Uses the ALB security group,
 # so the "SSH from ALB SG" rules on the instances also admit this endpoint.
 resource "aws_ec2_instance_connect_endpoint" "main" {
-  subnet_id          = data.aws_subnets.default.ids[0]
+  subnet_id          = data.aws_subnet.primary.id
   security_group_ids = [aws_security_group.alb.id]
   tags               = merge(local.tags, { Name = "wcl-ice" })
 }

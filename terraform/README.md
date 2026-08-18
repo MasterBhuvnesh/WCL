@@ -62,9 +62,13 @@ Required variables (`terraform.tfvars`):
 - `backend_public_key` / `frontend_public_key`: the public halves of the two
   SSH key pairs. Derive them from the existing private keys:
   `ssh-keygen -y -f ../secret/wcl-backend.pem` and
-  `ssh-keygen -y -f ../secret/wcl.pem`.
+  `ssh-keygen -y -f ../secret/wcl-frontend.pem`.
 
 ## After apply
+
+`docs/PROVISIONING.md` is the full runbook from an empty account to serving
+traffic, including the Instance Connect tunnel, the two derived files the
+backend needs, and the migration step. In short:
 
 1. Read the outputs: `terraform output` (RDS and Redis endpoints, instance ids,
    uploader access key). `terraform output -raw uploader_secret_access_key` for
@@ -73,6 +77,8 @@ Required variables (`terraform.tfvars`):
    keys, then copy them plus the compose files to `/srv/wcl` on each instance
    and run `docker compose ... up -d` (deploy docs have the exact commands).
 3. Apply database migrations once: `docker exec wclapi bunx drizzle-kit migrate`.
+   On a fresh database the API crash-loops until this runs, so use a one-off
+   container instead of `exec`; see the runbook.
 
 ## Important: this rebuilds, it does not adopt the live stack
 

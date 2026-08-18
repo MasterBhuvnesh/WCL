@@ -2,8 +2,8 @@
 # URLs directly). The API uploads with a dedicated least-privilege IAM user.
 
 resource "aws_s3_bucket" "images" {
-  bucket = "wcl-images"
-  tags   = merge(local.tags, { Name = "wcl-images" })
+  bucket = var.images_bucket
+  tags   = merge(local.tags, { Name = var.images_bucket })
 }
 
 # Public read requires the account-level block to be off for this bucket.
