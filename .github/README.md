@@ -201,6 +201,7 @@ production; see [Running it locally](#running-it-locally).
 | [docs/FEEDBACK.md](../docs/FEEDBACK.md) | Post-submission candidate feedback |
 | [docs/KIOSK_LOCKDOWN.md](../docs/KIOSK_LOCKDOWN.md) | How the client lockdown works |
 | [docs/ARCHITECTURE.md](../docs/ARCHITECTURE.md) | Network design, security groups, and data flows |
+| [docs/PROVISIONING.md](../docs/PROVISIONING.md) | Rebuilding the infrastructure with Terraform and deploying onto it |
 | [docs/DEPLOY_FRONTEND.md](../docs/DEPLOY_FRONTEND.md) | Frontend infrastructure and deployment |
 | [docs/DEPLOY_BACKEND.md](../docs/DEPLOY_BACKEND.md) | Backend infrastructure and deployment |
 | [docs/OBSERVABILITY.md](../docs/OBSERVABILITY.md) | Logs, metrics, and dashboards |
