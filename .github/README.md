@@ -133,9 +133,16 @@ flowchart LR
     end
 ```
 
-The infrastructure is codified as Terraform in [`terraform/`](../terraform),
-and the full network design (VPC, security groups, data flows) is explained
-in [docs/ARCHITECTURE.md](../docs/ARCHITECTURE.md).
+The infrastructure is codified as Terraform in [`terraform/`](../terraform).
+It is not aspirational: the entire stack has been rebuilt from it into a clean
+account and verified end to end. One `terraform apply` creates all 44
+resources, and the result serves traffic over HTTPS on every hostname with all
+five load balancer target groups healthy.
+
+[docs/PROVISIONING.md](../docs/PROVISIONING.md) is the runbook from an empty
+account to serving traffic, and the full network design (VPC, security groups,
+data flows) is explained in
+[docs/ARCHITECTURE.md](../docs/ARCHITECTURE.md).
 
 Server deploys are cut deliberately with `./release.sh <service>`, which
 tags a version; the exam client ships on every push to main:
