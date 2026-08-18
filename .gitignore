@@ -33,6 +33,7 @@ app/api/data/questions.cse.xlsx
 .DS_Store
 Thumbs.db
 .idea/
+.claude/
 
 # Credentials
 Credentials.json
