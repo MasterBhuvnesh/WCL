@@ -55,3 +55,4 @@ observability/metrics-token
 
 # Session memory / transcripts
 claude-session-memory.txt
+docs/memory.claude/
