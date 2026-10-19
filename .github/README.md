@@ -69,6 +69,21 @@ Every candidate who began the exam was graded and every result was
 written. Results were published to `result.rbuexam.in` after the paper
 closed.
 
+**Infrastructure that served the exam**
+
+| Component | Specification |
+|---|---|
+| **Region** | AWS ap-south-1 (Mumbai) |
+| **Frontend EC2** | `t3.small` (2 vCPU, 2 GiB), Ubuntu 24.04 LTS, 20 GB gp3, runs admin (5000), hall ticket (5001), result (5002), Watchtower |
+| **Backend EC2** | `t3.medium` (2 vCPU, 4 GiB), Ubuntu 24.04 LTS, 20 GB gp3, runs API (4000), Grafana (3000), Watchtower, Loki, Alloy, Prometheus |
+| **RDS PostgreSQL** | `db.t4g.micro` (2 vCPU, 1 GiB), **PostgreSQL 18**, 20 GB gp2, 7-day backup retention, publicly accessible but secured by SG |
+| **ElastiCache Redis** | `cache.t4g.micro`, **Redis 7.1**, single node, subnet group across default subnets |
+| **Application Load Balancer** | Internet-facing, TLS termination (ACM wildcard cert), 3 AZs, 5 target groups with host-header routing |
+| **S3** | `wcl-images` (public read), question images served directly via signed URLs |
+| **DNS / TLS** | Route 53 hosted zone `rbuexam.in`, 5 A-alias records, ACM wildcard certificate `*.rbuexam.in` |
+| **Observability** | Grafana dashboards, Prometheus metrics, Loki logs, Alloy collector on backend instance |
+| **Deployment** | Docker Compose on each EC2, images from Docker Hub via Watchtower (60s poll), Terraform-managed infra |
+
 ## The five applications
 
 | App | Role |
