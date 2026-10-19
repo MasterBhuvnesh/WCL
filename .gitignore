@@ -52,3 +52,6 @@ observability/metrics-token
 
 # local DB snapshots (prod PII, never commit)
 *.dump
+
+# Session memory / transcripts
+claude-session-memory.txt
